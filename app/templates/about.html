@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}About | My Site{% endblock %}
+
+{% block content %}
+<section class="section">
+    <h2>About Me</h2>
+    <div class="about-content">
+        <p>
+            Hello! I'm Alexander — a quant by trade and curious generalist at heart.
+        </p>
+        <p>
+            This site serves as a portfolio of my work and a place to host small
+            applications and demos that showcase what I've been working on.
+        </p>
+        <p class="interests-line">
+            My interests include <span id="cycling-interest" class="interest-highlight">Machine Learning</span>
+        </p>
+    </div>
+</section>
+
+<section class="section">
+    <h2>Skills</h2>
+    <div class="tags">
+        <span class="tag">Python</span>
+        <span class="tag">Flask</span>
+        <span class="tag">JavaScript</span>
+        <span class="tag">SQL</span>
+    </div>
+</section>
+
+<section class="section">
+    <h2>Get in Touch</h2>
+    <p>
+        This site is dedicated to my personal projects and side interests.
+        For my professional work, check out my <a href="{{ site.linkedin_url }}" target="_blank">LinkedIn</a>.
+    </p>
+</section>
+{% endblock %}
+
+{% block head %}
+<style>
+    .interest-highlight {
+        color: var(--primary-color);
+        font-weight: 500;
+        display: inline-block;
+        transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    .interest-highlight.fade-out {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+
+    .interest-highlight.fade-in {
+        opacity: 1;
+        transform: translateY(0);
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    // Add more interests here anytime
+    const interests = [
+        'Machine Learning',
+        'Artificial Intelligence',
+        '3D Printing',
+        'Computer Graphics',
+        'Electronic Music',
+        'Weightlifting',
+        'Snowboarding',
+        'Fencing',
+        'Painting',
+        'Strategy Games',
+        'World History',
+        'Finance',
+        'Functional Programming'
+    ];
+
+    const interestEl = document.getElementById('cycling-interest');
+    let currentIndex = 0;
+    const displayDuration = 2000;
+    const fadeDuration = 400;
+
+    function cycleInterest() {
+        // Fade out
+        interestEl.classList.remove('fade-in');
+        interestEl.classList.add('fade-out');
+
+        setTimeout(() => {
+            // Change text
+            currentIndex = (currentIndex + 1) % interests.length;
+            interestEl.textContent = interests[currentIndex];
+
+            // Fade in
+            interestEl.classList.remove('fade-out');
+            interestEl.classList.add('fade-in');
+        }, fadeDuration);
+    }
+
+    // Start cycling
+    interestEl.classList.add('fade-in');
+    setInterval(cycleInterest, displayDuration + fadeDuration);
+})();
+</script>
+{% endblock %}

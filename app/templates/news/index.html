@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}In the News - {{ site.name }}{% endblock %}
+
+{% block content %}
+<div class="section">
+    <h1>In the News</h1>
+    <p class="section-intro">Articles, interviews, and press mentions.</p>
+</div>
+
+<div class="news-list">
+    {% for article in articles %}
+    <article class="news-card">
+        <div class="news-meta">
+            <span class="news-source">{{ article.source }}</span>
+            <time class="news-date">{{ article.date }}</time>
+        </div>
+        <h2><a href="{{ article.url }}" target="_blank" rel="noopener">{{ article.title }}</a></h2>
+        <p>{{ article.description }}</p>
+        <a href="{{ article.url }}" target="_blank" rel="noopener" class="external-link">
+            Read article <span class="external-icon">&nearr;</span>
+        </a>
+    </article>
+    {% else %}
+    <p>No news articles yet. Check back soon!</p>
+    {% endfor %}
+</div>
+{% endblock %}

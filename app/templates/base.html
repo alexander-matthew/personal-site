@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}My Site{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <a href="{{ url_for('main.home') }}">{{ site.name }}</a>
+        </div>
+        <ul class="nav-links">
+            <li><a href="{{ url_for('main.home') }}">Home</a></li>
+            <li><a href="{{ url_for('main.about') }}">About</a></li>
+            <li><a href="{{ url_for('main.projects') }}">Projects</a></li>
+            <li><a href="{{ url_for('blog.index') }}">Blog</a></li>
+            <li><a href="{{ url_for('news.index') }}">In the News</a></li>
+        </ul>
+    </nav>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="footer-links">
+            <a href="{{ site.github_url }}" target="_blank">GitHub</a>
+            <a href="{{ site.linkedin_url }}" target="_blank">LinkedIn</a>
+        </div>
+        <p>&copy; 2026 {{ site.name }}</p>
+        <p class="footer-credit">Built with <a href="https://claude.ai" target="_blank">Claude</a> · Hosted on <a href="https://heroku.com" target="_blank">Heroku</a></p>
+    </footer>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

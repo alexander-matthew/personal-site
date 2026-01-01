@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Home | My Site{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <h1>Hi, I'm <span id="typed-name">Alex</span><span class="cursor">|</span></h1>
+    <p class="subtitle">Quant & Curious Generalist</p>
+    <p>Welcome to my corner of the internet — a place for personal projects, side interests, and things I'm learning.</p>
+</section>
+
+<section class="section">
+    <h2>What I Do</h2>
+    <p>Brief introduction about your work, interests, and what visitors can find on this site.</p>
+</section>
+{% endblock %}
+
+{% block head %}
+<style>
+    .cursor {
+        font-weight: 100;
+        animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    const nameEl = document.getElementById('typed-name');
+    const fullName = 'Alexander';
+    const shortName = 'Alex';
+    const typingSpeed = 150;
+    const pauseDuration = 1500;
+
+    let currentText = shortName;
+    let isDeleting = false;
+    let charIndex = shortName.length;
+
+    function type() {
+        if (!isDeleting && charIndex < fullName.length) {
+            // Typing forward to "Alexander"
+            charIndex++;
+            currentText = fullName.substring(0, charIndex);
+            nameEl.textContent = currentText;
+            setTimeout(type, typingSpeed);
+        } else if (!isDeleting && charIndex === fullName.length) {
+            // Pause at "Alexander", then start deleting
+            isDeleting = true;
+            setTimeout(type, pauseDuration);
+        } else if (isDeleting && charIndex > shortName.length) {
+            // Deleting back to "Alex"
+            charIndex--;
+            currentText = fullName.substring(0, charIndex);
+            nameEl.textContent = currentText;
+            setTimeout(type, typingSpeed / 2);
+        } else if (isDeleting && charIndex === shortName.length) {
+            // Pause at "Alex", then start typing again
+            isDeleting = false;
+            setTimeout(type, pauseDuration);
+        }
+    }
+
+    // Start animation after a short delay
+    setTimeout(type, pauseDuration);
+})();
+</script>
+{% endblock %}
