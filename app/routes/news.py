@@ -17,14 +17,14 @@ ARTICLES = [
         'source': 'Gaston Gazette',
         'date': '2016-04-14',
         'url': 'https://www.gastongazette.com/story/news/2016/04/14/our-best-amp-brightest-of-2016/31973293007/',
-        'description': 'Recognized among top students in Gaston County.'
+        'description': 'Recognized by Gaston County as the top student at Highland School of Technology.'
     },
     {
         'title': 'Highland Tech Students Score Big',
         'source': 'Gaston Gazette',
         'date': '2015-08-06',
         'url': 'https://www.gastongazette.com/story/lifestyle/family/2015/08/06/highland-tech-students-score-big/33729848007/',
-        'description': 'Highland School of Technology students recognized for achievements.'
+        'description': 'Placed 5th in the country in a stock market simulation game, achieving a 50% return in 14 weeks.'
     },
 ]
 
