@@ -14,12 +14,16 @@ Personal-Site/
 │   ├── __init__.py          # Flask app factory + SITE_CONFIG
 │   ├── routes/
 │   │   ├── __init__.py
-│   │   └── main.py          # Main routes (home, about, projects)
+│   │   ├── main.py          # Main routes (home, about, projects)
+│   │   ├── blog.py          # Blog routes
+│   │   └── news.py          # News/press routes
 │   ├── templates/
 │   │   ├── base.html        # Base layout with nav + footer
 │   │   ├── home.html        # Landing page with typing animation
 │   │   ├── about.html       # Bio with cycling interests animation
-│   │   └── projects.html    # Project showcase grid
+│   │   ├── projects.html    # Project showcase grid
+│   │   ├── blog/            # Blog templates
+│   │   └── news/            # News templates
 │   └── static/
 │       └── css/style.css    # Global styles with CSS variables
 ├── main.py                  # App entry point
@@ -42,6 +46,10 @@ SITE_CONFIG = {
 ```
 Access in templates via `{{ site.name }}`, `{{ site.linkedin_url }}`, etc.
 
+### Environment Variables
+- `SECRET_KEY` - Flask session secret (required in production)
+- `FLASK_DEBUG` - Set to `false` in production (defaults to `true` locally)
+
 ### Adding New Mini-Apps (Blueprints)
 1. Create blueprint in `app/routes/myapp.py`:
    ```python
@@ -61,6 +69,8 @@ Access in templates via `{{ site.name }}`, `{{ site.linkedin_url }}`, etc.
 
 3. Add templates in `app/templates/myapp/`
 
+4. Add nav link in `app/templates/base.html`
+
 ### Template Blocks
 Base template provides these blocks:
 - `{% block title %}` - Page title
@@ -77,6 +87,9 @@ Defined in `:root` in style.css:
 - `--bg-secondary`: Footer/card backgrounds
 - `--border-color`: Borders
 
+### External Links
+Always use `rel="noopener noreferrer"` with `target="_blank"` for security.
+
 ## Development
 
 ```bash
@@ -88,10 +101,27 @@ App runs at http://localhost:5000 with auto-reload.
 
 ## Deployment
 
+Set environment variables on Heroku:
+```bash
+heroku config:set SECRET_KEY=your-secure-random-key
+heroku config:set FLASK_DEBUG=false
+```
+
+Deploy:
 ```bash
 heroku create
 git push heroku main
 ```
+
+## Pages
+
+| Route | Template | Description |
+|-------|----------|-------------|
+| `/` | home.html | Landing with typing animation |
+| `/about` | about.html | Bio with cycling interests |
+| `/projects` | projects.html | Project showcase |
+| `/blog` | blog/index.html | Blog posts |
+| `/news` | news/index.html | Press/news mentions |
 
 ## Features
 
