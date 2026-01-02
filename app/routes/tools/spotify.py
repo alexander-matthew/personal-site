@@ -196,3 +196,80 @@ def spotify_genres():
     ]
 
     return jsonify({'genres': genres})
+
+
+@bp.route('/spotify/api/audio-features')
+@require_oauth('spotify')
+@rate_limit(max_requests=30, window_seconds=60)
+def spotify_audio_features():
+    """API endpoint: Get average audio features from top tracks."""
+    tracks_data, _ = _spotify_request('/me/top/tracks', {
+        'limit': 50,
+        'time_range': 'medium_term'
+    })
+
+    if not tracks_data or 'items' not in tracks_data:
+        return jsonify({'features': None})
+
+    # Get track IDs
+    track_ids = [track['id'] for track in tracks_data['items']]
+
+    # Fetch audio features for all tracks
+    features_data, _ = _spotify_request('/audio-features', {
+        'ids': ','.join(track_ids)
+    })
+
+    if not features_data or 'audio_features' not in features_data:
+        return jsonify({'features': None})
+
+    # Calculate averages for key features
+    feature_keys = ['danceability', 'energy', 'acousticness', 'valence', 'instrumentalness', 'liveness']
+    totals = {key: 0 for key in feature_keys}
+    count = 0
+
+    for features in features_data['audio_features']:
+        if features:
+            count += 1
+            for key in feature_keys:
+                totals[key] += features.get(key, 0)
+
+    if count == 0:
+        return jsonify({'features': None})
+
+    averages = {key: round(totals[key] / count * 100) for key in feature_keys}
+
+    return jsonify({'features': averages})
+
+
+@bp.route('/spotify/api/taste-evolution')
+@require_oauth('spotify')
+@rate_limit(max_requests=30, window_seconds=60)
+def spotify_taste_evolution():
+    """API endpoint: Compare top artists across time periods."""
+    periods = ['short_term', 'medium_term', 'long_term']
+    period_labels = {'short_term': '4 Weeks', 'medium_term': '6 Months', 'long_term': 'All Time'}
+
+    evolution = {}
+
+    for period in periods:
+        artists_data, _ = _spotify_request('/me/top/artists', {
+            'limit': 5,
+            'time_range': period
+        })
+
+        if artists_data and 'items' in artists_data:
+            evolution[period] = {
+                'label': period_labels[period],
+                'artists': [
+                    {
+                        'name': artist['name'],
+                        'image': artist['images'][-1]['url'] if artist.get('images') else None,
+                        'genres': artist.get('genres', [])[:2]
+                    }
+                    for artist in artists_data['items']
+                ]
+            }
+        else:
+            evolution[period] = {'label': period_labels[period], 'artists': []}
+
+    return jsonify(evolution)

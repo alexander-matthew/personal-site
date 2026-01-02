@@ -25,9 +25,6 @@
 </div>
 {% else %}
 
-<!-- Now Playing Widget -->
-<div id="now-playing-container"></div>
-
 <!-- Stats Overview -->
 <div class="data-cards">
     <div class="data-card data-card--primary" id="stat-tracks">
@@ -48,39 +45,63 @@
     </div>
 </div>
 
-<!-- Listening Timeline Heatmap -->
+<!-- Row 1: Taste Evolution + Audio Profile -->
+<div class="dashboard-grid">
+    <div class="cyber-card dashboard-item">
+        <h3 class="cyber-card-title">// Taste Evolution</h3>
+        <div id="evolution-container">
+            <div class="loading-spinner"></div>
+        </div>
+    </div>
+    <div class="cyber-card dashboard-item">
+        <h3 class="cyber-card-title">// Audio Profile</h3>
+        <div id="audio-profile-container">
+            <div class="loading-spinner"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Row 2: Listening Patterns + Genre Breakdown -->
+<div class="dashboard-grid">
+    <div class="cyber-card dashboard-item">
+        <h3 class="cyber-card-title">// Listening Patterns</h3>
+        <div id="patterns-container">
+            <div class="loading-spinner"></div>
+        </div>
+    </div>
+    <div class="cyber-card dashboard-item">
+        <h3 class="cyber-card-title">// Genre Analysis</h3>
+        <div id="genre-container">
+            <div class="loading-spinner"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Row 3: Timeline Heatmap (full width) -->
 <div class="cyber-card timeline-heatmap">
-    <h3 class="cyber-card-title">// Listening Timeline</h3>
+    <h3 class="cyber-card-title">// Weekly Timeline</h3>
     <div id="heatmap-container">
         <div class="loading-spinner"></div>
     </div>
 </div>
 
-<!-- Genre Breakdown -->
-<div class="cyber-card genre-breakdown">
-    <h3 class="cyber-card-title">// Genre Analysis</h3>
-    <div id="genre-container">
-        <div class="loading-spinner"></div>
+<!-- Row 4: Activity Chart + Top Tracks -->
+<div class="dashboard-grid">
+    <div class="chart-container dashboard-item">
+        <h3 class="chart-title">// Hourly Activity</h3>
+        <canvas id="activityChart"></canvas>
     </div>
-</div>
-
-<!-- Listening Activity Chart -->
-<div class="chart-container">
-    <h3 class="chart-title">// Activity by Hour</h3>
-    <canvas id="activityChart"></canvas>
-</div>
-
-<!-- Time Range Selector -->
-<div class="time-range-selector">
-    <button class="time-btn active" data-range="short_term">&gt; 4_WEEKS</button>
-    <button class="time-btn" data-range="medium_term">&gt; 6_MONTHS</button>
-    <button class="time-btn" data-range="long_term">&gt; ALL_TIME</button>
-</div>
-
-<!-- Top Tracks List -->
-<h3>// Top Tracks</h3>
-<div id="tracks-list" class="tracks-list">
-    <div class="loading-spinner"></div>
+    <div class="dashboard-item">
+        <div class="time-range-selector">
+            <button class="time-btn active" data-range="short_term">&gt; 4_WEEKS</button>
+            <button class="time-btn" data-range="medium_term">&gt; 6_MONTHS</button>
+            <button class="time-btn" data-range="long_term">&gt; ALL_TIME</button>
+        </div>
+        <h3>// Top Tracks</h3>
+        <div id="tracks-list" class="tracks-list">
+            <div class="loading-spinner"></div>
+        </div>
+    </div>
 </div>
 
 <p style="text-align: center; margin-top: 2rem;">
@@ -102,54 +123,200 @@
         red: '#ff3366'
     };
     let activityChart = null;
+    let audioProfileChart = null;
 
     // ===============================================
-    // Now Playing Widget
+    // Taste Evolution
     // ===============================================
-    async function loadNowPlaying() {
-        const container = document.getElementById('now-playing-container');
+    async function loadTasteEvolution() {
+        const container = document.getElementById('evolution-container');
         try {
-            const response = await fetch('/tools/spotify/api/now-playing');
+            const response = await fetch('/tools/spotify/api/taste-evolution');
             const data = await response.json();
 
-            if (data.is_playing && data.track) {
-                const track = data.track;
-                const progressPercent = (track.progress_ms / track.duration_ms) * 100;
-                const currentTime = formatTime(track.progress_ms);
-                const totalTime = formatTime(track.duration_ms);
+            const periods = ['short_term', 'medium_term', 'long_term'];
+            let html = '<div class="taste-evolution">';
 
-                container.innerHTML = `
-                    <div class="now-playing">
-                        <div class="now-playing-art">
-                            <img src="${track.image || ''}" alt="${track.album}">
-                        </div>
-                        <div class="now-playing-info">
-                            <div class="now-playing-track glitch-text" data-text="${escapeHtml(track.name)}">${escapeHtml(track.name)}</div>
-                            <div class="now-playing-artist">${escapeHtml(track.artist)}</div>
-                            <div class="now-playing-progress">
-                                <div class="now-playing-progress-bar" style="width: ${progressPercent}%"></div>
-                            </div>
-                            <div class="now-playing-time">
-                                <span>${currentTime}</span>
-                                <span>${totalTime}</span>
-                            </div>
-                            <div class="equalizer">
-                                ${Array(8).fill('<div class="equalizer-bar"></div>').join('')}
+            for (const period of periods) {
+                const periodData = data[period];
+                if (periodData && periodData.artists.length > 0) {
+                    html += `
+                        <div class="evolution-period">
+                            <div class="evolution-period-label">${periodData.label}</div>
+                            <div class="evolution-artists">
+                                ${periodData.artists.map((artist, i) => `
+                                    <div class="evolution-artist">
+                                        <span class="evolution-artist-rank">#${i + 1}</span>
+                                        ${artist.image ? `<img src="${artist.image}" alt="">` : ''}
+                                        <span>${escapeHtml(artist.name)}</span>
+                                    </div>
+                                `).join('')}
                             </div>
                         </div>
-                    </div>
-                `;
-            } else {
-                container.innerHTML = `
-                    <div class="now-playing-idle cyber-card">
-                        <p>// NO ACTIVE PLAYBACK DETECTED</p>
-                        <p style="font-size: 0.8rem; margin-top: 0.5rem;">Play something on Spotify to see it here</p>
-                    </div>
-                `;
+                    `;
+                }
             }
+
+            html += '</div>';
+            container.innerHTML = html;
         } catch (error) {
-            console.error('Failed to load now playing:', error);
-            container.innerHTML = '';
+            console.error('Failed to load taste evolution:', error);
+            container.innerHTML = '<p class="empty-state">Failed to load data</p>';
+        }
+    }
+
+    // ===============================================
+    // Audio Profile Radar Chart
+    // ===============================================
+    async function loadAudioProfile() {
+        const container = document.getElementById('audio-profile-container');
+        try {
+            const response = await fetch('/tools/spotify/api/audio-features');
+            const data = await response.json();
+
+            if (!data.features) {
+                container.innerHTML = '<p class="empty-state">No audio data available</p>';
+                return;
+            }
+
+            const features = data.features;
+            const labels = ['Danceability', 'Energy', 'Acousticness', 'Valence', 'Instrumentalness', 'Liveness'];
+            const values = [
+                features.danceability,
+                features.energy,
+                features.acousticness,
+                features.valence,
+                features.instrumentalness,
+                features.liveness
+            ];
+
+            container.innerHTML = `
+                <div class="audio-profile">
+                    <canvas id="audioRadarChart"></canvas>
+                    <div class="audio-legend">
+                        <div class="audio-legend-item"><span class="audio-legend-dot"></span> Danceability: ${features.danceability}%</div>
+                        <div class="audio-legend-item"><span class="audio-legend-dot"></span> Energy: ${features.energy}%</div>
+                        <div class="audio-legend-item"><span class="audio-legend-dot"></span> Acousticness: ${features.acousticness}%</div>
+                        <div class="audio-legend-item"><span class="audio-legend-dot"></span> Valence (Mood): ${features.valence}%</div>
+                        <div class="audio-legend-item"><span class="audio-legend-dot"></span> Instrumentalness: ${features.instrumentalness}%</div>
+                        <div class="audio-legend-item"><span class="audio-legend-dot"></span> Liveness: ${features.liveness}%</div>
+                    </div>
+                </div>
+            `;
+
+            const ctx = document.getElementById('audioRadarChart').getContext('2d');
+            audioProfileChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: 'rgba(0, 255, 255, 0.2)',
+                        borderColor: chartColors.cyan,
+                        borderWidth: 2,
+                        pointBackgroundColor: chartColors.magenta,
+                        pointBorderColor: chartColors.magenta,
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                display: false
+                            },
+                            grid: {
+                                color: 'rgba(0, 255, 255, 0.15)'
+                            },
+                            angleLines: {
+                                color: 'rgba(0, 255, 255, 0.15)'
+                            },
+                            pointLabels: {
+                                color: '#888899',
+                                font: { family: 'VT323', size: 11 }
+                            }
+                        }
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Failed to load audio profile:', error);
+            container.innerHTML = '<p class="empty-state">Failed to load data</p>';
+        }
+    }
+
+    // ===============================================
+    // Listening Patterns
+    // ===============================================
+    async function loadListeningPatterns() {
+        const container = document.getElementById('patterns-container');
+        try {
+            const response = await fetch('/tools/spotify/api/recent');
+            const data = await response.json();
+
+            if (!data.items || data.items.length === 0) {
+                container.innerHTML = '<p class="empty-state">No recent data</p>';
+                return;
+            }
+
+            // Day of week breakdown
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const dayData = new Array(7).fill(0);
+            const hourData = new Array(24).fill(0);
+
+            data.items.forEach(item => {
+                const date = new Date(item.played_at);
+                dayData[date.getDay()]++;
+                hourData[date.getHours()]++;
+            });
+
+            const maxDay = Math.max(...dayData);
+
+            // Find peak hours
+            const peakHours = hourData
+                .map((count, hour) => ({ hour, count }))
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 3);
+
+            container.innerHTML = `
+                <div class="patterns-grid">
+                    <div class="pattern-section">
+                        <h4>By Day of Week</h4>
+                        <div class="day-bars">
+                            ${days.map((day, i) => `
+                                <div class="day-bar-row">
+                                    <span class="day-bar-label">${day}</span>
+                                    <div class="day-bar-container">
+                                        <div class="day-bar" style="width: ${maxDay ? (dayData[i] / maxDay * 100) : 0}%"></div>
+                                    </div>
+                                    <span class="day-bar-value">${dayData[i]}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div class="pattern-section">
+                        <h4>Peak Hours</h4>
+                        <div class="peak-hours">
+                            ${peakHours.map((peak, i) => `
+                                <div class="peak-hour-item">
+                                    <span class="peak-hour-time">${String(peak.hour).padStart(2, '0')}:00</span>
+                                    <div class="peak-hour-info">
+                                        <span class="peak-hour-count">${peak.count} tracks</span><br>
+                                        ${i === 0 ? 'Most active hour' : `#${i + 1} peak`}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        } catch (error) {
+            console.error('Failed to load patterns:', error);
+            container.innerHTML = '<p class="empty-state">Failed to load data</p>';
         }
     }
 
@@ -187,7 +354,7 @@
     }
 
     // ===============================================
-    // Listening Timeline Heatmap
+    // Timeline Heatmap
     // ===============================================
     async function loadHeatmap() {
         const container = document.getElementById('heatmap-container');
@@ -200,7 +367,6 @@
                 return;
             }
 
-            // Build heatmap data: 7 days x 24 hours
             const heatmapData = {};
             const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -212,19 +378,14 @@
                 heatmapData[key] = (heatmapData[key] || 0) + 1;
             });
 
-            // Find max for scaling
             const maxCount = Math.max(...Object.values(heatmapData), 1);
 
-            // Build grid HTML
             let html = '<div class="heatmap-grid">';
-
-            // Header row with hours
             html += '<div class="heatmap-header"></div>';
             for (let h = 0; h < 24; h++) {
                 html += `<div class="heatmap-header">${h}</div>`;
             }
 
-            // Data rows
             for (let d = 0; d < 7; d++) {
                 html += `<div class="heatmap-day-label">${days[d]}</div>`;
                 for (let h = 0; h < 24; h++) {
@@ -326,9 +487,8 @@
             },
             options: {
                 responsive: true,
-                plugins: {
-                    legend: { display: false }
-                },
+                maintainAspectRatio: true,
+                plugins: { legend: { display: false } },
                 scales: {
                     y: {
                         beginAtZero: true,
@@ -357,7 +517,7 @@
             return;
         }
 
-        container.innerHTML = tracks.slice(0, 10).map((track, i) => `
+        container.innerHTML = tracks.slice(0, 8).map((track, i) => `
             <div class="track-item">
                 <span class="track-rank">${String(i + 1).padStart(2, '0')}</span>
                 <img src="${track.album.images[2]?.url || ''}" alt="" class="track-cover">
@@ -372,13 +532,6 @@
     // ===============================================
     // Utilities
     // ===============================================
-    function formatTime(ms) {
-        const seconds = Math.floor(ms / 1000);
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
-    }
-
     function escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
@@ -399,14 +552,13 @@
     // ===============================================
     // Initial Load
     // ===============================================
-    loadNowPlaying();
     loadRecentData();
     loadTopData();
+    loadTasteEvolution();
+    loadAudioProfile();
+    loadListeningPatterns();
     loadGenres();
     loadHeatmap();
-
-    // Refresh now playing every 30 seconds
-    setInterval(loadNowPlaying, 30000);
 })();
 </script>
 {% endif %}
