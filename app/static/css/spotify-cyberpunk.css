@@ -68,9 +68,10 @@
 
 /* Tool page overrides */
 .spotify-cyberpunk .tool-page {
-    max-width: 1400px;
+    max-width: 1600px;
     position: relative;
     z-index: 1;
+    padding: 0 2rem;
 }
 
 /* Dashboard Grid Layout */

@@ -36,8 +36,8 @@ def create_app():
     from app.routes import news
     app.register_blueprint(news.bp)
 
-    # Register tools blueprint
-    from app.routes.tools import bp as tools_bp
-    app.register_blueprint(tools_bp)
+    # Register Spotify dashboard
+    from app.routes import spotify
+    app.register_blueprint(spotify.bp)
 
     return app

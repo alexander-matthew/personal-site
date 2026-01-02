@@ -15,19 +15,12 @@ def about():
 
 @bp.route('/projects')
 def projects():
-    # Sample projects - replace with database or config file later
     sample_projects = [
         {
-            'title': 'Project One',
-            'description': 'A sample project description.',
-            'link': '#',
-            'tags': ['Python', 'Flask']
+            'title': 'Spotify Dashboard',
+            'description': 'Cyberpunk-themed visualization of my Spotify listening habits, featuring taste evolution, audio profiles, and listening patterns.',
+            'link': '/projects/spotify',
+            'tags': ['Python', 'Spotify API', 'Data Viz']
         },
-        {
-            'title': 'Project Two',
-            'description': 'Another sample project.',
-            'link': '#',
-            'tags': ['JavaScript', 'API']
-        }
     ]
     return render_template('projects.html', projects=sample_projects)
