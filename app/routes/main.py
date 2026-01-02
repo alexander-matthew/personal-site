@@ -22,5 +22,11 @@ def projects():
             'link': '/projects/spotify',
             'tags': ['Python', 'Spotify API', 'Data Viz']
         },
+        {
+            'title': 'PCA & Lasso Explainer',
+            'description': 'Visual walkthrough of dimensionality reduction and feature selection, exploring the relationship between PCA and Lasso regression.',
+            'link': '/projects/pca-lasso',
+            'tags': ['Machine Learning', 'Statistics', 'Education']
+        },
     ]
     return render_template('projects.html', projects=sample_projects)

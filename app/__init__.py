@@ -40,4 +40,8 @@ def create_app():
     from app.routes import spotify
     app.register_blueprint(spotify.bp)
 
+    # Register PCA & Lasso explainer
+    from app.routes import pca_lasso
+    app.register_blueprint(pca_lasso.bp)
+
     return app
