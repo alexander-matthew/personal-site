@@ -1,0 +1,25 @@
+{#
+Data display card for plain HTML/CSS visualizations
+Usage: {% include 'tools/components/data_card.html' %}
+
+Variables:
+  - card_title: Card header (required)
+  - card_value: Main display value (required)
+  - card_subtitle: Optional subtitle/label
+  - card_trend: Optional trend indicator ('up', 'down', 'neutral')
+  - card_color: Optional accent color ('primary', 'success', 'warning')
+#}
+<div class="data-card {% if card_color %}data-card--{{ card_color }}{% endif %}">
+    <h4 class="data-card__title">{{ card_title }}</h4>
+    <div class="data-card__value">
+        {{ card_value }}
+        {% if card_trend %}
+        <span class="data-card__trend data-card__trend--{{ card_trend }}">
+            {% if card_trend == 'up' %}&uarr;{% elif card_trend == 'down' %}&darr;{% else %}&mdash;{% endif %}
+        </span>
+        {% endif %}
+    </div>
+    {% if card_subtitle %}
+    <p class="data-card__subtitle">{{ card_subtitle }}</p>
+    {% endif %}
+</div>

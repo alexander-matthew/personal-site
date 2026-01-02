@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block head %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tools.css') }}">
+{% block tool_head %}{% endblock %}
+{% endblock %}
+
+{% block content %}
+<div class="tool-page">
+    <header class="tool-header">
+        <a href="{{ url_for('tools.index') }}" class="back-link">&larr; All Tools</a>
+        <h1>{% block tool_title %}Tool{% endblock %}</h1>
+        <p class="tool-description">{% block tool_description %}{% endblock %}</p>
+    </header>
+
+    <div class="tool-content">
+        {% block tool_content %}{% endblock %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+{% block tool_scripts %}{% endblock %}
+{% endblock %}

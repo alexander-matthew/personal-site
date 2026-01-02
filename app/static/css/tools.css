@@ -1,0 +1,359 @@
+/* ===============================================
+   Tools Framework Styles
+   =============================================== */
+
+/* Additional CSS variables for tools */
+:root {
+    --chart-color-1: #2563eb;
+    --chart-color-2: #16a34a;
+    --chart-color-3: #dc2626;
+    --chart-color-4: #9333ea;
+    --chart-color-5: #ea580c;
+    --success-color: #16a34a;
+    --warning-color: #eab308;
+    --danger-color: #dc2626;
+}
+
+/* Section intro */
+.section-intro {
+    color: var(--text-light);
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
+/* Tools Grid Layout */
+.tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Tool Card */
+.tool-card {
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    transition: box-shadow 0.2s, transform 0.2s;
+    position: relative;
+}
+
+.tool-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.tool-card h2 {
+    margin: 0.75rem 0 0.5rem;
+    font-size: 1.25rem;
+}
+
+.tool-card h2 a {
+    color: var(--text-color);
+    text-decoration: none;
+}
+
+.tool-card h2 a:hover {
+    color: var(--primary-color);
+}
+
+.tool-card p {
+    color: var(--text-light);
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.tool-icon {
+    width: 48px;
+    height: 48px;
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-color);
+}
+
+.auth-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background-color: var(--bg-secondary);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: var(--text-light);
+}
+
+/* Tool Page Layout */
+.tool-page {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.tool-header {
+    margin-bottom: 2rem;
+}
+
+.tool-header h1 {
+    margin: 0.5rem 0;
+}
+
+.tool-description {
+    color: var(--text-light);
+    font-size: 1.1rem;
+}
+
+.back-link {
+    color: var(--text-light);
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.back-link:hover {
+    color: var(--primary-color);
+}
+
+/* Chart Container */
+.chart-container {
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    min-height: 300px;
+}
+
+.chart-title {
+    font-size: 1rem;
+    color: var(--text-light);
+    margin-bottom: 1rem;
+    font-weight: 500;
+}
+
+/* Data Cards Grid */
+.data-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+/* Data Card Component */
+.data-card {
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 1.25rem;
+    text-align: center;
+}
+
+.data-card__title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-light);
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.data-card__value {
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.data-card__subtitle {
+    font-size: 0.875rem;
+    color: var(--text-light);
+    margin-top: 0.25rem;
+}
+
+.data-card__trend {
+    font-size: 1rem;
+}
+
+.data-card__trend--up {
+    color: var(--success-color);
+}
+
+.data-card__trend--down {
+    color: var(--danger-color);
+}
+
+.data-card__trend--neutral {
+    color: var(--text-light);
+}
+
+/* Color variants */
+.data-card--primary {
+    border-left: 4px solid var(--primary-color);
+}
+
+.data-card--success {
+    border-left: 4px solid var(--success-color);
+}
+
+.data-card--warning {
+    border-left: 4px solid var(--warning-color);
+}
+
+/* Loading States */
+.loading-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+}
+
+.loading-spinner::after {
+    content: '';
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border-color);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Auth Required State */
+.auth-required {
+    text-align: center;
+    padding: 3rem;
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+}
+
+.auth-required h3 {
+    margin-bottom: 1rem;
+}
+
+.auth-required p {
+    color: var(--text-light);
+    margin-bottom: 1.5rem;
+}
+
+.auth-button {
+    display: inline-block;
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.auth-button:hover {
+    background-color: #1d4ed8;
+    color: white;
+}
+
+/* Time Range Selector */
+.time-range-selector {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.time-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+}
+
+.time-btn:hover {
+    border-color: var(--primary-color);
+}
+
+.time-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+/* Tracks List */
+.tracks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.track-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+}
+
+.track-rank {
+    width: 24px;
+    text-align: center;
+    font-weight: 600;
+    color: var(--text-light);
+}
+
+.track-cover {
+    width: 48px;
+    height: 48px;
+    border-radius: 4px;
+    object-fit: cover;
+}
+
+.track-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.track-name {
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.track-artist {
+    font-size: 0.875rem;
+    color: var(--text-light);
+}
+
+/* Empty state */
+.empty-state {
+    text-align: center;
+    color: var(--text-light);
+    padding: 3rem;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .tools-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .data-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .data-card__value {
+        font-size: 1.5rem;
+    }
+
+    .time-range-selector {
+        justify-content: center;
+    }
+}

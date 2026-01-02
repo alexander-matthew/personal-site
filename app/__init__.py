@@ -1,5 +1,9 @@
 import os
 from flask import Flask
+from dotenv import load_dotenv
+
+# Load .env file for local development (no-op if file doesn't exist)
+load_dotenv()
 
 
 # Global site variables - easy to update in one place
@@ -31,5 +35,9 @@ def create_app():
     # Register news routes
     from app.routes import news
     app.register_blueprint(news.bp)
+
+    # Register tools blueprint
+    from app.routes.tools import bp as tools_bp
+    app.register_blueprint(tools_bp)
 
     return app

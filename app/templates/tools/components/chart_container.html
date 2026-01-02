@@ -1,0 +1,15 @@
+{#
+Chart.js container component
+Usage: {% include 'tools/components/chart_container.html' %}
+
+Variables:
+  - chart_id: Unique ID for the canvas (required)
+  - chart_title: Optional title above chart
+  - chart_height: Height in pixels (default: 400)
+#}
+<div class="chart-container" {% if chart_height %}style="height: {{ chart_height }}px"{% endif %}>
+    {% if chart_title %}
+    <h3 class="chart-title">{{ chart_title }}</h3>
+    {% endif %}
+    <canvas id="{{ chart_id }}"></canvas>
+</div>

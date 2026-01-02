@@ -1,0 +1,413 @@
+{% extends "tools/base_tool.html" %}
+
+{% block tool_title %}Spotify Listening Trends{% endblock %}
+{% block tool_description %}Visualize your listening habits and discover patterns in your music taste.{% endblock %}
+
+{% block tool_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/spotify-cyberpunk.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block tool_content %}
+<div class="spotify-cyberpunk">
+{% if not is_configured %}
+<div class="auth-required">
+    <h3>// SYSTEM OFFLINE</h3>
+    <p>Spotify API credentials not configured. Set SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET to enable this module.</p>
+</div>
+{% elif not is_authenticated %}
+<div class="auth-required">
+    <h3>// ACCESS REQUIRED</h3>
+    <p>Initialize connection to Spotify network to access your listening data.</p>
+    <a href="{{ url_for('tools.spotify_auth') }}" class="auth-button">
+        &gt; CONNECT_SPOTIFY
+    </a>
+</div>
+{% else %}
+
+<!-- Now Playing Widget -->
+<div id="now-playing-container"></div>
+
+<!-- Stats Overview -->
+<div class="data-cards">
+    <div class="data-card data-card--primary" id="stat-tracks">
+        <h4 class="data-card__title">Recent Tracks</h4>
+        <div class="data-card__value">--</div>
+    </div>
+    <div class="data-card data-card--success" id="stat-artists">
+        <h4 class="data-card__title">Unique Artists</h4>
+        <div class="data-card__value">--</div>
+    </div>
+    <div class="data-card" id="stat-top-artist">
+        <h4 class="data-card__title">Top Artist</h4>
+        <div class="data-card__value" style="font-size: 1rem;">--</div>
+    </div>
+    <div class="data-card" id="stat-top-track">
+        <h4 class="data-card__title">Most Played</h4>
+        <div class="data-card__value" style="font-size: 1rem;">--</div>
+    </div>
+</div>
+
+<!-- Listening Timeline Heatmap -->
+<div class="cyber-card timeline-heatmap">
+    <h3 class="cyber-card-title">// Listening Timeline</h3>
+    <div id="heatmap-container">
+        <div class="loading-spinner"></div>
+    </div>
+</div>
+
+<!-- Genre Breakdown -->
+<div class="cyber-card genre-breakdown">
+    <h3 class="cyber-card-title">// Genre Analysis</h3>
+    <div id="genre-container">
+        <div class="loading-spinner"></div>
+    </div>
+</div>
+
+<!-- Listening Activity Chart -->
+<div class="chart-container">
+    <h3 class="chart-title">// Activity by Hour</h3>
+    <canvas id="activityChart"></canvas>
+</div>
+
+<!-- Time Range Selector -->
+<div class="time-range-selector">
+    <button class="time-btn active" data-range="short_term">&gt; 4_WEEKS</button>
+    <button class="time-btn" data-range="medium_term">&gt; 6_MONTHS</button>
+    <button class="time-btn" data-range="long_term">&gt; ALL_TIME</button>
+</div>
+
+<!-- Top Tracks List -->
+<h3>// Top Tracks</h3>
+<div id="tracks-list" class="tracks-list">
+    <div class="loading-spinner"></div>
+</div>
+
+<p style="text-align: center; margin-top: 2rem;">
+    <a href="{{ url_for('tools.spotify_logout') }}" class="back-link">&gt; DISCONNECT_SESSION</a>
+</p>
+{% endif %}
+</div>
+{% endblock %}
+
+{% block tool_scripts %}
+{% if is_authenticated %}
+<script>
+(function() {
+    const chartColors = {
+        cyan: '#00ffff',
+        magenta: '#ff00ff',
+        yellow: '#ffff00',
+        green: '#00ff88',
+        red: '#ff3366'
+    };
+    let activityChart = null;
+
+    // ===============================================
+    // Now Playing Widget
+    // ===============================================
+    async function loadNowPlaying() {
+        const container = document.getElementById('now-playing-container');
+        try {
+            const response = await fetch('/tools/spotify/api/now-playing');
+            const data = await response.json();
+
+            if (data.is_playing && data.track) {
+                const track = data.track;
+                const progressPercent = (track.progress_ms / track.duration_ms) * 100;
+                const currentTime = formatTime(track.progress_ms);
+                const totalTime = formatTime(track.duration_ms);
+
+                container.innerHTML = `
+                    <div class="now-playing">
+                        <div class="now-playing-art">
+                            <img src="${track.image || ''}" alt="${track.album}">
+                        </div>
+                        <div class="now-playing-info">
+                            <div class="now-playing-track glitch-text" data-text="${escapeHtml(track.name)}">${escapeHtml(track.name)}</div>
+                            <div class="now-playing-artist">${escapeHtml(track.artist)}</div>
+                            <div class="now-playing-progress">
+                                <div class="now-playing-progress-bar" style="width: ${progressPercent}%"></div>
+                            </div>
+                            <div class="now-playing-time">
+                                <span>${currentTime}</span>
+                                <span>${totalTime}</span>
+                            </div>
+                            <div class="equalizer">
+                                ${Array(8).fill('<div class="equalizer-bar"></div>').join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="now-playing-idle cyber-card">
+                        <p>// NO ACTIVE PLAYBACK DETECTED</p>
+                        <p style="font-size: 0.8rem; margin-top: 0.5rem;">Play something on Spotify to see it here</p>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Failed to load now playing:', error);
+            container.innerHTML = '';
+        }
+    }
+
+    // ===============================================
+    // Genre Breakdown
+    // ===============================================
+    async function loadGenres() {
+        const container = document.getElementById('genre-container');
+        try {
+            const response = await fetch('/tools/spotify/api/genres');
+            const data = await response.json();
+
+            if (data.genres && data.genres.length > 0) {
+                const barClasses = ['genre-bar-1', 'genre-bar-2', 'genre-bar-3', 'genre-bar-4', 'genre-bar-5'];
+                container.innerHTML = `
+                    <div class="genre-bars">
+                        ${data.genres.map((genre, i) => `
+                            <div class="genre-item">
+                                <span class="genre-name">${escapeHtml(genre.name)}</span>
+                                <div class="genre-bar-container">
+                                    <div class="genre-bar ${barClasses[i % barClasses.length]}" style="width: ${genre.percent}%"></div>
+                                </div>
+                                <span class="genre-percent">${genre.percent}%</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } else {
+                container.innerHTML = '<p class="empty-state">No genre data available</p>';
+            }
+        } catch (error) {
+            console.error('Failed to load genres:', error);
+            container.innerHTML = '<p class="empty-state">Failed to load genres</p>';
+        }
+    }
+
+    // ===============================================
+    // Listening Timeline Heatmap
+    // ===============================================
+    async function loadHeatmap() {
+        const container = document.getElementById('heatmap-container');
+        try {
+            const response = await fetch('/tools/spotify/api/recent');
+            const data = await response.json();
+
+            if (!data.items || data.items.length === 0) {
+                container.innerHTML = '<p class="empty-state">No recent listening data</p>';
+                return;
+            }
+
+            // Build heatmap data: 7 days x 24 hours
+            const heatmapData = {};
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+            data.items.forEach(item => {
+                const date = new Date(item.played_at);
+                const day = date.getDay();
+                const hour = date.getHours();
+                const key = `${day}-${hour}`;
+                heatmapData[key] = (heatmapData[key] || 0) + 1;
+            });
+
+            // Find max for scaling
+            const maxCount = Math.max(...Object.values(heatmapData), 1);
+
+            // Build grid HTML
+            let html = '<div class="heatmap-grid">';
+
+            // Header row with hours
+            html += '<div class="heatmap-header"></div>';
+            for (let h = 0; h < 24; h++) {
+                html += `<div class="heatmap-header">${h}</div>`;
+            }
+
+            // Data rows
+            for (let d = 0; d < 7; d++) {
+                html += `<div class="heatmap-day-label">${days[d]}</div>`;
+                for (let h = 0; h < 24; h++) {
+                    const count = heatmapData[`${d}-${h}`] || 0;
+                    const level = count === 0 ? 0 : Math.min(4, Math.ceil((count / maxCount) * 4));
+                    html += `
+                        <div class="heatmap-cell" data-level="${level}">
+                            <div class="heatmap-tooltip">${count} track${count !== 1 ? 's' : ''}</div>
+                        </div>
+                    `;
+                }
+            }
+
+            html += '</div>';
+            container.innerHTML = html;
+        } catch (error) {
+            console.error('Failed to load heatmap:', error);
+            container.innerHTML = '<p class="empty-state">Failed to load timeline</p>';
+        }
+    }
+
+    // ===============================================
+    // Recent Data & Stats
+    // ===============================================
+    async function loadRecentData() {
+        try {
+            const response = await fetch('/tools/spotify/api/recent');
+            const data = await response.json();
+
+            if (data.items) {
+                updateStats(data.items);
+                renderActivityChart(data.items);
+            }
+        } catch (error) {
+            console.error('Failed to load recent data:', error);
+        }
+    }
+
+    // ===============================================
+    // Top Data
+    // ===============================================
+    async function loadTopData(timeRange = 'short_term') {
+        try {
+            const response = await fetch(`/tools/spotify/api/top/${timeRange}`);
+            const data = await response.json();
+
+            if (data.artists && data.artists.items) {
+                updateTopArtist(data.artists.items);
+            }
+            if (data.tracks && data.tracks.items) {
+                renderTracksList(data.tracks.items);
+                updateTopTrack(data.tracks.items);
+            }
+        } catch (error) {
+            console.error('Failed to load top data:', error);
+        }
+    }
+
+    function updateStats(items) {
+        const uniqueArtists = new Set(items.map(i => i.track.artists[0].name));
+        document.querySelector('#stat-tracks .data-card__value').textContent = items.length;
+        document.querySelector('#stat-artists .data-card__value').textContent = uniqueArtists.size;
+    }
+
+    function updateTopArtist(artists) {
+        if (artists.length > 0) {
+            document.querySelector('#stat-top-artist .data-card__value').textContent = artists[0].name;
+        }
+    }
+
+    function updateTopTrack(tracks) {
+        if (tracks.length > 0) {
+            document.querySelector('#stat-top-track .data-card__value').textContent = tracks[0].name;
+        }
+    }
+
+    function renderActivityChart(items) {
+        const hourData = new Array(24).fill(0);
+        items.forEach(item => {
+            const hour = new Date(item.played_at).getHours();
+            hourData[hour]++;
+        });
+
+        const ctx = document.getElementById('activityChart').getContext('2d');
+        if (activityChart) activityChart.destroy();
+
+        activityChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: hourData.map((_, i) => `${i}:00`),
+                datasets: [{
+                    label: 'Tracks',
+                    data: hourData,
+                    backgroundColor: chartColors.cyan,
+                    borderColor: chartColors.cyan,
+                    borderWidth: 1,
+                    borderRadius: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0, 255, 255, 0.1)' },
+                        ticks: { color: '#888899', font: { family: 'VT323' } }
+                    },
+                    x: {
+                        grid: { color: 'rgba(0, 255, 255, 0.05)' },
+                        ticks: {
+                            color: '#888899',
+                            font: { family: 'VT323' },
+                            callback: function(val, index) {
+                                return index % 4 === 0 ? this.getLabelForValue(val) : '';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderTracksList(tracks) {
+        const container = document.getElementById('tracks-list');
+        if (!tracks || tracks.length === 0) {
+            container.innerHTML = '<p class="empty-state">No tracks found.</p>';
+            return;
+        }
+
+        container.innerHTML = tracks.slice(0, 10).map((track, i) => `
+            <div class="track-item">
+                <span class="track-rank">${String(i + 1).padStart(2, '0')}</span>
+                <img src="${track.album.images[2]?.url || ''}" alt="" class="track-cover">
+                <div class="track-info">
+                    <span class="track-name">${escapeHtml(track.name)}</span>
+                    <span class="track-artist">${escapeHtml(track.artists[0].name)}</span>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // ===============================================
+    // Utilities
+    // ===============================================
+    function formatTime(ms) {
+        const seconds = Math.floor(ms / 1000);
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // ===============================================
+    // Event Listeners
+    // ===============================================
+    document.querySelectorAll('.time-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            loadTopData(e.target.dataset.range);
+        });
+    });
+
+    // ===============================================
+    // Initial Load
+    // ===============================================
+    loadNowPlaying();
+    loadRecentData();
+    loadTopData();
+    loadGenres();
+    loadHeatmap();
+
+    // Refresh now playing every 30 seconds
+    setInterval(loadNowPlaying, 30000);
+})();
+</script>
+{% endif %}
+{% endblock %}
