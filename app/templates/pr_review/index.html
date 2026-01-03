@@ -383,75 +383,40 @@
 <header class="tool-header">
     <h1>PR Review Tool</h1>
     <p class="subtitle">Automate code review for firm-specific standards and style guidelines</p>
+    <a href="https://github.com/alexander-matthew/personal-site/tree/feature/pr-review-tool"
+       class="github-link"
+       target="_blank"
+       rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+        </svg>
+        View on GitHub
+    </a>
 </header>
 
 <section class="section">
-    <h2>The Problem</h2>
+    <h2>Why I Built This</h2>
     <p>
-        Senior developers spend hours reviewing junior code for the same issues: inconsistent naming conventions,
-        missing error handling patterns, non-standard imports. These aren't bugs—they're <strong>style and convention violations</strong>
-        that every team documents but nobody remembers.
+        I spent a few hours each week reviewing junior developers' pull requests. While it's important to have
+        an experienced team member review business logic, I found nitpicking code style and variable naming
+        to be tedious.
     </p>
     <p>
-        This tool encodes your team's bespoke standards into automated reviews, freeing senior developers
-        to focus on architecture and logic rather than pointing out the same style issues repeatedly.
+        This tool helped in two ways. First, it forced me to clearly define our standards—no more tribal knowledge.
+        Second, it provides a quick first pass for basic conventions, reducing the context switching and mental
+        load required to review large amounts of code. I can focus on what matters: architecture and logic.
     </p>
-
-    <div class="value-props">
-        <div class="value-card">
-            <div class="metric">80%</div>
-            <div class="label">Reduction in style-related review comments</div>
-        </div>
-        <div class="value-card">
-            <div class="metric">2-3 hrs</div>
-            <div class="label">Saved per senior dev per week</div>
-        </div>
-        <div class="value-card">
-            <div class="metric">100%</div>
-            <div class="label">Consistency in standards enforcement</div>
-        </div>
-    </div>
 </section>
 
 <section class="section">
-    <h2>How It Works</h2>
-
-    <div class="workflow-steps">
-        <div class="workflow-step">
-            <div class="step-number">1</div>
-            <div class="step-label">Define Standards</div>
-        </div>
-        <span class="workflow-arrow">→</span>
-        <div class="workflow-step">
-            <div class="step-number">2</div>
-            <div class="step-label">Submit PR</div>
-        </div>
-        <span class="workflow-arrow">→</span>
-        <div class="workflow-step">
-            <div class="step-number">3</div>
-            <div class="step-label">Automated Review</div>
-        </div>
-        <span class="workflow-arrow">→</span>
-        <div class="workflow-step">
-            <div class="step-number">4</div>
-            <div class="step-label">Actionable Feedback</div>
-        </div>
-    </div>
-
-    <div class="highlight-box">
-        <p>
-            Your team's standards live in a <strong>CLAUDE.md</strong> file at the repo root.
-            The tool reads these guidelines and enforces them automatically on every PR.
-        </p>
-    </div>
-</section>
-
-<section class="section">
-    <h2>Example: CLAUDE.md Standards File</h2>
-    <p>Define your team's conventions in plain English. The tool understands context and applies rules intelligently.</p>
+    <h2>The Standards File</h2>
+    <p>
+        Define your team's conventions in a <code>code_style.md</code> file. The code-review skill reads this
+        and checks PRs against your rules.
+    </p>
 
     <div class="code-header">
-        <span class="filename">CLAUDE.md</span>
+        <span class="filename">code_style.md</span>
         <span class="lang">markdown</span>
     </div>
     <div class="code-block">
@@ -501,7 +466,7 @@
                 <span class="issue-description">Bare except clause violates error handling standards</span>
                 <span class="issue-file">src/auth/handlers.py:45</span>
                 <div class="issue-suggestion">
-                    <strong>CLAUDE.md says:</strong> "Never use bare except clauses. Always log exceptions before re-raising."
+                    <strong>code_style.md:</strong> "Never use bare except clauses. Always log exceptions before re-raising."
                 </div>
             </div>
             <div class="issue-item">
@@ -509,7 +474,7 @@
                 <span class="issue-description">API response missing required request_id field</span>
                 <span class="issue-file">src/auth/handlers.py:67</span>
                 <div class="issue-suggestion">
-                    <strong>CLAUDE.md says:</strong> "Include request_id in all responses"
+                    <strong>code_style.md:</strong> "Include request_id in all responses"
                 </div>
             </div>
         </div>
@@ -621,35 +586,83 @@
 </section>
 
 <section class="section">
-    <h2>Usage</h2>
+    <h2>The Claude Skill</h2>
+    <p>
+        The <code>code-review</code> skill is a Claude Code plugin that reads your <code>code_style.md</code>
+        and reviews PRs against those standards. It integrates directly with the GitHub CLI.
+    </p>
 
-    <div class="command-block">
-        <code>
-<span class="comment"># Review a PR for standards compliance</span><br>
-/pr-review-enhanced:request-changes 123<br><br>
-<span class="comment"># Auto-fix style issues and push</span><br>
-/pr-review-enhanced:fix-pr 123<br><br>
-<span class="comment"># Add inline feedback on specific lines</span><br>
-/pr-review-enhanced:line-comment 123 src/auth.py 45 "Use snake_case here"
-        </code>
+    <div class="code-header">
+        <span class="filename">Example: Invoking the skill</span>
+        <span class="lang">terminal</span>
+    </div>
+    <div class="code-block">
+<pre><span class="comment"># Review PR #42 against code_style.md</span>
+> Review PR 42 for our code standards
+
+<span class="comment"># Claude reads code_style.md, fetches the PR diff, and reports violations</span>
+<span class="string">Reading code_style.md...</span>
+<span class="string">Fetching PR #42 diff...</span>
+
+<span class="function">## Style Review for PR #42</span>
+
+<span class="keyword">STYLE</span> `src/auth.py:23` - Variable `userName` should be `user_name`
+<span class="keyword">PATTERN</span> `src/api.py:45` - Missing error logging before re-raise
+
+<span class="string">Found 2 violations. Would you like me to comment on the PR?</span></pre>
     </div>
 </section>
 
 <section class="section">
-    <h2>Get the Code</h2>
+    <h2>GitHub CLI Integration</h2>
     <p>
-        The plugin source is available on GitHub. Clone it, customize the standards for your team,
-        and start saving review time.
+        The skill uses the GitHub CLI (<code>gh</code>) to interact with PRs programmatically—viewing diffs,
+        adding comments, and submitting reviews.
     </p>
 
-    <a href="https://github.com/alexander-matthew/personal-site/tree/feature/pr-review-tool"
-       class="github-link"
-       target="_blank"
-       rel="noopener noreferrer">
-        <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-        </svg>
-        View on GitHub
-    </a>
+    <div class="code-header">
+        <span class="filename">GitHub CLI commands used</span>
+        <span class="lang">bash</span>
+    </div>
+    <div class="code-block">
+<pre><span class="comment"># View PR details</span>
+gh pr view 42 --json title,state,additions,deletions
+
+<span class="comment"># Get the diff to review</span>
+gh pr diff 42
+
+<span class="comment"># Add a general comment to the PR</span>
+gh pr comment 42 --body <span class="string">"Style review: found 2 violations"</span>
+
+<span class="comment"># Add an inline comment on a specific line</span>
+gh api repos/{owner}/{repo}/pulls/42/comments \
+  -f body=<span class="string">"Use snake_case here"</span> \
+  -f commit_id=<span class="string">"$(gh pr view 42 --json headRefOid -q .headRefOid)"</span> \
+  -f path=<span class="string">"src/auth.py"</span> \
+  -F line=23
+
+<span class="comment"># Submit a formal review requesting changes</span>
+gh pr review 42 --request-changes --body <span class="string">"Please fix style violations"</span>
+
+<span class="comment"># Approve after fixes</span>
+gh pr review 42 --approve</pre>
+    </div>
 </section>
+
+<section class="section">
+    <h2>Commands</h2>
+    <p>The plugin provides these slash commands:</p>
+
+    <div class="command-block">
+        <code>
+<span class="comment"># Review and request changes</span><br>
+/pr-review-enhanced:request-changes 42<br><br>
+<span class="comment"># Add inline comment on specific line</span><br>
+/pr-review-enhanced:line-comment 42 src/auth.py 23 "Use snake_case"<br><br>
+<span class="comment"># Auto-fix issues and push (with preview first)</span><br>
+/pr-review-enhanced:fix-pr 42 --dry-run
+        </code>
+    </div>
+</section>
+
 {% endblock %}
