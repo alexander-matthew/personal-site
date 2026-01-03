@@ -99,6 +99,32 @@ python main.py
 ```
 App runs at http://localhost:5000 with auto-reload.
 
+### Parallel Development with Git Worktrees
+
+When working on multiple features simultaneously, use git worktrees to run isolated Claude Code sessions:
+
+```bash
+# Create a worktree for a new feature
+git worktree add ../Personal-Site-feature-name -b feature/feature-name
+
+# Set up the worktree
+cd ../Personal-Site-feature-name
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# Run Claude in this worktree
+claude
+```
+
+Name your Claude sessions with `/rename feature-name` for easy resumption later (`claude --resume feature-name`).
+
+Worktrees persist across sessions - keep them alive while working on a feature. Clean up only after the PR is merged:
+```bash
+git worktree list                              # See all active worktrees
+git worktree remove ../Personal-Site-feature-name  # Remove after PR merge
+```
+
 ## Deployment
 
 Set environment variables on Heroku:
