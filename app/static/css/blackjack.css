@@ -118,38 +118,28 @@
 /* ===== Felt Text Arc ===== */
 .felt-text {
     position: absolute;
-    top: 50%;
+    top: 25px;
     left: 50%;
-    transform: translate(-50%, -50%);
-    width: 320px;
-    height: 160px;
-    border: 3px solid rgba(212, 175, 55, 0.4);
-    border-bottom: none;
-    border-radius: 160px 160px 0 0;
+    transform: translateX(-50%);
     display: flex;
-    flex-direction: column;
     align-items: center;
-    padding-top: 20px;
-    box-sizing: border-box;
+    justify-content: center;
+    gap: 2rem;
+    padding: 8px 30px;
+    border: 2px solid rgba(212, 175, 55, 0.35);
+    border-radius: 0 0 80px 80px;
+    background: rgba(0, 0, 0, 0.15);
     pointer-events: none;
 }
 
 .felt-text span {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     font-weight: bold;
     text-transform: uppercase;
-    letter-spacing: 1.5px;
-    color: rgba(212, 175, 55, 0.6);
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+    letter-spacing: 1px;
+    color: rgba(212, 175, 55, 0.7);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
     white-space: nowrap;
-}
-
-.felt-text span:first-child {
-    margin-bottom: 4px;
-}
-
-.felt-divider {
-    display: none;
 }
 
 /* ===== Hand Areas ===== */
