@@ -119,6 +119,7 @@
 .dealer-area, .player-area {
     text-align: center;
     padding: 0.25rem 0;
+    min-height: 130px; /* Prevent layout shift when cards are dealt */
 }
 
 .hand-label {
@@ -247,8 +248,9 @@
 }
 
 .player-hand.active {
-    background: rgba(212, 175, 55, 0.1);
-    box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+    background: rgba(212, 175, 55, 0.15);
+    border: 3px solid var(--gold);
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.5), inset 0 0 15px rgba(212, 175, 55, 0.1);
 }
 
 /* ===== Action Buttons ===== */
@@ -418,6 +420,13 @@
     to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
 }
 
+/* Default style for multi-hand results */
+.result-message {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(30, 30, 30, 0.95));
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
 .result-message.win { background: linear-gradient(135deg, #4caf50, #2e7d32); color: white; }
 .result-message.lose { background: linear-gradient(135deg, #f44336, #c62828); color: white; }
 .result-message.push { background: linear-gradient(135deg, #607d8b, #455a64); color: white; }
@@ -580,6 +589,18 @@
 .mistake-details .played { color: var(--button-red); }
 .mistake-details .optimal { color: var(--button-green); }
 
+.ev-badge {
+    display: inline-block;
+    padding: 0.15rem 0.4rem;
+    background: rgba(212, 175, 55, 0.2);
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: normal;
+    margin-left: 0.5rem;
+}
+
 .no-mistakes {
     text-align: center;
     color: var(--gold);
@@ -662,6 +683,13 @@
     border-radius: 4px;
     cursor: pointer;
     font-size: 0.7rem;
+}
+
+/* ===== Strategy Chart Table ===== */
+#strategy-chart table th,
+#strategy-chart table td:first-child {
+    color: white;
+    background: rgba(0, 0, 0, 0.4);
 }
 
 /* ===== Responsive: Stack on smaller screens ===== */

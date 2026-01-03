@@ -30,13 +30,13 @@
             </div>
 
             <!-- Result Message -->
-            <div id="result-message"></div>
+            <div id="result-message" style="display: none;"></div>
 
             <!-- Player Area -->
             <div class="player-area">
                 <div class="hand-label">Player</div>
                 <div class="player-hands" id="player-hands">
-                    <div class="player-hand active" data-hand="0">
+                    <div class="player-hand" data-hand="0">
                         <div class="cards" id="player-cards-0"></div>
                         <div class="hand-total" id="player-total-0"></div>
                     </div>
@@ -409,6 +409,9 @@
             const soft = isSoft(hand);
             const mistakeKey = `${soft ? 'Soft' : 'Hard'} ${total} vs ${dealerUpcard}`;
 
+            // Get EV for this hand
+            const ev = getHandEV(total, dealerUpcard, soft);
+
             // Check if this mistake already exists
             const existingMistake = stats.mistakes.find(m => m.hand === mistakeKey);
             if (existingMistake) {
@@ -419,6 +422,7 @@
                     played: playerAction,
                     optimal: optimalAction,
                     explanation: getActionExplanation(hand, dealerUpcard, optimalAction, playerAction),
+                    ev: ev,
                     count: 1
                 });
             }
@@ -539,7 +543,7 @@
 
         playerHands.forEach((hand, i) => {
             const handDiv = document.createElement('div');
-            handDiv.className = `player-hand ${i === currentHandIndex ? 'active' : ''}`;
+            handDiv.className = `player-hand ${playerHands.length > 1 && i === currentHandIndex ? 'active' : ''}`;
             handDiv.dataset.hand = i;
 
             const cardsDiv = document.createElement('div');
@@ -682,9 +686,11 @@
         if (stats.mistakes.length === 0) {
             mistakesList.innerHTML = '<div class="no-mistakes">No mistakes yet. Keep playing!</div>';
         } else {
-            mistakesList.innerHTML = stats.mistakes.slice(0, 10).map(m => `
+            mistakesList.innerHTML = stats.mistakes.slice(0, 10).map(m => {
+                const evDisplay = m.ev != null ? `${m.ev >= 0 ? "+" : ""}${(m.ev * 100).toFixed(1)}%` : "";
+                return `
                 <div class="mistake-item">
-                    <div class="mistake-hand">${m.hand} (${m.count}x)</div>
+                    <div class="mistake-hand">${m.hand} (${m.count}x)${evDisplay ? ` <span class="ev-badge">EV: ${evDisplay}</span>` : ''}</div>
                     <div class="mistake-details">
                         You played: <span class="played">${m.played}</span> |
                         Optimal: <span class="optimal">${m.optimal}</span>
@@ -693,7 +699,7 @@
                         ${m.explanation}
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
     }
 
@@ -729,6 +735,9 @@
         // Save this bet for re-up
         lastBet = currentBet;
 
+        // Hide any existing result message
+        document.getElementById('result-message').style.display = 'none';
+
         // Initialize
         deck = deck.length > 78 ? deck : createDeck();
         playerHands = [[]];
@@ -749,7 +758,9 @@
         renderDealerHand();
         renderPlayerHands(true);
 
-        startPlay();
+        // Delay startPlay until deal animation completes to avoid race condition
+        // when revealing dealer blackjack (4 cards * 300ms timing + buffer)
+        setTimeout(startPlay, TIMING.cardDeal * 2 + 100);
     }
 
     function startPlay() {
