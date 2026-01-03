@@ -687,7 +687,7 @@
             mistakesList.innerHTML = '<div class="no-mistakes">No mistakes yet. Keep playing!</div>';
         } else {
             mistakesList.innerHTML = stats.mistakes.slice(0, 10).map(m => {
-                const evDisplay = m.ev !== undefined ? (m.ev >= 0 ? '+' : '') + (m.ev * 100).toFixed(1) + '%' : '';
+                const evDisplay = m.ev != null ? `${m.ev >= 0 ? "+" : ""}${(m.ev * 100).toFixed(1)}%` : "";
                 return `
                 <div class="mistake-item">
                     <div class="mistake-hand">${m.hand} (${m.count}x)${evDisplay ? ` <span class="ev-badge">EV: ${evDisplay}</span>` : ''}</div>
