@@ -152,6 +152,34 @@ Note: Separate clones use more disk space and require independent fetch/pull ope
 
 Name your Claude sessions with `/rename feature-name` for easy resumption later (`claude --resume feature-name`).
 
+### Pre-commit Hooks
+
+For large tasks, use pre-commit hooks to ensure code quality before commits. Configure hooks in `.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "PreCommit": [
+      {
+        "command": "npm test",
+        "description": "Run tests before commit"
+      },
+      {
+        "command": "python -m pytest",
+        "description": "Run Python tests"
+      }
+    ]
+  }
+}
+```
+
+Common pre-commit checks for this project:
+- **Linting**: Run `flake8` or `ruff` on Python files
+- **Tests**: Run `pytest` for backend, `npm test` for JavaScript
+- **Type checking**: Run `mypy` if using type hints
+
+Claude Code will automatically run these hooks before each commit, preventing broken code from being committed.
+
 ## Deployment
 
 Set environment variables on Heroku:
