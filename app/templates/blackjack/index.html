@@ -49,10 +49,10 @@
             </div>
 
             <!-- Action Buttons -->
-            <div class="action-buttons" id="action-buttons" style="display: none;">
-                <button class="action-btn hit" id="hit-btn">Hit</button>
-                <button class="action-btn stand" id="stand-btn">Stand</button>
-                <button class="action-btn double" id="double-btn">Double</button>
+            <div class="action-buttons" id="action-buttons">
+                <button class="action-btn hit" id="hit-btn" disabled>Hit</button>
+                <button class="action-btn stand" id="stand-btn" disabled>Stand</button>
+                <button class="action-btn double" id="double-btn" disabled>Double</button>
                 <button class="action-btn split" id="split-btn" disabled>Split</button>
                 <button class="action-btn insurance" id="insurance-btn" disabled>Insurance</button>
             </div>
@@ -512,7 +512,7 @@
     }
 
     // ===== UI Rendering =====
-    function renderCard(card, container, animate = true) {
+    function renderCard(card, container, animate = true, zIndex = null) {
         const cardEl = document.createElement('div');
 
         if (card.faceDown) {
@@ -534,6 +534,10 @@
             `;
         }
 
+        if (zIndex !== null) {
+            cardEl.style.zIndex = zIndex;
+        }
+
         if (animate) {
             cardEl.classList.add('dealing');
         }
@@ -553,10 +557,12 @@
         const container = document.getElementById('dealer-cards');
         container.innerHTML = '';
         dealerHand.forEach((card, i) => {
+            // Face-down cards get z-index 0, face-up cards get incrementing z-index
+            const zIndex = card.faceDown ? 0 : (i + 1);
             if (animate) {
-                setTimeout(() => renderCard(card, container, true), i * TIMING.cardDeal);
+                setTimeout(() => renderCard(card, container, true, zIndex), i * TIMING.cardDeal);
             } else {
-                renderCard(card, container, false);
+                renderCard(card, container, false, zIndex);
             }
         });
 
@@ -573,7 +579,9 @@
 
     function addCardToDealer(card) {
         const container = document.getElementById('dealer-cards');
-        renderCard(card, container, true);
+        // New cards get z-index based on current hand size (they're always on top)
+        const zIndex = dealerHand.length;
+        renderCard(card, container, true, zIndex);
         updateDealerTotal();
     }
 
@@ -645,13 +653,28 @@
 
     function updateButtons() {
         const hand = playerHands[currentHandIndex];
-        if (!hand || !isPlaying) return;
+        if (!hand || !isPlaying) {
+            disableAllActionButtons();
+            return;
+        }
 
         const canDouble = hand.length === 2 && balance >= handBets[currentHandIndex];
         const canSplit = isPair(hand) && playerHands.length < 4 && balance >= handBets[currentHandIndex];
 
+        // Insurance: only on first decision, dealer shows Ace, haven't taken it yet
+        const dealerUpcard = getDealerUpcard();
+        const canInsurance = hand.length === 2 &&
+                             playerHands.length === 1 &&
+                             dealerUpcard?.rank === 'A' &&
+                             insuranceBet === 0 &&
+                             balance >= Math.floor(handBets[0] / 2);
+
+        // Enable hit and stand during play
+        document.getElementById('hit-btn').disabled = false;
+        document.getElementById('stand-btn').disabled = false;
         document.getElementById('double-btn').disabled = !canDouble;
         document.getElementById('split-btn').disabled = !canSplit;
+        document.getElementById('insurance-btn').disabled = !canInsurance;
 
         // Show hint if enabled
         if (document.getElementById('hint-mode').checked) {
@@ -675,7 +698,6 @@
     function updateBalanceDisplay() {
         document.getElementById('balance').textContent = balance;
         document.getElementById('current-bet').textContent = currentBet;
-        document.getElementById('deal-btn').disabled = currentBet === 0;
 
         // Update bet circle
         const betAmount = document.getElementById('bet-amount');
@@ -687,6 +709,9 @@
         const sessionEl = document.getElementById('session-result');
         sessionEl.textContent = (sessionPL >= 0 ? '+' : '') + '$' + sessionPL;
         sessionEl.style.color = sessionPL >= 0 ? '#4caf50' : '#f44336';
+
+        // Update betting controls (deal button, chips)
+        updateBettingControls();
     }
 
     function updateStatsDisplay() {
@@ -807,10 +832,9 @@
             return;
         }
 
-        // Show action buttons, hide betting zone
-        document.getElementById('action-buttons').style.display = 'flex';
-        document.getElementById('betting-zone').style.display = 'none';
+        // Enable action buttons, disable betting
         updateButtons();
+        updateBettingControls();
     }
 
     function hit() {
@@ -876,6 +900,26 @@
         }
     }
 
+    function takeInsurance() {
+        // Insurance costs half the original bet
+        insuranceBet = Math.floor(handBets[0] / 2);
+        balance -= insuranceBet;
+
+        // Track as a mistake (insurance is never optimal)
+        stats.totalDecisions++;
+        stats.mistakes.unshift({
+            hand: 'Insurance bet',
+            played: 'take insurance',
+            optimal: 'decline',
+            explanation: 'Insurance is never optimal. The expected value is always negative.',
+            count: 1
+        });
+        saveStats();
+
+        updateBalanceDisplay();
+        updateButtons(); // Disable insurance button now
+    }
+
     function moveToNextHand() {
         currentHandIndex++;
 
@@ -888,9 +932,14 @@
     }
 
     function dealerPlay() {
-        // Reveal dealer hole card (re-render without animation)
-        dealerHand[0].faceDown = false;
+        // Reveal dealer hole card (index 1)
+        dealerHand[1].faceDown = false;
         renderDealerHand(false);
+
+        // Check for insurance payout (dealer blackjack with Ace showing)
+        if (insuranceBet > 0 && isBlackjack(dealerHand)) {
+            balance += insuranceBet * 3; // Insurance pays 2:1 (original bet + 2x winnings)
+        }
 
         // Check if all player hands busted
         const allBusted = playerHands.every(h => calculateHand(h) > 21);
@@ -963,8 +1012,9 @@
         isPlaying = false;
         currentBet = 0;
 
-        document.getElementById('action-buttons').style.display = 'none';
-        document.getElementById('betting-zone').style.display = 'flex';
+        // Disable all action buttons
+        disableAllActionButtons();
+        updateBettingControls();
 
         updateBalanceDisplay();
         updateStatsDisplay();
@@ -975,6 +1025,25 @@
             startingBalance = 1000;
             alert('You\'re out of chips! Here\'s another $1000.');
         }
+    }
+
+    function disableAllActionButtons() {
+        document.getElementById('hit-btn').disabled = true;
+        document.getElementById('stand-btn').disabled = true;
+        document.getElementById('double-btn').disabled = true;
+        document.getElementById('split-btn').disabled = true;
+        document.getElementById('insurance-btn').disabled = true;
+    }
+
+    function updateBettingControls() {
+        const chipsDisabled = isPlaying;
+        document.querySelectorAll('.chip').forEach(chip => {
+            chip.style.opacity = chipsDisabled ? '0.4' : '1';
+            chip.style.pointerEvents = chipsDisabled ? 'none' : 'auto';
+            chip.draggable = !chipsDisabled;
+        });
+        document.getElementById('clear-bet').disabled = chipsDisabled;
+        document.getElementById('deal-btn').disabled = chipsDisabled || (currentBet === 0 && !(lastBet > 0 && lastBet <= balance));
     }
 
     // ===== Strategy Chart =====
@@ -1198,39 +1267,7 @@
         document.getElementById('stand-btn').addEventListener('click', stand);
         document.getElementById('double-btn').addEventListener('click', double);
         document.getElementById('split-btn').addEventListener('click', split);
-
-        // Insurance
-        document.getElementById('no-insurance').addEventListener('click', () => {
-            document.getElementById('insurance-modal').style.display = 'none';
-            trackDecision('no-insurance', [...playerHands[0]]);
-            startPlay();
-        });
-
-        document.getElementById('yes-insurance').addEventListener('click', () => {
-            document.getElementById('insurance-modal').style.display = 'none';
-            // Insurance is never optimal, track it as a mistake
-            const insuranceBet = Math.floor(handBets[0] / 2);
-            balance -= insuranceBet;
-
-            // Check if dealer has blackjack
-            dealerHand[0].faceDown = false;
-            if (isBlackjack(dealerHand)) {
-                balance += insuranceBet * 3; // Insurance pays 2:1
-            }
-            dealerHand[0].faceDown = true;
-
-            stats.totalDecisions++;
-            stats.mistakes.unshift({
-                hand: 'Insurance bet',
-                played: 'take insurance',
-                optimal: 'decline',
-                explanation: 'Insurance is never optimal. The expected value is always negative.',
-                count: 1
-            });
-            saveStats();
-
-            startPlay();
-        });
+        document.getElementById('insurance-btn').addEventListener('click', takeInsurance);
 
         // Hint toggle
         document.getElementById('hint-mode').addEventListener('change', () => {
