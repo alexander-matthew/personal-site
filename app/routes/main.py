@@ -28,5 +28,17 @@ def projects():
             'link': '/projects/pca-lasso',
             'tags': ['Machine Learning', 'Statistics', 'Education']
         },
+        {
+            'title': 'Blackjack Trainer',
+            'description': 'Practice blackjack with real-time feedback on optimal play. Tracks your decisions vs basic strategy and helps you learn from mistakes.',
+            'link': '/projects/blackjack',
+            'tags': ['Game', 'Strategy', 'Interactive']
+        },
+        {
+            'title': 'PR Review Tool',
+            'description': 'A Claude Code skill for automating code review of firm-specific standards and style guidelines, saving senior developers hours of review time.',
+            'link': '/projects/pr-review',
+            'tags': ['Claude Code', 'AI', 'Developer Tools']
+        },
     ]
     return render_template('projects.html', projects=sample_projects)
