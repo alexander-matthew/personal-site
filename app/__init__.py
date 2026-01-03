@@ -48,4 +48,8 @@ def create_app():
     from app.routes import pr_review
     app.register_blueprint(pr_review.bp)
 
+    # Register Sudoku game
+    from app.routes import sudoku
+    app.register_blueprint(sudoku.bp)
+
     return app

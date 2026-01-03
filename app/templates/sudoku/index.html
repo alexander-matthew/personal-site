@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}Sudoku - {{ site.name }}{% endblock %}
+
+{% block head %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/sudoku.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="sudoku-container">
+    <div class="game-header">
+        <h1>Sudoku</h1>
+        <div class="controls">
+            <div class="difficulty-selector">
+                <label for="difficulty">Difficulty:</label>
+                <select id="difficulty">
+                    <option value="easy">Easy</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="hard">Hard</option>
+                </select>
+            </div>
+            <button class="new-game-btn" id="new-game">New Game</button>
+        </div>
+    </div>
+
+    <div class="game-area">
+        <div class="sudoku-grid" id="sudoku-grid"></div>
+
+        <div class="number-buttons" id="number-buttons">
+            <button class="num-btn" data-value="1">1</button>
+            <button class="num-btn" data-value="2">2</button>
+            <button class="num-btn" data-value="3">3</button>
+            <button class="num-btn" data-value="4">4</button>
+            <button class="num-btn" data-value="5">5</button>
+            <button class="num-btn" data-value="6">6</button>
+            <button class="num-btn" data-value="7">7</button>
+            <button class="num-btn" data-value="8">8</button>
+            <button class="num-btn" data-value="9">9</button>
+            <button class="num-btn erase" data-value="0">Erase</button>
+        </div>
+    </div>
+
+    <div class="win-message" id="win-message">
+        <div class="win-content">
+            <h2>Congratulations!</h2>
+            <p>You solved the puzzle!</p>
+            <button id="play-again">Play Again</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/sudoku-engine.js') }}"></script>
+<script>
+(function() {
+    'use strict';
+
+    // ===== Game State =====
+    let currentPuzzle = null;
+    let currentSolution = null;
+    let userGrid = null;
+    let givenCells = null;
+    let selectedCell = null;
+
+    // ===== Initialize =====
+    function init() {
+        renderGrid();
+        setupEventListeners();
+        startNewGame();
+    }
+
+    function renderGrid() {
+        const container = document.getElementById('sudoku-grid');
+        container.innerHTML = '';
+
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.dataset.row = row;
+                cell.dataset.col = col;
+
+                if (col % 3 === 2 && col !== 8) cell.classList.add('box-right');
+                if (row % 3 === 2 && row !== 8) cell.classList.add('box-bottom');
+
+                container.appendChild(cell);
+            }
+        }
+    }
+
+    function startNewGame() {
+        const difficulty = document.getElementById('difficulty').value;
+        const { puzzle, solution } = generatePuzzle(difficulty);
+
+        currentPuzzle = puzzle;
+        currentSolution = solution;
+        userGrid = copyGrid(puzzle);
+        givenCells = new Set();
+
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                if (puzzle[row][col] !== 0) {
+                    givenCells.add(`${row}-${col}`);
+                }
+            }
+        }
+
+        updateDisplay();
+        document.getElementById('win-message').classList.remove('show');
+        selectedCell = null;
+    }
+
+    function updateDisplay() {
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                const cell = document.querySelector(
+                    `.cell[data-row="${row}"][data-col="${col}"]`
+                );
+                const value = userGrid[row][col];
+
+                cell.textContent = value === 0 ? '' : value;
+                cell.classList.remove('given', 'user-input', 'selected', 'error');
+
+                if (givenCells.has(`${row}-${col}`)) {
+                    cell.classList.add('given');
+                } else if (value !== 0) {
+                    cell.classList.add('user-input');
+
+                    if (!isValidPlacementForDisplay(row, col, value)) {
+                        cell.classList.add('error');
+                    }
+                }
+
+                if (selectedCell && selectedCell.row === row && selectedCell.col === col) {
+                    cell.classList.add('selected');
+                }
+            }
+        }
+    }
+
+    function isValidPlacementForDisplay(row, col, value) {
+        const temp = userGrid[row][col];
+        userGrid[row][col] = 0;
+        const valid = isValidPlacement(userGrid, row, col, value);
+        userGrid[row][col] = temp;
+        return valid;
+    }
+
+    function setupEventListeners() {
+        document.getElementById('sudoku-grid').addEventListener('click', (e) => {
+            if (e.target.classList.contains('cell')) {
+                selectCell(e.target);
+            }
+        });
+
+        document.querySelectorAll('.num-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (selectedCell) {
+                    enterNumber(parseInt(btn.dataset.value));
+                }
+            });
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (!selectedCell) return;
+
+            if (e.key >= '1' && e.key <= '9') {
+                enterNumber(parseInt(e.key));
+            } else if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') {
+                enterNumber(0);
+            } else if (e.key === 'ArrowUp') {
+                moveSelection(-1, 0);
+                e.preventDefault();
+            } else if (e.key === 'ArrowDown') {
+                moveSelection(1, 0);
+                e.preventDefault();
+            } else if (e.key === 'ArrowLeft') {
+                moveSelection(0, -1);
+                e.preventDefault();
+            } else if (e.key === 'ArrowRight') {
+                moveSelection(0, 1);
+                e.preventDefault();
+            }
+        });
+
+        document.getElementById('new-game').addEventListener('click', startNewGame);
+        document.getElementById('play-again').addEventListener('click', startNewGame);
+    }
+
+    function selectCell(cell) {
+        const row = parseInt(cell.dataset.row);
+        const col = parseInt(cell.dataset.col);
+
+        if (givenCells.has(`${row}-${col}`)) return;
+
+        selectedCell = { row, col };
+        updateDisplay();
+    }
+
+    function enterNumber(value) {
+        if (!selectedCell) return;
+
+        const { row, col } = selectedCell;
+
+        if (givenCells.has(`${row}-${col}`)) return;
+
+        userGrid[row][col] = value;
+        updateDisplay();
+
+        if (isComplete(userGrid)) {
+            document.getElementById('win-message').classList.add('show');
+        }
+    }
+
+    function moveSelection(rowDelta, colDelta) {
+        if (!selectedCell) return;
+
+        let newRow = selectedCell.row + rowDelta;
+        let newCol = selectedCell.col + colDelta;
+
+        if (newRow < 0) newRow = 8;
+        if (newRow > 8) newRow = 0;
+        if (newCol < 0) newCol = 8;
+        if (newCol > 8) newCol = 0;
+
+        const newCell = document.querySelector(
+            `.cell[data-row="${newRow}"][data-col="${newCol}"]`
+        );
+        selectCell(newCell);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
+</script>
+{% endblock %}

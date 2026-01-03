@@ -40,5 +40,11 @@ def projects():
             'link': '/projects/pr-review',
             'tags': ['Claude Code', 'AI', 'Developer Tools']
         },
+        {
+            'title': 'Sudoku',
+            'description': 'Classic puzzle game with three difficulty levels. Features real-time validation, keyboard navigation, and guaranteed unique solutions.',
+            'link': '/projects/sudoku',
+            'tags': ['Game', 'Puzzle', 'Interactive']
+        },
     ]
     return render_template('projects.html', projects=sample_projects)
