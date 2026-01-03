@@ -99,9 +99,13 @@ python main.py
 ```
 App runs at http://localhost:5000 with auto-reload.
 
-### Parallel Development with Git Worktrees
+### Parallel Development
 
-When working on multiple features simultaneously, use git worktrees to run isolated Claude Code sessions:
+When working on multiple features simultaneously, use one of these approaches to run isolated Claude Code sessions:
+
+#### Option 1: Git Worktrees (Recommended)
+
+Worktrees share the same `.git` directory, saving disk space and keeping branches in sync:
 
 ```bash
 # Create a worktree for a new feature
@@ -117,13 +121,36 @@ pip install -r requirements.txt
 claude
 ```
 
-Name your Claude sessions with `/rename feature-name` for easy resumption later (`claude --resume feature-name`).
-
-Worktrees persist across sessions - keep them alive while working on a feature. Clean up only after the PR is merged:
+Manage worktrees:
 ```bash
-git worktree list                              # See all active worktrees
+git worktree list                                  # See all active worktrees
 git worktree remove ../Personal-Site-feature-name  # Remove after PR merge
 ```
+
+#### Option 2: Separate Clones
+
+Use separate clones when you need full isolation (e.g., risky git experiments, same branch in multiple places):
+
+```bash
+# Clone to a new directory
+git clone git@github.com:amatthew/Personal-Site.git ../Personal-Site-feature-name
+cd ../Personal-Site-feature-name
+git checkout -b feature/feature-name
+
+# Set up the clone
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# Run Claude in this clone
+claude
+```
+
+Note: Separate clones use more disk space and require independent fetch/pull operations.
+
+#### Session Naming
+
+Name your Claude sessions with `/rename feature-name` for easy resumption later (`claude --resume feature-name`).
 
 ## Deployment
 
