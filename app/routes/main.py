@@ -23,12 +23,6 @@ def projects():
             'tags': ['Python', 'Spotify API', 'Data Viz']
         },
         {
-            'title': 'PCA & Lasso Explainer',
-            'description': 'Visual walkthrough of dimensionality reduction and feature selection, exploring the relationship between PCA and Lasso regression.',
-            'link': '/projects/pca-lasso',
-            'tags': ['Machine Learning', 'Statistics', 'Education']
-        },
-        {
             'title': 'Blackjack Trainer',
             'description': 'Practice blackjack with real-time feedback on optimal play. Tracks your decisions vs basic strategy and helps you learn from mistakes.',
             'link': '/projects/blackjack',
