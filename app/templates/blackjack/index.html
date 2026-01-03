@@ -729,6 +729,9 @@
         // Save this bet for re-up
         lastBet = currentBet;
 
+        // Hide any existing result message
+        document.getElementById('result-message').style.display = 'none';
+
         // Initialize
         deck = deck.length > 78 ? deck : createDeck();
         playerHands = [[]];
