@@ -119,6 +119,7 @@
 .dealer-area, .player-area {
     text-align: center;
     padding: 0.25rem 0;
+    min-height: 130px; /* Prevent layout shift when cards are dealt */
 }
 
 .hand-label {
@@ -247,8 +248,9 @@
 }
 
 .player-hand.active {
-    background: rgba(212, 175, 55, 0.1);
-    box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+    background: rgba(212, 175, 55, 0.15);
+    border: 3px solid var(--gold);
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.5), inset 0 0 15px rgba(212, 175, 55, 0.1);
 }
 
 /* ===== Action Buttons ===== */
@@ -416,6 +418,13 @@
 @keyframes popIn {
     from { transform: translate(-50%, -50%) scale(0); opacity: 0; }
     to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+/* Default style for multi-hand results */
+.result-message {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(30, 30, 30, 0.95));
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
 }
 
 .result-message.win { background: linear-gradient(135deg, #4caf50, #2e7d32); color: white; }
@@ -662,6 +671,13 @@
     border-radius: 4px;
     cursor: pointer;
     font-size: 0.7rem;
+}
+
+/* ===== Strategy Chart Table ===== */
+#strategy-chart table th,
+#strategy-chart table td:first-child {
+    color: white;
+    background: rgba(0, 0, 0, 0.4);
 }
 
 /* ===== Responsive: Stack on smaller screens ===== */
