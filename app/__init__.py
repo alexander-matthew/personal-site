@@ -40,10 +40,6 @@ def create_app():
     from app.routes import spotify
     app.register_blueprint(spotify.bp)
 
-    # Register PCA & Lasso explainer
-    from app.routes import pca_lasso
-    app.register_blueprint(pca_lasso.bp)
-
     # Register Blackjack trainer
     from app.routes import blackjack
     app.register_blueprint(blackjack.bp)
