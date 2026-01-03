@@ -539,7 +539,7 @@
 
         playerHands.forEach((hand, i) => {
             const handDiv = document.createElement('div');
-            handDiv.className = `player-hand ${i === currentHandIndex ? 'active' : ''}`;
+            handDiv.className = `player-hand ${playerHands.length > 1 && i === currentHandIndex ? 'active' : ''}`;
             handDiv.dataset.hand = i;
 
             const cardsDiv = document.createElement('div');
