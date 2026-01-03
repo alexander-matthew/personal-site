@@ -24,6 +24,17 @@ def create_app():
     def inject_site_config():
         return {'site': SITE_CONFIG}
 
+    # Custom error handlers
+    @app.errorhandler(404)
+    def page_not_found(e):
+        from flask import render_template
+        return render_template('404.html'), 404
+
+    @app.errorhandler(500)
+    def internal_server_error(e):
+        from flask import render_template
+        return render_template('500.html'), 500
+
     # Register main routes
     from app.routes import main
     app.register_blueprint(main.bp)

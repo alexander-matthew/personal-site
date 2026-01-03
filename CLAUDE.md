@@ -16,20 +16,46 @@ Personal-Site/
 │   │   ├── __init__.py
 │   │   ├── main.py          # Main routes (home, about, projects)
 │   │   ├── blog.py          # Blog routes
-│   │   └── news.py          # News/press routes
+│   │   ├── news.py          # News/press routes
+│   │   ├── spotify.py       # Spotify dashboard with OAuth
+│   │   ├── blackjack.py     # Blackjack trainer game
+│   │   ├── sudoku.py        # Sudoku puzzle game
+│   │   ├── pr_review.py     # PR Review tool showcase
+│   │   └── tools/           # Tools framework (extensible mini-apps)
+│   ├── services/
+│   │   ├── cache.py         # File-based caching with TTL
+│   │   ├── oauth.py         # OAuth2 client (Spotify)
+│   │   └── rate_limit.py    # In-memory rate limiting
 │   ├── templates/
 │   │   ├── base.html        # Base layout with nav + footer
 │   │   ├── home.html        # Landing page with typing animation
 │   │   ├── about.html       # Bio with cycling interests animation
 │   │   ├── projects.html    # Project showcase grid
 │   │   ├── blog/            # Blog templates
-│   │   └── news/            # News templates
+│   │   ├── news/            # News templates
+│   │   ├── spotify/         # Spotify dashboard (cyberpunk theme)
+│   │   ├── blackjack/       # Blackjack trainer UI
+│   │   ├── sudoku/          # Sudoku game UI
+│   │   ├── pr_review/       # PR Review showcase
+│   │   └── tools/           # Tools framework templates
 │   └── static/
-│       └── css/style.css    # Global styles with CSS variables
+│       ├── css/
+│       │   ├── style.css           # Global styles with CSS variables
+│       │   ├── spotify-cyberpunk.css  # Spotify retro-futuristic theme
+│       │   ├── blackjack.css       # Blackjack game styles
+│       │   ├── sudoku.css          # Sudoku grid styles
+│       │   └── tools.css           # Tools framework styles
+│       └── js/
+│           ├── blackjack-engine.js      # Blackjack game logic + strategy
+│           ├── blackjack-engine.test.js # Jest tests
+│           ├── sudoku-engine.js         # Sudoku generation + validation
+│           └── sudoku-engine.test.js    # Jest tests
 ├── main.py                  # App entry point
 ├── Procfile                 # Heroku: gunicorn main:app
 ├── runtime.txt              # Heroku: python-3.11.9
-└── requirements.txt         # Flask + gunicorn
+├── requirements.txt         # Flask + gunicorn + requests
+├── package.json             # Jest testing for JS engines
+└── jest.config.js           # Jest configuration
 ```
 
 ## Key Patterns
@@ -49,6 +75,8 @@ Access in templates via `{{ site.name }}`, `{{ site.linkedin_url }}`, etc.
 ### Environment Variables
 - `SECRET_KEY` - Flask session secret (required in production)
 - `FLASK_DEBUG` - Set to `false` in production (defaults to `true` locally)
+- `SPOTIFY_CLIENT_ID` - Spotify API client ID (for Spotify dashboard)
+- `SPOTIFY_CLIENT_SECRET` - Spotify API client secret (for Spotify dashboard)
 
 ### Adding New Mini-Apps (Blueprints)
 1. Create blueprint in `app/routes/myapp.py`:
@@ -180,12 +208,21 @@ Common pre-commit checks for this project:
 
 Claude Code will automatically run these hooks before each commit, preventing broken code from being committed.
 
+### Pull Requests
+
+When creating pull requests:
+- **Do NOT merge PRs** - only create them and provide the URL
+- The owner will review and merge PRs manually
+- After PR is merged, deployment to Heroku can proceed
+
 ## Deployment
 
 Set environment variables on Heroku:
 ```bash
 heroku config:set SECRET_KEY=your-secure-random-key
 heroku config:set FLASK_DEBUG=false
+heroku config:set SPOTIFY_CLIENT_ID=your-spotify-client-id
+heroku config:set SPOTIFY_CLIENT_SECRET=your-spotify-client-secret
 ```
 
 Deploy:
@@ -203,6 +240,77 @@ git push heroku main
 | `/projects` | projects.html | Project showcase |
 | `/blog` | blog/index.html | Blog posts |
 | `/news` | news/index.html | Press/news mentions |
+| `/projects/spotify` | spotify/index.html | Spotify dashboard with OAuth |
+| `/projects/blackjack` | blackjack/index.html | Blackjack trainer game |
+| `/projects/sudoku` | sudoku/index.html | Sudoku puzzle game |
+| `/projects/pr-review` | pr_review/index.html | PR Review tool showcase |
+| `/tools` | tools/index.html | Tools framework index |
+
+## Mini-Apps
+
+### Spotify Dashboard (`/projects/spotify`)
+OAuth-authenticated data visualization with cyberpunk theme:
+- Recently played tracks (last 50)
+- Top artists/tracks by time range (4 weeks, 6 months, all time)
+- Genre breakdown with percentages
+- Audio feature analysis (danceability, energy, valence, etc.)
+- Taste evolution comparison
+
+**API Endpoints:** `/api/recent`, `/api/top/<time_range>`, `/api/genres`, `/api/audio-features`, `/api/taste-evolution`
+
+### Blackjack Trainer (`/projects/blackjack`)
+Interactive game with basic strategy guidance:
+- Real money simulation (starting balance: $1000)
+- Optimal play feedback using strategy charts
+- Hard, soft, and pair hand scenarios
+- Visual card display with betting interface
+
+### Sudoku Game (`/projects/sudoku`)
+Puzzle game with three difficulty levels:
+- Easy, Medium, Hard difficulty selection
+- 9x9 grid with real-time validation
+- Keyboard navigation support
+- Win detection modal
+
+### PR Review Tool (`/projects/pr-review`)
+Documentation showcase for automated code review:
+- Demonstrates `code_style.md` file system
+- GitHub CLI integration examples
+- Before/after refactoring examples
+
+## Services
+
+### Cache (`app/services/cache.py`)
+File-based caching with TTL support:
+```python
+from app.services.cache import cached
+
+@cached(ttl_seconds=300, key_prefix='spotify')
+def get_spotify_data():
+    ...
+```
+
+### Rate Limiting (`app/services/rate_limit.py`)
+In-memory rate limiting decorator:
+```python
+from app.services.rate_limit import rate_limit
+
+@rate_limit(max_requests=30, window_seconds=60)
+def api_endpoint():
+    ...
+```
+
+### OAuth (`app/services/oauth.py`)
+OAuth2 client for external services (currently Spotify).
+
+## Testing
+
+Run JavaScript tests (game engines):
+```bash
+npm test                  # Run all tests
+npm run test:watch        # Watch mode
+npm run test:coverage     # Coverage report
+```
 
 ## Features
 
@@ -210,3 +318,5 @@ git push heroku main
 - **Interests carousel**: About page fades through interests list
 - **Responsive**: Mobile-friendly with breakpoint at 640px
 - **Footer**: Persistent with GitHub/LinkedIn links + Claude/Heroku credit
+- **Cyberpunk theme**: Spotify dashboard with retro-futuristic styling
+- **Game engines**: Pure JavaScript with Jest test coverage
