@@ -22,13 +22,6 @@
 
         <!-- Game Table -->
         <div class="game-table">
-            <!-- Felt Text Arc -->
-            <div class="felt-text">
-                <span>BLACKJACK PAYS 3:2</span>
-                <span>•</span>
-                <span>INSURANCE PAYS 2:1</span>
-            </div>
-
             <!-- Dealer Area -->
             <div class="dealer-area">
                 <div class="hand-label">Dealer</div>
@@ -759,7 +752,9 @@
         renderDealerHand();
         renderPlayerHands(true);
 
-        startPlay();
+        // Delay startPlay until deal animation completes to avoid race condition
+        // when revealing dealer blackjack (4 cards * 300ms timing + buffer)
+        setTimeout(startPlay, TIMING.cardDeal * 2 + 100);
     }
 
     function startPlay() {
