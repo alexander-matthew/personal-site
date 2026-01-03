@@ -589,6 +589,18 @@
 .mistake-details .played { color: var(--button-red); }
 .mistake-details .optimal { color: var(--button-green); }
 
+.ev-badge {
+    display: inline-block;
+    padding: 0.15rem 0.4rem;
+    background: rgba(212, 175, 55, 0.2);
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: normal;
+    margin-left: 0.5rem;
+}
+
 .no-mistakes {
     text-align: center;
     color: var(--gold);

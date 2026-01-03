@@ -409,6 +409,9 @@
             const soft = isSoft(hand);
             const mistakeKey = `${soft ? 'Soft' : 'Hard'} ${total} vs ${dealerUpcard}`;
 
+            // Get EV for this hand
+            const ev = getHandEV(total, dealerUpcard, soft);
+
             // Check if this mistake already exists
             const existingMistake = stats.mistakes.find(m => m.hand === mistakeKey);
             if (existingMistake) {
@@ -419,6 +422,7 @@
                     played: playerAction,
                     optimal: optimalAction,
                     explanation: getActionExplanation(hand, dealerUpcard, optimalAction, playerAction),
+                    ev: ev,
                     count: 1
                 });
             }
@@ -682,9 +686,11 @@
         if (stats.mistakes.length === 0) {
             mistakesList.innerHTML = '<div class="no-mistakes">No mistakes yet. Keep playing!</div>';
         } else {
-            mistakesList.innerHTML = stats.mistakes.slice(0, 10).map(m => `
+            mistakesList.innerHTML = stats.mistakes.slice(0, 10).map(m => {
+                const evDisplay = m.ev !== undefined ? (m.ev >= 0 ? '+' : '') + (m.ev * 100).toFixed(1) + '%' : '';
+                return `
                 <div class="mistake-item">
-                    <div class="mistake-hand">${m.hand} (${m.count}x)</div>
+                    <div class="mistake-hand">${m.hand} (${m.count}x)${evDisplay ? ` <span class="ev-badge">EV: ${evDisplay}</span>` : ''}</div>
                     <div class="mistake-details">
                         You played: <span class="played">${m.played}</span> |
                         Optimal: <span class="optimal">${m.optimal}</span>
@@ -693,7 +699,7 @@
                         ${m.explanation}
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
     }
 
