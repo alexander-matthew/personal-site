@@ -208,16 +208,45 @@ Common pre-commit checks for this project:
 
 Claude Code will automatically run these hooks before each commit, preventing broken code from being committed.
 
+## Workflow
+
+### Development Cycle
+
+1. **Work & Commit Frequently**: Commit changes continuously as you work
+2. **Test Locally**: Run `python main.py` and verify at http://localhost:5000
+3. **Create PR on Command**: Only create a pull request when explicitly asked
+4. **Deploy After Merge**: After PR is merged, deploy to Heroku
+
+### Commits
+- Commit early and often during development
+- Each commit should be atomic and focused
+- Push to origin/main after commits: `git push`
+
 ### Pull Requests
-
-When creating pull requests:
-- **Do NOT merge PRs** - only create them and provide the URL
+- **Only create PRs when explicitly requested** by the user
+- Do NOT merge PRs - only create them and provide the URL
 - The owner will review and merge PRs manually
-- After PR is merged, deployment to Heroku can proceed
 
-## Deployment
+### Deployment
+After a PR is merged to main:
+```bash
+git pull origin main
+git push heroku main
+```
 
-Set environment variables on Heroku:
+### Local Testing
+Always test locally before committing:
+```bash
+source .venv/bin/activate
+python main.py
+# Visit http://localhost:5000
+```
+
+## Heroku Configuration
+
+App: `acm-personal-site`
+
+Set environment variables:
 ```bash
 heroku config:set SECRET_KEY=your-secure-random-key
 heroku config:set FLASK_DEBUG=false
@@ -225,10 +254,14 @@ heroku config:set SPOTIFY_CLIENT_ID=your-spotify-client-id
 heroku config:set SPOTIFY_CLIENT_SECRET=your-spotify-client-secret
 ```
 
-Deploy:
+Deploy manually:
 ```bash
-heroku create
 git push heroku main
+```
+
+View logs:
+```bash
+heroku logs --tail
 ```
 
 ## Pages
