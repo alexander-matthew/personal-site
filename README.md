@@ -2,7 +2,7 @@
 
 A Flask-based personal website to showcase side projects and interests. Built for fun, not for work (see LinkedIn for that).
 
-**Live Site:** [acm-personal-site.herokuapp.com](https://acm-personal-site.herokuapp.com)
+**Live Site:** [mighty-shelf-14141.herokuapp.com](https://mighty-shelf-14141.herokuapp.com)
 
 ## Features
 

@@ -217,10 +217,12 @@ Claude Code will automatically run these hooks before each commit, preventing br
 3. **Create PR on Command**: Only create a pull request when explicitly asked
 4. **Deploy After Merge**: After PR is merged, deploy to Heroku
 
-### Commits
+### Branches
+- **Never commit directly to main** - always create a feature branch
+- Create branches with descriptive names: `feature/add-widget`, `fix/login-bug`
 - Commit early and often during development
 - Each commit should be atomic and focused
-- Push to origin/main after commits: `git push`
+- Push your branch: `git push -u origin branch-name`
 
 ### Pull Requests
 - **Only create PRs when explicitly requested** by the user
@@ -228,9 +230,13 @@ Claude Code will automatically run these hooks before each commit, preventing br
 - The owner will review and merge PRs manually
 
 ### Deployment
-After a PR is merged to main:
+Deployment is automatic via GitHub Actions. When a PR is merged to main:
+1. GitHub Actions triggers the deploy workflow
+2. Code is pushed to Heroku automatically
+3. Heroku builds and deploys the app
+
+Manual deployment (if needed):
 ```bash
-git pull origin main
 git push heroku main
 ```
 
@@ -244,7 +250,7 @@ python main.py
 
 ## Heroku Configuration
 
-App: `acm-personal-site`
+App: `mighty-shelf-14141`
 
 Set environment variables:
 ```bash
