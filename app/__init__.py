@@ -44,4 +44,12 @@ def create_app():
     from app.routes import pca_lasso
     app.register_blueprint(pca_lasso.bp)
 
+    # Register Blackjack trainer
+    from app.routes import blackjack
+    app.register_blueprint(blackjack.bp)
+
+    # Register PR Review Tool showcase
+    from app.routes import pr_review
+    app.register_blueprint(pr_review.bp)
+
     return app
