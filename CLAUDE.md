@@ -125,7 +125,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 python main.py
 ```
-App runs at http://localhost:5000 with auto-reload.
+App runs at http://localhost:5001 with auto-reload.
 
 ### Parallel Development
 
@@ -213,7 +213,7 @@ Claude Code will automatically run these hooks before each commit, preventing br
 ### Development Cycle
 
 1. **Work & Commit Frequently**: Commit changes continuously as you work
-2. **Test Locally**: Run `python main.py` and verify at http://localhost:5000
+2. **Test Locally**: Run `python main.py` and verify at http://localhost:5001
 3. **Create PR on Command**: Only create a pull request when explicitly asked
 4. **Deploy After Merge**: After PR is merged, deploy to Heroku
 
@@ -245,7 +245,7 @@ Always test locally before committing:
 ```bash
 source .venv/bin/activate
 python main.py
-# Visit http://localhost:5000
+# Visit http://localhost:5001
 ```
 
 ## Heroku Configuration

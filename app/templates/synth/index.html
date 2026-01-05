@@ -1,0 +1,624 @@
+{% extends "base.html" %}
+
+{% block title %}Analog Synth - {{ site.name }}{% endblock %}
+
+{% block head %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/synth.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="synth-container">
+    <div class="synth-panel">
+        <!-- Header -->
+        <div class="synth-header">
+            <div class="synth-logo">SYNTHWAVE</div>
+            <div class="power-section">
+                <button class="power-btn" id="power-btn">POWER</button>
+                <div class="power-led" id="power-led"></div>
+            </div>
+        </div>
+
+        <!-- Dual Synth Units -->
+        <div class="dual-synth-row">
+            <!-- Synth A: Bass/Chords -->
+            <div class="synth-unit synth-a">
+                <div class="synth-unit-header">
+                    <h3 class="synth-unit-title">SYNTH A - BASS/CHORDS</h3>
+                    <div class="mode-selector" id="synth-a-mode">
+                        <button data-mode="bass" class="active">BASS</button>
+                        <button data-mode="chord">CHORD</button>
+                        <button data-mode="off">OFF</button>
+                    </div>
+                </div>
+                <div class="synth-controls-row">
+                    <div class="control-section">
+                        <h4 class="section-label">OSC</h4>
+                        <div class="waveform-selector" id="synth-a-wave">
+                            <button data-wave="sine">SIN</button>
+                            <button data-wave="triangle">TRI</button>
+                            <button data-wave="sawtooth" class="active">SAW</button>
+                            <button data-wave="square">SQR</button>
+                        </div>
+                    </div>
+                    <div class="control-section">
+                        <h4 class="section-label">FILTER</h4>
+                        <div class="knob-row">
+                            <div class="knob-group">
+                                <div class="knob" id="synth-a-cutoff" data-min="20" data-max="8000" data-value="800"></div>
+                                <span class="knob-label">CUTOFF</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control-section">
+                        <h4 class="section-label">ENV</h4>
+                        <div class="slider-row">
+                            <div class="slider-group">
+                                <input type="range" class="vertical-slider" id="synth-a-attack" min="0.01" max="1" step="0.01" value="0.05">
+                                <span class="slider-label">A</span>
+                            </div>
+                            <div class="slider-group">
+                                <input type="range" class="vertical-slider" id="synth-a-release" min="0.05" max="2" step="0.05" value="0.3">
+                                <span class="slider-label">R</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control-section">
+                        <h4 class="section-label">LEVEL</h4>
+                        <div class="knob-group">
+                            <div class="knob" id="synth-a-volume" data-min="0" data-max="100" data-value="60"></div>
+                            <span class="knob-label">VOL</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Synth B: Arpeggio -->
+            <div class="synth-unit synth-b">
+                <div class="synth-unit-header">
+                    <h3 class="synth-unit-title">SYNTH B - ARPEGGIO</h3>
+                </div>
+                <div class="synth-controls-row">
+                    <div class="control-section">
+                        <h4 class="section-label">OSC</h4>
+                        <div class="waveform-selector" id="synth-b-wave">
+                            <button data-wave="sine">SIN</button>
+                            <button data-wave="triangle">TRI</button>
+                            <button data-wave="sawtooth" class="active">SAW</button>
+                            <button data-wave="square">SQR</button>
+                        </div>
+                    </div>
+                    <div class="control-section">
+                        <h4 class="section-label">FILTER</h4>
+                        <div class="knob-row">
+                            <div class="knob-group">
+                                <div class="knob" id="synth-b-cutoff" data-min="200" data-max="15000" data-value="3000"></div>
+                                <span class="knob-label">CUTOFF</span>
+                            </div>
+                            <div class="knob-group">
+                                <div class="knob" id="synth-b-res" data-min="0" data-max="15" data-value="3"></div>
+                                <span class="knob-label">RES</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control-section">
+                        <h4 class="section-label">ENV</h4>
+                        <div class="slider-row">
+                            <div class="slider-group">
+                                <input type="range" class="vertical-slider" id="synth-b-attack" min="0.001" max="0.5" step="0.001" value="0.01">
+                                <span class="slider-label">A</span>
+                            </div>
+                            <div class="slider-group">
+                                <input type="range" class="vertical-slider" id="synth-b-decay" min="0.01" max="1" step="0.01" value="0.15">
+                                <span class="slider-label">D</span>
+                            </div>
+                            <div class="slider-group">
+                                <input type="range" class="vertical-slider" id="synth-b-release" min="0.01" max="1" step="0.01" value="0.2">
+                                <span class="slider-label">R</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control-section">
+                        <h4 class="section-label">LEVEL</h4>
+                        <div class="knob-group">
+                            <div class="knob" id="synth-b-volume" data-min="0" data-max="100" data-value="70"></div>
+                            <span class="knob-label">VOL</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Global Controls -->
+        <div class="global-controls">
+            <div class="global-controls-row">
+                <!-- Key/Scale -->
+                <div class="control-group">
+                    <label>KEY</label>
+                    <select id="root-note">
+                        <option value="C">C</option>
+                        <option value="C#">C#</option>
+                        <option value="D">D</option>
+                        <option value="D#">D#</option>
+                        <option value="E">E</option>
+                        <option value="F">F</option>
+                        <option value="F#">F#</option>
+                        <option value="G">G</option>
+                        <option value="G#">G#</option>
+                        <option value="A">A</option>
+                        <option value="A#">A#</option>
+                        <option value="B">B</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>OCTAVE</label>
+                    <select id="root-octave">
+                        <option value="2">2</option>
+                        <option value="3" selected>3</option>
+                        <option value="4">4</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>SCALE</label>
+                    <select id="scale">
+                        <option value="major">Major</option>
+                        <option value="minor">Minor</option>
+                        <option value="pentatonic">Pentatonic</option>
+                        <option value="blues">Blues</option>
+                        <option value="dorian">Dorian</option>
+                        <option value="mixolydian">Mixolydian</option>
+                    </select>
+                </div>
+
+                <!-- Chord Progression -->
+                <div class="control-group">
+                    <label>PROGRESSION</label>
+                    <select id="progression">
+                        <option value="I">I (Single Chord)</option>
+                        <option value="I-IV-V-I" selected>I-IV-V-I</option>
+                        <option value="I-V-vi-IV">I-V-vi-IV (Pop)</option>
+                        <option value="ii-V-I">ii-V-I (Jazz)</option>
+                        <option value="I-vi-IV-V">I-vi-IV-V (50s)</option>
+                        <option value="i-iv-v">i-iv-v (Minor)</option>
+                        <option value="i-VI-III-VII">i-VI-III-VII (Epic)</option>
+                        <option value="12-bar">12-Bar Blues</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>CHORD</label>
+                    <select id="chord-type">
+                        <option value="triad">Triad</option>
+                        <option value="seventh">7th</option>
+                        <option value="sus2">Sus2</option>
+                        <option value="sus4">Sus4</option>
+                        <option value="power">Power</option>
+                    </select>
+                </div>
+
+                <!-- Timing -->
+                <div class="control-group">
+                    <label>TEMPO</label>
+                    <div class="knob-group">
+                        <div class="knob" id="tempo-knob" data-min="60" data-max="200" data-value="120"></div>
+                        <div class="led-display" id="tempo-display">120</div>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>NOTE VALUE</label>
+                    <div class="subdiv-selector" id="subdivision">
+                        <button data-subdiv="1/4">1/4</button>
+                        <button data-subdiv="1/8" class="active">1/8</button>
+                        <button data-subdiv="1/16">1/16</button>
+                        <button data-subdiv="1/8T">8T</button>
+                        <button data-subdiv="1/16T">16T</button>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>NOTES/CHORD</label>
+                    <select id="notes-per-chord">
+                        <option value="4">4</option>
+                        <option value="8" selected>8</option>
+                        <option value="16">16</option>
+                        <option value="32">32</option>
+                    </select>
+                </div>
+
+                <!-- Pattern -->
+                <div class="control-group">
+                    <label>ARP PATTERN</label>
+                    <div class="pattern-selector" id="arp-pattern">
+                        <button data-pattern="up" class="active">UP</button>
+                        <button data-pattern="down">DN</button>
+                        <button data-pattern="upDown">U/D</button>
+                        <button data-pattern="random">RND</button>
+                        <button data-pattern="outside">OUT</button>
+                        <button data-pattern="1-3-5-3">1353</button>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>OCTAVES</label>
+                    <select id="arp-octaves">
+                        <option value="1">1</option>
+                        <option value="2" selected>2</option>
+                        <option value="3">3</option>
+                    </select>
+                </div>
+
+                <!-- Master -->
+                <div class="control-group">
+                    <label>MASTER</label>
+                    <div class="knob-group">
+                        <div class="knob large" id="master-volume" data-min="0" data-max="100" data-value="70"></div>
+                        <span class="knob-label">VOL</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Display -->
+            <div class="arp-display">
+                <div class="chord-display" id="chord-display">C</div>
+                <div class="sequence-display" id="sequence-display"></div>
+                <div class="current-note-display" id="current-note">--</div>
+            </div>
+        </div>
+
+        <!-- Transport -->
+        <div class="transport-bar">
+            <button class="transport-btn play" id="play-btn">
+                <span class="play-icon"></span>
+            </button>
+            <button class="transport-btn stop" id="stop-btn">
+                <span class="stop-icon"></span>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/synth-engine.js') }}"></script>
+<script>
+(function() {
+    'use strict';
+
+    let engine = null;
+    let isPowered = false;
+    let knobStates = {};
+
+    // DOM Elements
+    const powerBtn = document.getElementById('power-btn');
+    const powerLed = document.getElementById('power-led');
+    const playBtn = document.getElementById('play-btn');
+    const stopBtn = document.getElementById('stop-btn');
+    const tempoDisplay = document.getElementById('tempo-display');
+    const chordDisplay = document.getElementById('chord-display');
+    const sequenceDisplay = document.getElementById('sequence-display');
+    const currentNoteDisplay = document.getElementById('current-note');
+
+    // Knob Controller
+    class KnobController {
+        constructor(element) {
+            this.element = element;
+            this.min = parseFloat(element.dataset.min) || 0;
+            this.max = parseFloat(element.dataset.max) || 100;
+            this.value = parseFloat(element.dataset.value) || 0;
+            this.isDragging = false;
+            this.startY = 0;
+            this.startValue = 0;
+            this.updateVisual();
+            this.bindEvents();
+        }
+
+        bindEvents() {
+            this.element.addEventListener('mousedown', this.onStart.bind(this));
+            this.element.addEventListener('touchstart', this.onStart.bind(this));
+            document.addEventListener('mousemove', this.onMove.bind(this));
+            document.addEventListener('touchmove', this.onMove.bind(this));
+            document.addEventListener('mouseup', this.onEnd.bind(this));
+            document.addEventListener('touchend', this.onEnd.bind(this));
+        }
+
+        onStart(e) {
+            e.preventDefault();
+            this.isDragging = true;
+            this.startY = e.clientY || e.touches[0].clientY;
+            this.startValue = this.value;
+        }
+
+        onMove(e) {
+            if (!this.isDragging) return;
+            const y = e.clientY || (e.touches && e.touches[0].clientY);
+            if (y === undefined) return;
+            const delta = this.startY - y;
+            const range = this.max - this.min;
+            this.value = Math.max(this.min, Math.min(this.max, this.startValue + (delta / 150) * range));
+            this.updateVisual();
+            this.emit();
+        }
+
+        onEnd() { this.isDragging = false; }
+
+        updateVisual() {
+            const norm = (this.value - this.min) / (this.max - this.min);
+            const rotation = -135 + (norm * 270);
+            this.element.style.setProperty('--rotation', `${rotation}deg`);
+        }
+
+        emit() {
+            this.element.dispatchEvent(new CustomEvent('knobchange', { detail: { value: this.value } }));
+        }
+
+        setValue(v) {
+            this.value = Math.max(this.min, Math.min(this.max, v));
+            this.updateVisual();
+        }
+    }
+
+    function init() {
+        engine = new DualSynthEngine();
+        setupKnobs();
+        setupControls();
+        setupTransport();
+        setupPower();
+        updateSequenceDisplay();
+    }
+
+    function setupKnobs() {
+        document.querySelectorAll('.knob').forEach(el => {
+            const ctrl = new KnobController(el);
+            knobStates[el.id] = ctrl;
+
+            el.addEventListener('knobchange', (e) => {
+                if (!isPowered) return;
+                handleKnobChange(el.id, e.detail.value);
+            });
+        });
+    }
+
+    function handleKnobChange(id, value) {
+        switch (id) {
+            case 'synth-a-cutoff':
+                engine.setSynthAParams({ filter: { cutoff: value } });
+                break;
+            case 'synth-a-volume':
+                engine.setSynthAParams({ volume: value / 100 });
+                break;
+            case 'synth-b-cutoff':
+                engine.setSynthBParams({ filter: { cutoff: value } });
+                break;
+            case 'synth-b-res':
+                engine.setSynthBParams({ filter: { resonance: value } });
+                break;
+            case 'synth-b-volume':
+                engine.setSynthBParams({ volume: value / 100 });
+                break;
+            case 'tempo-knob':
+                engine.setTempo(Math.round(value));
+                tempoDisplay.textContent = Math.round(value);
+                break;
+            case 'master-volume':
+                engine.setMasterVolume(value / 100);
+                break;
+        }
+    }
+
+    function setupControls() {
+        // Synth A mode
+        document.querySelectorAll('#synth-a-mode button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (!isPowered) return;
+                document.querySelectorAll('#synth-a-mode button').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                engine.setSynthAParams({ mode: btn.dataset.mode });
+            });
+        });
+
+        // Synth A waveform
+        document.querySelectorAll('#synth-a-wave button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (!isPowered) return;
+                document.querySelectorAll('#synth-a-wave button').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                engine.setSynthAParams({ osc1: { waveform: btn.dataset.wave } });
+            });
+        });
+
+        // Synth A envelope sliders
+        document.getElementById('synth-a-attack').addEventListener('input', (e) => {
+            if (!isPowered) return;
+            engine.setSynthAParams({ envelope: { attack: parseFloat(e.target.value) } });
+        });
+        document.getElementById('synth-a-release').addEventListener('input', (e) => {
+            if (!isPowered) return;
+            engine.setSynthAParams({ envelope: { release: parseFloat(e.target.value) } });
+        });
+
+        // Synth B waveform
+        document.querySelectorAll('#synth-b-wave button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (!isPowered) return;
+                document.querySelectorAll('#synth-b-wave button').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                engine.setSynthBParams({ osc1: { waveform: btn.dataset.wave } });
+            });
+        });
+
+        // Synth B envelope sliders
+        document.getElementById('synth-b-attack').addEventListener('input', (e) => {
+            if (!isPowered) return;
+            engine.setSynthBParams({ envelope: { attack: parseFloat(e.target.value) } });
+        });
+        document.getElementById('synth-b-decay').addEventListener('input', (e) => {
+            if (!isPowered) return;
+            engine.setSynthBParams({ envelope: { decay: parseFloat(e.target.value) } });
+        });
+        document.getElementById('synth-b-release').addEventListener('input', (e) => {
+            if (!isPowered) return;
+            engine.setSynthBParams({ envelope: { release: parseFloat(e.target.value) } });
+        });
+
+        // Global controls
+        function updateScale() {
+            if (!isPowered) return;
+            engine.setScale(
+                document.getElementById('root-note').value,
+                parseInt(document.getElementById('root-octave').value),
+                document.getElementById('scale').value
+            );
+            updateChordDisplay();
+            updateSequenceDisplay();
+        }
+
+        document.getElementById('root-note').addEventListener('change', updateScale);
+        document.getElementById('root-octave').addEventListener('change', updateScale);
+        document.getElementById('scale').addEventListener('change', updateScale);
+
+        document.getElementById('progression').addEventListener('change', (e) => {
+            if (!isPowered) return;
+            engine.setArpParams({ progression: e.target.value });
+            updateChordDisplay();
+            updateSequenceDisplay();
+        });
+
+        document.getElementById('chord-type').addEventListener('change', (e) => {
+            if (!isPowered) return;
+            engine.setArpParams({ chordType: e.target.value });
+            updateSequenceDisplay();
+        });
+
+        document.getElementById('notes-per-chord').addEventListener('change', (e) => {
+            if (!isPowered) return;
+            engine.setNotesPerChord(parseInt(e.target.value));
+        });
+
+        document.getElementById('arp-octaves').addEventListener('change', (e) => {
+            if (!isPowered) return;
+            engine.setArpParams({ octaves: parseInt(e.target.value) });
+            updateSequenceDisplay();
+        });
+
+        // Subdivision buttons
+        document.querySelectorAll('#subdivision button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (!isPowered) return;
+                document.querySelectorAll('#subdivision button').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                engine.setSubdivision(btn.dataset.subdiv);
+            });
+        });
+
+        // Pattern buttons
+        document.querySelectorAll('#arp-pattern button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (!isPowered) return;
+                document.querySelectorAll('#arp-pattern button').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                engine.setArpParams({ pattern: btn.dataset.pattern });
+                updateSequenceDisplay();
+            });
+        });
+    }
+
+    function setupTransport() {
+        playBtn.addEventListener('click', async () => {
+            if (!isPowered) return;
+            await engine.start();
+            if (!engine.isPlaying()) {
+                engine.onNotePlay = (midi, name, step) => {
+                    currentNoteDisplay.textContent = name;
+                    highlightStep(step);
+                };
+                engine.onChordChange = () => {
+                    updateChordDisplay();
+                    updateSequenceDisplay();
+                };
+                engine.startPlayback();
+                playBtn.classList.add('active');
+                stopBtn.classList.remove('active');
+            }
+        });
+
+        stopBtn.addEventListener('click', () => {
+            if (!isPowered) return;
+            engine.stopPlayback();
+            playBtn.classList.remove('active');
+            currentNoteDisplay.textContent = '--';
+            clearHighlight();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (!isPowered) return;
+            if (e.code === 'Space') {
+                e.preventDefault();
+                engine.isPlaying() ? stopBtn.click() : playBtn.click();
+            }
+        });
+    }
+
+    function setupPower() {
+        powerBtn.addEventListener('click', async () => {
+            isPowered = !isPowered;
+            if (isPowered) {
+                await engine.start();
+                powerBtn.classList.add('active');
+                powerLed.classList.add('on');
+                // Initialize with current settings
+                engine.setScale(
+                    document.getElementById('root-note').value,
+                    parseInt(document.getElementById('root-octave').value),
+                    document.getElementById('scale').value
+                );
+                engine.setArpParams({
+                    progression: document.getElementById('progression').value,
+                    chordType: document.getElementById('chord-type').value,
+                    octaves: parseInt(document.getElementById('arp-octaves').value)
+                });
+                engine.setNotesPerChord(parseInt(document.getElementById('notes-per-chord').value));
+                updateChordDisplay();
+                updateSequenceDisplay();
+            } else {
+                engine.stopPlayback();
+                powerBtn.classList.remove('active');
+                powerLed.classList.remove('on');
+                playBtn.classList.remove('active');
+                currentNoteDisplay.textContent = '--';
+            }
+        });
+    }
+
+    function updateChordDisplay() {
+        if (!engine) return;
+        const info = engine.getCurrentChordInfo();
+        chordDisplay.textContent = info.rootName.replace(/\d/, '');
+    }
+
+    function updateSequenceDisplay() {
+        if (!engine) return;
+        const seq = engine.getArpSequence();
+        sequenceDisplay.innerHTML = '';
+        seq.forEach((note, i) => {
+            const dot = document.createElement('div');
+            dot.className = 'sequence-note';
+            dot.title = note.name;
+            sequenceDisplay.appendChild(dot);
+        });
+    }
+
+    function highlightStep(step) {
+        const dots = sequenceDisplay.querySelectorAll('.sequence-note');
+        dots.forEach((d, i) => d.classList.toggle('active', i === step));
+    }
+
+    function clearHighlight() {
+        sequenceDisplay.querySelectorAll('.sequence-note').forEach(d => d.classList.remove('active'));
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
+</script>
+{% endblock %}

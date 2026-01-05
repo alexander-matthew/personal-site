@@ -40,5 +40,11 @@ def projects():
             'link': '/projects/sudoku',
             'tags': ['Game', 'Puzzle', 'Interactive']
         },
+        {
+            'title': 'Analog Synth',
+            'description': 'Hardware-inspired web synthesizer with dual oscillators, filter, LFO, and musical arpeggiator. Supports scales and chord progressions.',
+            'link': '/projects/synth',
+            'tags': ['Web Audio', 'Music', 'Interactive']
+        },
     ]
     return render_template('projects.html', projects=sample_projects)

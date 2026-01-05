@@ -63,4 +63,8 @@ def create_app():
     from app.routes import sudoku
     app.register_blueprint(sudoku.bp)
 
+    # Register Analog Synth
+    from app.routes import synth
+    app.register_blueprint(synth.bp)
+
     return app
