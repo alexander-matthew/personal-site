@@ -40,5 +40,11 @@ def projects():
             'link': '/projects/sudoku',
             'tags': ['Game', 'Puzzle', 'Interactive']
         },
+        {
+            'title': 'Weather Dashboard',
+            'description': 'Real-time global weather with animated themes. Track extreme weather patterns worldwide and see industry impact analysis.',
+            'link': '/projects/weather',
+            'tags': ['Weather', 'Data Viz', 'API']
+        },
     ]
     return render_template('projects.html', projects=sample_projects)

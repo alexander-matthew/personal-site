@@ -1,0 +1,593 @@
+{% extends "base.html" %}
+
+{% block title %}Weather Dashboard{% endblock %}
+
+{% block head %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/weather.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="weather-dashboard" id="weatherDashboard">
+    <!-- Weather Animation Container -->
+    <div class="weather-animation-container" id="weatherAnimation"></div>
+
+    <!-- Tab Navigation -->
+    <div class="weather-tabs">
+        <button class="tab-btn active" data-tab="current">
+            <i class="fas fa-cloud-sun"></i>
+            Current Weather
+        </button>
+        <button class="tab-btn" data-tab="extremes">
+            <i class="fas fa-bolt"></i>
+            Extreme Weather
+        </button>
+    </div>
+
+    <!-- Tab 1: Current Weather -->
+    <section id="current-tab" class="tab-content active">
+        <!-- Location Search Bar -->
+        <div class="location-bar">
+            <div class="location-current" id="currentLocation">
+                <i class="fas fa-location-dot"></i>
+                <span id="locationName">Detecting location...</span>
+            </div>
+            <div class="location-search">
+                <input type="text" id="citySearch" placeholder="Search city..." autocomplete="off">
+                <button id="searchBtn"><i class="fas fa-search"></i></button>
+            </div>
+            <button id="geolocateBtn" class="geo-btn" title="Use my location">
+                <i class="fas fa-crosshairs"></i>
+            </button>
+        </div>
+
+        <!-- Search Results Dropdown -->
+        <div class="search-results" id="searchResults"></div>
+
+        <!-- Current Weather Card -->
+        <div class="current-weather-card" id="currentWeatherCard">
+            <div class="weather-loading" id="currentLoading">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>Loading weather...</span>
+            </div>
+            <div class="weather-content" id="currentContent" style="display: none;">
+                <div class="weather-main">
+                    <div class="weather-icon-large" id="weatherIconLarge">
+                        <i class="fas fa-sun"></i>
+                    </div>
+                    <div class="weather-temp">
+                        <span class="temp-value" id="tempValue">--</span>
+                        <span class="temp-unit">°C</span>
+                    </div>
+                    <div class="weather-condition" id="weatherCondition">--</div>
+                </div>
+                <div class="weather-details">
+                    <div class="detail-item">
+                        <i class="fas fa-temperature-half"></i>
+                        <span class="detail-label">Feels Like</span>
+                        <span class="detail-value" id="feelsLike">--°C</span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-droplet"></i>
+                        <span class="detail-label">Humidity</span>
+                        <span class="detail-value" id="humidity">--%</span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-wind"></i>
+                        <span class="detail-label">Wind</span>
+                        <span class="detail-value" id="windSpeed">-- km/h</span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-cloud-rain"></i>
+                        <span class="detail-label">Precipitation</span>
+                        <span class="detail-value" id="precipitation">-- mm</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7-Day Forecast -->
+        <div class="forecast-section">
+            <h3><i class="fas fa-calendar-days"></i> 7-Day Forecast</h3>
+            <div class="forecast-grid" id="forecastGrid">
+                <div class="weather-loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tab 2: Extreme Weather -->
+    <section id="extremes-tab" class="tab-content">
+        <!-- Time Horizon Selector -->
+        <div class="horizon-selector">
+            <button class="horizon-btn active" data-horizon="today">Today</button>
+            <button class="horizon-btn" data-horizon="tomorrow">Tomorrow</button>
+            <button class="horizon-btn" data-horizon="3day">3 Days</button>
+            <button class="horizon-btn" data-horizon="7day">7 Days</button>
+            <button class="horizon-btn" data-horizon="season">Season</button>
+            <button class="horizon-btn" data-horizon="year">Year</button>
+        </div>
+
+        <!-- Extremes Grid -->
+        <div class="extremes-grid" id="extremesGrid">
+            <div class="extreme-card hottest" data-type="hottest">
+                <div class="extreme-icon"><i class="fas fa-fire"></i></div>
+                <div class="extreme-label">Hottest</div>
+                <div class="extreme-value" id="hottestValue">--°C</div>
+                <div class="extreme-location" id="hottestLocation">Loading...</div>
+            </div>
+            <div class="extreme-card coldest" data-type="coldest">
+                <div class="extreme-icon"><i class="fas fa-snowflake"></i></div>
+                <div class="extreme-label">Coldest</div>
+                <div class="extreme-value" id="coldestValue">--°C</div>
+                <div class="extreme-location" id="coldestLocation">Loading...</div>
+            </div>
+            <div class="extreme-card wettest" data-type="wettest">
+                <div class="extreme-icon"><i class="fas fa-cloud-showers-heavy"></i></div>
+                <div class="extreme-label">Wettest</div>
+                <div class="extreme-value" id="wettestValue">-- mm</div>
+                <div class="extreme-location" id="wettestLocation">Loading...</div>
+            </div>
+            <div class="extreme-card windiest" data-type="windiest">
+                <div class="extreme-icon"><i class="fas fa-wind"></i></div>
+                <div class="extreme-label">Windiest</div>
+                <div class="extreme-value" id="windiestValue">-- km/h</div>
+                <div class="extreme-location" id="windiestLocation">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Industry Impact Panel -->
+        <div class="industry-panel" id="industryPanel" style="display: none;">
+            <div class="industry-header">
+                <h3><i class="fas fa-industry"></i> Industry Impact</h3>
+                <button class="close-panel" id="closeIndustry"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="industry-location" id="industryLocation">--</div>
+            <div class="industry-list" id="industryList"></div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/weather-engine.js') }}"></script>
+<script>
+(function() {
+    'use strict';
+
+    // State
+    let currentLat = null;
+    let currentLon = null;
+    let currentTheme = 'sunny';
+
+    // DOM Elements
+    const dashboard = document.getElementById('weatherDashboard');
+    const animationContainer = document.getElementById('weatherAnimation');
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    // Current Weather Elements
+    const locationName = document.getElementById('locationName');
+    const citySearch = document.getElementById('citySearch');
+    const searchBtn = document.getElementById('searchBtn');
+    const geolocateBtn = document.getElementById('geolocateBtn');
+    const searchResults = document.getElementById('searchResults');
+    const currentLoading = document.getElementById('currentLoading');
+    const currentContent = document.getElementById('currentContent');
+    const tempValue = document.getElementById('tempValue');
+    const weatherCondition = document.getElementById('weatherCondition');
+    const weatherIconLarge = document.getElementById('weatherIconLarge');
+    const feelsLike = document.getElementById('feelsLike');
+    const humidity = document.getElementById('humidity');
+    const windSpeed = document.getElementById('windSpeed');
+    const precipitation = document.getElementById('precipitation');
+    const forecastGrid = document.getElementById('forecastGrid');
+
+    // Extreme Weather Elements
+    const horizonBtns = document.querySelectorAll('.horizon-btn');
+    const extremesGrid = document.getElementById('extremesGrid');
+    const industryPanel = document.getElementById('industryPanel');
+    const industryLocation = document.getElementById('industryLocation');
+    const industryList = document.getElementById('industryList');
+    const closeIndustry = document.getElementById('closeIndustry');
+
+    // Tab switching
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tab = btn.dataset.tab;
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tabContents.forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(`${tab}-tab`).classList.add('active');
+
+            if (tab === 'extremes') {
+                loadExtremes('today');
+            }
+        });
+    });
+
+    // Apply weather theme
+    function applyTheme(theme) {
+        if (currentTheme === theme) return;
+        currentTheme = theme;
+
+        // Remove old theme classes
+        dashboard.className = 'weather-dashboard';
+        dashboard.classList.add(`theme-${theme}`);
+
+        // Clear and create new animation
+        animationContainer.innerHTML = '';
+        createWeatherAnimation(theme);
+    }
+
+    // Create weather animations
+    function createWeatherAnimation(theme) {
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (prefersReducedMotion) return;
+
+        animationContainer.className = `weather-animation-container animation-${theme}`;
+
+        if (theme === 'rainy' || theme === 'stormy') {
+            // Create rain drops
+            const dropCount = theme === 'stormy' ? 80 : 50;
+            for (let i = 0; i < dropCount; i++) {
+                const drop = document.createElement('div');
+                drop.className = 'rain-drop';
+                drop.style.left = `${Math.random() * 100}%`;
+                drop.style.animationDelay = `${Math.random() * 2}s`;
+                drop.style.animationDuration = `${0.5 + Math.random() * 0.5}s`;
+                animationContainer.appendChild(drop);
+            }
+            if (theme === 'stormy') {
+                const lightning = document.createElement('div');
+                lightning.className = 'lightning';
+                animationContainer.appendChild(lightning);
+            }
+        } else if (theme === 'snowy') {
+            // Create snowflakes
+            for (let i = 0; i < 40; i++) {
+                const flake = document.createElement('div');
+                flake.className = 'snowflake';
+                flake.innerHTML = '<i class="fas fa-snowflake"></i>';
+                flake.style.left = `${Math.random() * 100}%`;
+                flake.style.animationDelay = `${Math.random() * 5}s`;
+                flake.style.animationDuration = `${3 + Math.random() * 4}s`;
+                flake.style.fontSize = `${8 + Math.random() * 12}px`;
+                flake.style.opacity = 0.3 + Math.random() * 0.5;
+                animationContainer.appendChild(flake);
+            }
+        } else if (theme === 'sunny') {
+            // Sun rays
+            const sun = document.createElement('div');
+            sun.className = 'sun';
+            animationContainer.appendChild(sun);
+        } else if (theme === 'cloudy') {
+            // Floating clouds
+            for (let i = 0; i < 5; i++) {
+                const cloud = document.createElement('div');
+                cloud.className = 'cloud';
+                cloud.style.top = `${10 + Math.random() * 30}%`;
+                cloud.style.animationDelay = `${Math.random() * 20}s`;
+                cloud.style.animationDuration = `${30 + Math.random() * 20}s`;
+                cloud.style.opacity = 0.3 + Math.random() * 0.4;
+                cloud.style.transform = `scale(${0.5 + Math.random() * 1})`;
+                animationContainer.appendChild(cloud);
+            }
+        } else if (theme === 'foggy') {
+            // Fog layers
+            for (let i = 0; i < 3; i++) {
+                const fog = document.createElement('div');
+                fog.className = 'fog-layer';
+                fog.style.animationDelay = `${i * 3}s`;
+                animationContainer.appendChild(fog);
+            }
+        }
+    }
+
+    // Get icon class for weather code
+    function getWeatherIcon(code) {
+        return WeatherEngine.getIconClass(code);
+    }
+
+    // Load current weather
+    async function loadCurrentWeather(lat, lon, cityName) {
+        currentLoading.style.display = 'flex';
+        currentContent.style.display = 'none';
+
+        try {
+            const response = await fetch(`/projects/weather/api/current?lat=${lat}&lon=${lon}`);
+            const data = await response.json();
+
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            // Update display
+            tempValue.textContent = Math.round(data.temperature);
+            weatherCondition.textContent = data.weather_text;
+            weatherIconLarge.innerHTML = `<i class="fas fa-${data.weather_icon}"></i>`;
+            feelsLike.textContent = `${Math.round(data.feels_like)}°C`;
+            humidity.textContent = `${data.humidity}%`;
+            windSpeed.textContent = `${Math.round(data.wind_speed)} km/h`;
+            precipitation.textContent = `${data.precipitation} mm`;
+
+            if (cityName) {
+                locationName.textContent = cityName;
+            }
+
+            // Apply theme
+            applyTheme(data.weather_theme);
+
+            currentLoading.style.display = 'none';
+            currentContent.style.display = 'block';
+
+            // Load forecast
+            loadForecast(lat, lon);
+
+        } catch (error) {
+            console.error('Error loading weather:', error);
+            currentLoading.innerHTML = `<i class="fas fa-exclamation-triangle"></i><span>Failed to load weather</span>`;
+        }
+    }
+
+    // Load 7-day forecast
+    async function loadForecast(lat, lon) {
+        try {
+            const response = await fetch(`/projects/weather/api/forecast?lat=${lat}&lon=${lon}`);
+            const data = await response.json();
+
+            if (data.error) throw new Error(data.error);
+
+            forecastGrid.innerHTML = data.days.map((day, i) => {
+                const date = new Date(day.date);
+                const dayName = i === 0 ? 'Today' : date.toLocaleDateString('en-US', { weekday: 'short' });
+
+                return `
+                    <div class="forecast-day">
+                        <div class="forecast-day-name">${dayName}</div>
+                        <div class="forecast-icon"><i class="fas fa-${day.weather_icon}"></i></div>
+                        <div class="forecast-temps">
+                            <span class="temp-high">${Math.round(day.temp_max)}°</span>
+                            <span class="temp-low">${Math.round(day.temp_min)}°</span>
+                        </div>
+                        <div class="forecast-precip">
+                            ${day.precipitation_probability ? `<i class="fas fa-droplet"></i> ${day.precipitation_probability}%` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+        } catch (error) {
+            console.error('Error loading forecast:', error);
+            forecastGrid.innerHTML = '<div class="error">Failed to load forecast</div>';
+        }
+    }
+
+    // Search for city
+    async function searchCity(query) {
+        if (!query.trim()) {
+            searchResults.style.display = 'none';
+            return;
+        }
+
+        try {
+            const response = await fetch(`/projects/weather/api/geocode?city=${encodeURIComponent(query)}`);
+            const data = await response.json();
+
+            if (data.error || !data.results || data.results.length === 0) {
+                searchResults.innerHTML = '<div class="search-item no-results">No cities found</div>';
+                searchResults.style.display = 'block';
+                return;
+            }
+
+            searchResults.innerHTML = data.results.map(city => {
+                const fullName = [city.name, city.admin1, city.country].filter(Boolean).join(', ');
+                return `
+                    <div class="search-item" data-lat="${city.lat}" data-lon="${city.lon}" data-name="${fullName}">
+                        <i class="fas fa-location-dot"></i>
+                        <span>${fullName}</span>
+                    </div>
+                `;
+            }).join('');
+
+            searchResults.style.display = 'block';
+
+        } catch (error) {
+            console.error('Error searching city:', error);
+        }
+    }
+
+    // Handle search result click
+    searchResults.addEventListener('click', (e) => {
+        const item = e.target.closest('.search-item');
+        if (item && item.dataset.lat) {
+            const lat = parseFloat(item.dataset.lat);
+            const lon = parseFloat(item.dataset.lon);
+            const name = item.dataset.name;
+
+            currentLat = lat;
+            currentLon = lon;
+
+            localStorage.setItem('weather_last_city', JSON.stringify({ lat, lon, name }));
+
+            searchResults.style.display = 'none';
+            citySearch.value = '';
+            loadCurrentWeather(lat, lon, name);
+        }
+    });
+
+    // Search input handling
+    let searchTimeout;
+    citySearch.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => searchCity(e.target.value), 300);
+    });
+
+    citySearch.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            searchCity(citySearch.value);
+        }
+    });
+
+    searchBtn.addEventListener('click', () => searchCity(citySearch.value));
+
+    // Close search results when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.location-search') && !e.target.closest('.search-results')) {
+            searchResults.style.display = 'none';
+        }
+    });
+
+    // Geolocation
+    function getGeolocation() {
+        locationName.textContent = 'Detecting location...';
+
+        if (!navigator.geolocation) {
+            locationName.textContent = 'Geolocation not supported';
+            loadFromSaved();
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                currentLat = position.coords.latitude;
+                currentLon = position.coords.longitude;
+
+                // Reverse geocode to get city name
+                try {
+                    const response = await fetch(`/projects/weather/api/geocode?city=${currentLat},${currentLon}`);
+                    const data = await response.json();
+                    const cityName = data.results?.[0]?.name || 'Your Location';
+                    loadCurrentWeather(currentLat, currentLon, cityName);
+                } catch {
+                    loadCurrentWeather(currentLat, currentLon, 'Your Location');
+                }
+            },
+            (error) => {
+                console.log('Geolocation error:', error);
+                loadFromSaved();
+            },
+            { timeout: 10000 }
+        );
+    }
+
+    // Load from saved location
+    function loadFromSaved() {
+        const saved = localStorage.getItem('weather_last_city');
+        if (saved) {
+            try {
+                const { lat, lon, name } = JSON.parse(saved);
+                currentLat = lat;
+                currentLon = lon;
+                loadCurrentWeather(lat, lon, name);
+                return;
+            } catch {}
+        }
+
+        // Default to New York
+        currentLat = 40.7128;
+        currentLon = -74.0060;
+        loadCurrentWeather(currentLat, currentLon, 'New York, USA');
+    }
+
+    geolocateBtn.addEventListener('click', getGeolocation);
+
+    // Load extreme weather
+    async function loadExtremes(horizon) {
+        // Update active button
+        horizonBtns.forEach(b => b.classList.remove('active'));
+        document.querySelector(`[data-horizon="${horizon}"]`).classList.add('active');
+
+        // Show loading state
+        document.querySelectorAll('.extreme-value').forEach(el => el.textContent = '...');
+        document.querySelectorAll('.extreme-location').forEach(el => el.textContent = 'Loading...');
+
+        try {
+            const response = await fetch(`/projects/weather/api/extremes/${horizon}`);
+            const data = await response.json();
+
+            if (data.error) throw new Error(data.error);
+
+            // Update cards
+            if (data.hottest) {
+                document.getElementById('hottestValue').textContent = `${Math.round(data.hottest.value)}°C`;
+                document.getElementById('hottestLocation').textContent = data.hottest.name;
+                document.querySelector('.extreme-card.hottest').dataset.region = data.hottest.region;
+            }
+
+            if (data.coldest) {
+                document.getElementById('coldestValue').textContent = `${Math.round(data.coldest.value)}°C`;
+                document.getElementById('coldestLocation').textContent = data.coldest.name;
+                document.querySelector('.extreme-card.coldest').dataset.region = data.coldest.region;
+            }
+
+            if (data.wettest) {
+                document.getElementById('wettestValue').textContent = `${Math.round(data.wettest.value)} mm`;
+                document.getElementById('wettestLocation').textContent = data.wettest.name;
+                document.querySelector('.extreme-card.wettest').dataset.region = data.wettest.region;
+            }
+
+            if (data.windiest) {
+                document.getElementById('windiestValue').textContent = `${Math.round(data.windiest.value)} km/h`;
+                document.getElementById('windiestLocation').textContent = data.windiest.name;
+                document.querySelector('.extreme-card.windiest').dataset.region = data.windiest.region;
+            }
+
+        } catch (error) {
+            console.error('Error loading extremes:', error);
+            document.querySelectorAll('.extreme-location').forEach(el => el.textContent = 'Error loading data');
+        }
+    }
+
+    // Horizon button clicks
+    horizonBtns.forEach(btn => {
+        btn.addEventListener('click', () => loadExtremes(btn.dataset.horizon));
+    });
+
+    // Extreme card clicks - show industry impact
+    extremesGrid.addEventListener('click', async (e) => {
+        const card = e.target.closest('.extreme-card');
+        if (!card || !card.dataset.region) return;
+
+        const region = card.dataset.region;
+        const locationText = card.querySelector('.extreme-location').textContent;
+
+        try {
+            const response = await fetch(`/projects/weather/api/industry/${region}`);
+            const data = await response.json();
+
+            if (data.error) {
+                industryList.innerHTML = '<div class="industry-item">No industry data available for this region</div>';
+            } else {
+                industryLocation.textContent = `${locationText} - ${data.name}`;
+                industryList.innerHTML = data.industries.map(ind => `
+                    <div class="industry-item sensitivity-${ind.sensitivity}">
+                        <div class="industry-name">
+                            <span class="sensitivity-badge">${ind.sensitivity}</span>
+                            ${ind.name}
+                        </div>
+                        <div class="industry-details">${ind.details}</div>
+                    </div>
+                `).join('');
+            }
+
+            industryPanel.style.display = 'block';
+
+        } catch (error) {
+            console.error('Error loading industry data:', error);
+        }
+    });
+
+    // Close industry panel
+    closeIndustry.addEventListener('click', () => {
+        industryPanel.style.display = 'none';
+    });
+
+    // Initialize
+    getGeolocation();
+
+})();
+</script>
+{% endblock %}

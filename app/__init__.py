@@ -63,4 +63,8 @@ def create_app():
     from app.routes import sudoku
     app.register_blueprint(sudoku.bp)
 
+    # Register Weather dashboard
+    from app.routes import weather
+    app.register_blueprint(weather.bp)
+
     return app
