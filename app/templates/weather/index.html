@@ -1,0 +1,381 @@
+{% extends "base.html" %}
+
+{% block title %}Weather Dashboard{% endblock %}
+
+{% block head %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/weather.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="weather-dashboard" id="weatherDashboard">
+    <!-- Tab Navigation -->
+    <div class="weather-tabs">
+        <button class="tab-btn active" data-tab="current">
+            <i class="fas fa-cloud-sun"></i>
+            Current Weather
+        </button>
+        <button class="tab-btn" data-tab="coming-soon">
+            <i class="fas fa-chart-line"></i>
+            Coming Soon
+        </button>
+    </div>
+
+    <!-- Tab 1: Current Weather -->
+    <section id="current-tab" class="tab-content active">
+        <!-- Location Search Bar -->
+        <div class="location-bar">
+            <div class="location-current" id="currentLocation">
+                <i class="fas fa-location-dot"></i>
+                <span id="locationName">Detecting location...</span>
+            </div>
+            <div class="location-search">
+                <input type="text" id="citySearch" placeholder="Search city..." autocomplete="off">
+                <button id="searchBtn"><i class="fas fa-search"></i></button>
+                <!-- Search Results Dropdown -->
+                <div class="search-results" id="searchResults"></div>
+            </div>
+            <button id="geolocateBtn" class="geo-btn" title="Use my location">
+                <i class="fas fa-crosshairs"></i>
+            </button>
+        </div>
+
+        <!-- Current Weather Card -->
+        <div class="current-weather-card" id="currentWeatherCard">
+            <div class="weather-loading" id="currentLoading">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>Loading weather...</span>
+            </div>
+            <div class="weather-content" id="currentContent" style="display: none;">
+                <div class="weather-main">
+                    <div class="weather-icon-large" id="weatherIconLarge">
+                        <i class="fas fa-sun"></i>
+                    </div>
+                    <div class="weather-temp">
+                        <span class="temp-value" id="tempValue">--</span>
+                        <span class="temp-unit">°C</span>
+                    </div>
+                    <div class="weather-condition" id="weatherCondition">--</div>
+                </div>
+                <div class="weather-details">
+                    <div class="detail-item">
+                        <i class="fas fa-temperature-half"></i>
+                        <span class="detail-label">Feels Like</span>
+                        <span class="detail-value" id="feelsLike">--°C</span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-droplet"></i>
+                        <span class="detail-label">Humidity</span>
+                        <span class="detail-value" id="humidity">--%</span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-wind"></i>
+                        <span class="detail-label">Wind</span>
+                        <span class="detail-value" id="windSpeed">-- km/h</span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-cloud-rain"></i>
+                        <span class="detail-label">Precipitation</span>
+                        <span class="detail-value" id="precipitation">-- mm</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7-Day Forecast -->
+        <div class="forecast-section">
+            <h3><i class="fas fa-calendar-days"></i> 7-Day Forecast</h3>
+            <div class="forecast-grid" id="forecastGrid">
+                <div class="weather-loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tab 2: Coming Soon -->
+    <section id="coming-soon-tab" class="tab-content">
+        <div class="coming-soon-placeholder">
+            <i class="fas fa-hammer"></i>
+            <h3>Feature Coming Soon</h3>
+            <p>We're working on something new for this space.</p>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/weather-engine.js') }}"></script>
+<script>
+(function() {
+    'use strict';
+
+    // State
+    let currentLat = null;
+    let currentLon = null;
+    let currentWeatherTheme = 'sunny';
+
+    // DOM Elements
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    // Current Weather Elements
+    const locationName = document.getElementById('locationName');
+    const citySearch = document.getElementById('citySearch');
+    const searchBtn = document.getElementById('searchBtn');
+    const geolocateBtn = document.getElementById('geolocateBtn');
+    const searchResults = document.getElementById('searchResults');
+    const currentLoading = document.getElementById('currentLoading');
+    const currentContent = document.getElementById('currentContent');
+    const tempValue = document.getElementById('tempValue');
+    const weatherCondition = document.getElementById('weatherCondition');
+    const weatherIconLarge = document.getElementById('weatherIconLarge');
+    const feelsLike = document.getElementById('feelsLike');
+    const humidity = document.getElementById('humidity');
+    const windSpeed = document.getElementById('windSpeed');
+    const precipitation = document.getElementById('precipitation');
+    const forecastGrid = document.getElementById('forecastGrid');
+
+    // Tab switching
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tab = btn.dataset.tab;
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tabContents.forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(`${tab}-tab`).classList.add('active');
+        });
+    });
+
+    // Get icon class for weather code
+    function getWeatherIcon(code) {
+        return WeatherEngine.getIconClass(code);
+    }
+
+    // Update ASCII background based on weather (dispatches custom event)
+    function updateWeatherBackground(theme) {
+        console.log('[Weather] Updating background to:', theme, 'current:', currentWeatherTheme);
+        if (currentWeatherTheme === theme) return;
+        currentWeatherTheme = theme;
+
+        // Dispatch event for weather-ascii-background to listen to
+        console.log('[Weather] Dispatching weatherchange event:', theme);
+        window.dispatchEvent(new CustomEvent('weatherchange', {
+            detail: { theme }
+        }));
+    }
+
+    // Load current weather
+    async function loadCurrentWeather(lat, lon, cityName) {
+        currentLoading.style.display = 'flex';
+        currentContent.style.display = 'none';
+
+        try {
+            const response = await fetch(`/projects/weather/api/current?lat=${lat}&lon=${lon}`);
+            const data = await response.json();
+
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            // Update display
+            tempValue.textContent = Math.round(data.temperature);
+            weatherCondition.textContent = data.weather_text;
+
+            // Set icon with theme class for coloring
+            weatherIconLarge.className = `weather-icon-large ${data.weather_theme}`;
+            weatherIconLarge.innerHTML = `<i class="fas fa-${data.weather_icon}"></i>`;
+
+            feelsLike.textContent = `${Math.round(data.feels_like)}°C`;
+            humidity.textContent = `${data.humidity}%`;
+            windSpeed.textContent = `${Math.round(data.wind_speed)} km/h`;
+            precipitation.textContent = `${data.precipitation} mm`;
+
+            if (cityName) {
+                locationName.textContent = cityName;
+            }
+
+            // Update ASCII background based on weather
+            updateWeatherBackground(data.weather_theme);
+
+            currentLoading.style.display = 'none';
+            currentContent.style.display = 'block';
+
+            // Load forecast
+            loadForecast(lat, lon);
+
+        } catch (error) {
+            console.error('Error loading weather:', error);
+            currentLoading.innerHTML = `<i class="fas fa-exclamation-triangle"></i><span>Failed to load weather</span>`;
+        }
+    }
+
+    // Load 7-day forecast
+    async function loadForecast(lat, lon) {
+        try {
+            const response = await fetch(`/projects/weather/api/forecast?lat=${lat}&lon=${lon}`);
+            const data = await response.json();
+
+            if (data.error) throw new Error(data.error);
+
+            forecastGrid.innerHTML = data.days.map((day, i) => {
+                const date = new Date(day.date);
+                const dayName = i === 0 ? 'Today' : date.toLocaleDateString('en-US', { weekday: 'short' });
+
+                return `
+                    <div class="forecast-day">
+                        <div class="forecast-day-name">${dayName}</div>
+                        <div class="forecast-icon"><i class="fas fa-${day.weather_icon}"></i></div>
+                        <div class="forecast-temps">
+                            <span class="temp-high">${Math.round(day.temp_max)}°</span>
+                            <span class="temp-low">${Math.round(day.temp_min)}°</span>
+                        </div>
+                        <div class="forecast-precip">
+                            ${day.precipitation_probability ? `<i class="fas fa-droplet"></i> ${day.precipitation_probability}%` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+        } catch (error) {
+            console.error('Error loading forecast:', error);
+            forecastGrid.innerHTML = '<div class="error">Failed to load forecast</div>';
+        }
+    }
+
+    // Search for city
+    async function searchCity(query) {
+        if (!query.trim()) {
+            searchResults.style.display = 'none';
+            return;
+        }
+
+        try {
+            const response = await fetch(`/projects/weather/api/geocode?city=${encodeURIComponent(query)}`);
+            const data = await response.json();
+
+            if (data.error || !data.results || data.results.length === 0) {
+                searchResults.innerHTML = '<div class="search-item no-results">No cities found</div>';
+                searchResults.style.display = 'block';
+                return;
+            }
+
+            searchResults.innerHTML = data.results.map(city => {
+                const fullName = [city.name, city.admin1, city.country].filter(Boolean).join(', ');
+                return `
+                    <div class="search-item" data-lat="${city.lat}" data-lon="${city.lon}" data-name="${fullName}">
+                        <i class="fas fa-location-dot"></i>
+                        <span>${fullName}</span>
+                    </div>
+                `;
+            }).join('');
+
+            searchResults.style.display = 'block';
+
+        } catch (error) {
+            console.error('Error searching city:', error);
+        }
+    }
+
+    // Handle search result click
+    searchResults.addEventListener('click', (e) => {
+        const item = e.target.closest('.search-item');
+        if (item && item.dataset.lat) {
+            const lat = parseFloat(item.dataset.lat);
+            const lon = parseFloat(item.dataset.lon);
+            const name = item.dataset.name;
+
+            currentLat = lat;
+            currentLon = lon;
+
+            localStorage.setItem('weather_last_city', JSON.stringify({ lat, lon, name }));
+
+            searchResults.style.display = 'none';
+            citySearch.value = '';
+            loadCurrentWeather(lat, lon, name);
+        }
+    });
+
+    // Search input handling
+    let searchTimeout;
+    citySearch.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => searchCity(e.target.value), 300);
+    });
+
+    citySearch.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            searchCity(citySearch.value);
+        }
+    });
+
+    searchBtn.addEventListener('click', () => searchCity(citySearch.value));
+
+    // Close search results when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.location-search') && !e.target.closest('.search-results')) {
+            searchResults.style.display = 'none';
+        }
+    });
+
+    // Geolocation
+    function getGeolocation() {
+        locationName.textContent = 'Detecting location...';
+
+        if (!navigator.geolocation) {
+            locationName.textContent = 'Geolocation not supported';
+            loadFromSaved();
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                currentLat = position.coords.latitude;
+                currentLon = position.coords.longitude;
+
+                // Reverse geocode to get city name
+                try {
+                    const response = await fetch(`/projects/weather/api/geocode?city=${currentLat},${currentLon}`);
+                    const data = await response.json();
+                    const cityName = data.results?.[0]?.name || 'Your Location';
+                    loadCurrentWeather(currentLat, currentLon, cityName);
+                } catch {
+                    loadCurrentWeather(currentLat, currentLon, 'Your Location');
+                }
+            },
+            (error) => {
+                console.log('Geolocation error:', error);
+                loadFromSaved();
+            },
+            { timeout: 10000 }
+        );
+    }
+
+    // Load from saved location
+    function loadFromSaved() {
+        const saved = localStorage.getItem('weather_last_city');
+        if (saved) {
+            try {
+                const { lat, lon, name } = JSON.parse(saved);
+                currentLat = lat;
+                currentLon = lon;
+                loadCurrentWeather(lat, lon, name);
+                return;
+            } catch {}
+        }
+
+        // Default to New York
+        currentLat = 40.7128;
+        currentLon = -74.0060;
+        loadCurrentWeather(currentLat, currentLon, 'New York, USA');
+    }
+
+    geolocateBtn.addEventListener('click', getGeolocation);
+
+    // Initialize
+    getGeolocation();
+
+})();
+</script>
+{% endblock %}
