@@ -21,6 +21,21 @@ let currentEffect = null;
 let currentScene = null;
 let currentParticles = null;
 
+// Mouse tracking for ripple effect
+const mouse = {
+    x: 0,
+    y: 0,
+    worldX: 0,
+    worldY: 0
+};
+
+// Ripple configuration
+const ripple = {
+    radius: 150,      // How far the ripple extends
+    strength: 40,     // How much particles are pushed
+    falloff: 0.92     // How quickly displacement decays (0-1, higher = slower return)
+};
+
 export function updateAsciiTheme(isDark) {
     if (!currentEffect || !currentScene) return;
 
@@ -94,6 +109,10 @@ export function initAsciiBackground(containerId = 'ascii-background', isDark = t
         sphere.userData.speed = 0.5 + Math.random() * 1.5;
         sphere.userData.offset = Math.random() * Math.PI * 2;
 
+        // Ripple displacement (will be animated)
+        sphere.userData.displaceX = 0;
+        sphere.userData.displaceY = 0;
+
         particles.add(sphere);
     }
 
@@ -102,6 +121,19 @@ export function initAsciiBackground(containerId = 'ascii-background', isDark = t
     // Add ambient light
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(ambientLight);
+
+    // Mouse event handler
+    function onMouseMove(event) {
+        // Normalize mouse position to -1 to 1
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        // Convert to world coordinates (approximate, for the z=0 plane)
+        mouse.worldX = mouse.x * 500;
+        mouse.worldY = mouse.y * 300;
+    }
+
+    window.addEventListener('mousemove', onMouseMove);
 
     // Animation
     let animationId;
@@ -112,14 +144,42 @@ export function initAsciiBackground(containerId = 'ascii-background', isDark = t
 
         const time = clock.getElapsedTime();
 
-        // Animate each particle with wave-like motion
+        // Animate each particle with wave-like motion + ripple displacement
         particles.children.forEach((particle) => {
             const { initialX, initialY, initialZ, speed, offset } = particle.userData;
 
-            // Drift motion with sine waves
-            particle.position.x = initialX + Math.sin(time * speed * 0.3 + offset) * 30;
-            particle.position.y = initialY + Math.cos(time * speed * 0.2 + offset) * 20;
-            particle.position.z = initialZ + Math.sin(time * speed * 0.4 + offset * 2) * 25;
+            // Calculate base drift position
+            const baseX = initialX + Math.sin(time * speed * 0.3 + offset) * 30;
+            const baseY = initialY + Math.cos(time * speed * 0.2 + offset) * 20;
+            const baseZ = initialZ + Math.sin(time * speed * 0.4 + offset * 2) * 25;
+
+            // Calculate distance from mouse (in screen-projected space)
+            const dx = baseX - mouse.worldX;
+            const dy = baseY - mouse.worldY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            // Apply ripple push if within radius
+            if (distance < ripple.radius && distance > 0) {
+                // Strength falls off with distance (inverse, like water ripples)
+                const force = (1 - distance / ripple.radius) * ripple.strength;
+
+                // Push direction (away from mouse)
+                const pushX = (dx / distance) * force;
+                const pushY = (dy / distance) * force;
+
+                // Add to displacement (accumulates for smooth effect)
+                particle.userData.displaceX += pushX * 0.1;
+                particle.userData.displaceY += pushY * 0.1;
+            }
+
+            // Decay displacement over time (particles settle back)
+            particle.userData.displaceX *= ripple.falloff;
+            particle.userData.displaceY *= ripple.falloff;
+
+            // Apply final position
+            particle.position.x = baseX + particle.userData.displaceX;
+            particle.position.y = baseY + particle.userData.displaceY;
+            particle.position.z = baseZ;
         });
 
         // Slow rotation of entire particle system
