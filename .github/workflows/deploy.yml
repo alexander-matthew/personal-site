@@ -1,25 +1,22 @@
 
-name: Deploy to Heroku
-  
-on:
-  push:
-    branches:
-      - main
-      
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
+  on:
+    push:
+      branches:
+        - main
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+  jobs:
+    deploy:
+      runs-on: ubuntu-latest
 
-      - name: Deploy to Heroku
-        uses: akhileshns/heroku-deploy@v3.13.15
-        with:
-          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
-          heroku_app_name: mighty-shelf-14141
-          heroku_email: ${{ secrets.HEROKU_EMAIL }}
+      steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+          with:
+            fetch-depth: 0
 
+        - name: Deploy to Heroku
+          env:
+            HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+          run: |
+            git remote add heroku https://heroku:${HEROKU_API_KEY}@git.heroku.com/mighty-shelf-14141.git
+            git push heroku main --force

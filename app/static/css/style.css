@@ -31,6 +31,8 @@ body {
     padding: 1rem 2rem;
     background-color: var(--bg-color);
     border-bottom: 1px solid var(--border-color);
+    position: relative;
+    z-index: 100;
 }
 
 .nav-brand a {
@@ -42,6 +44,7 @@ body {
 
 .nav-links {
     display: flex;
+    align-items: center;
     list-style: none;
     gap: 2rem;
 }
@@ -63,12 +66,18 @@ body {
     margin: 0 auto;
     padding: 3rem 2rem;
     flex: 1;
+    position: relative;
+    z-index: 50;
 }
 
 /* Hero Section */
 .hero {
     text-align: center;
     padding: 4rem 0;
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 2rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
 }
 
 .hero h1 {
@@ -85,6 +94,9 @@ body {
 /* Sections */
 .section {
     margin-bottom: 3rem;
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 2rem;
+    border-radius: 8px;
 }
 
 .section h2 {
@@ -105,6 +117,7 @@ body {
     border: 1px solid var(--border-color);
     border-radius: 8px;
     transition: box-shadow 0.2s;
+    background-color: rgba(255, 255, 255, 0.95);
 }
 
 .project-card:hover {
@@ -159,6 +172,8 @@ body {
     background-color: var(--bg-secondary);
     color: var(--text-light);
     font-size: 0.875rem;
+    position: relative;
+    z-index: 100;
 }
 
 .footer p {
@@ -176,11 +191,27 @@ body {
     color: var(--text-color);
     text-decoration: none;
     font-weight: 500;
-    transition: color 0.2s;
+    transition: color 0.2s, transform 0.2s;
 }
 
 .footer-links a:hover {
     color: var(--primary-color);
+}
+
+.footer-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.footer-icon svg {
+    width: 24px;
+    height: 24px;
+    transition: transform 0.2s ease;
+}
+
+.footer-icon:hover svg {
+    transform: scale(1.1);
 }
 
 .footer-credit {
@@ -215,6 +246,7 @@ body {
     border: 1px solid var(--border-color);
     border-radius: 8px;
     transition: box-shadow 0.2s;
+    background-color: rgba(255, 255, 255, 0.95);
 }
 
 .post-card:hover {
@@ -297,6 +329,7 @@ body {
     border: 1px solid var(--border-color);
     border-radius: 8px;
     transition: box-shadow 0.2s;
+    background-color: rgba(255, 255, 255, 0.95);
 }
 
 .news-card:hover {
@@ -410,6 +443,222 @@ body {
 
 .btn-secondary:hover {
     background-color: var(--border-color);
+}
+
+/* Dark Theme for Homepage with ASCII Background */
+.home-dark {
+    --primary-color: #60a5fa;
+    --text-color: #e5e5e5;
+    --text-light: #a3a3a3;
+    --bg-color: #0a0a0a;
+    --bg-secondary: #171717;
+    --border-color: #262626;
+    background-color: var(--bg-color);
+}
+
+.home-dark .navbar {
+    background-color: rgba(10, 10, 10, 0.9);
+    backdrop-filter: blur(10px);
+    border-bottom-color: var(--border-color);
+    position: relative;
+    z-index: 100;
+}
+
+.home-dark .nav-brand a,
+.home-dark .nav-links a {
+    color: var(--text-color) !important;
+}
+
+.home-dark .nav-links a:hover {
+    color: var(--primary-color) !important;
+}
+
+/* Modern link styling for dark theme */
+.home-dark a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.home-dark a:hover {
+    color: #93c5fd;
+    text-decoration: none;
+}
+
+.home-dark a:visited {
+    color: var(--primary-color);
+}
+
+.home-dark a:active {
+    color: #3b82f6;
+}
+
+/* Inline links in paragraphs get subtle underline on hover */
+.home-dark p a,
+.home-dark .about-content a,
+.home-dark .post-content a {
+    border-bottom: 1px solid transparent;
+}
+
+.home-dark p a:hover,
+.home-dark .about-content a:hover,
+.home-dark .post-content a:hover {
+    border-bottom-color: var(--primary-color);
+}
+
+/* Read more and external links */
+.home-dark .read-more,
+.home-dark .external-link {
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+.home-dark .read-more:hover,
+.home-dark .external-link:hover {
+    color: #93c5fd;
+}
+
+.home-dark .container {
+    position: relative;
+    z-index: 50;
+}
+
+.home-dark .hero,
+.home-dark .section {
+    background-color: rgba(10, 10, 10, 0.85);
+    padding: 2rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.home-dark .project-card,
+.home-dark .post-card,
+.home-dark .news-card {
+    background-color: rgba(10, 10, 10, 0.85);
+    border-color: var(--border-color);
+}
+
+.home-dark .project-card:hover,
+.home-dark .post-card:hover,
+.home-dark .news-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.home-dark .project-card h3 a,
+.home-dark .post-card h2 a,
+.home-dark .news-card h2 a {
+    color: var(--text-color);
+}
+
+.home-dark .project-card h3 a:hover,
+.home-dark .post-card h2 a:hover,
+.home-dark .news-card h2 a:hover {
+    color: var(--primary-color);
+}
+
+.home-dark .tag {
+    background-color: var(--bg-secondary);
+    color: var(--text-light);
+}
+
+.home-dark .projects-grid {
+    position: relative;
+    z-index: 50;
+}
+
+.home-dark .posts-list,
+.home-dark .news-list {
+    position: relative;
+    z-index: 50;
+}
+
+.home-dark .blog-post {
+    position: relative;
+    z-index: 50;
+}
+
+.home-dark .back-link {
+    color: var(--text-light);
+}
+
+.home-dark .back-link:hover {
+    color: var(--primary-color);
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    color: var(--text-color);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.theme-toggle:hover {
+    background-color: var(--bg-secondary);
+    color: var(--primary-color);
+}
+
+/* Show moon in dark mode, sun in light mode */
+.home-dark .theme-toggle .sun-icon {
+    display: block;
+}
+
+.home-dark .theme-toggle .moon-icon {
+    display: none;
+}
+
+.theme-toggle .sun-icon {
+    display: none;
+}
+
+.theme-toggle .moon-icon {
+    display: block;
+}
+
+/* ASCII background is now visible in both light and dark modes */
+
+/* Footer icons - white in dark mode, dark in light mode */
+.home-dark .footer-icon {
+    color: var(--text-color);
+}
+
+.footer-icon {
+    color: var(--text-color);
+}
+
+.home-dark .footer {
+    background-color: var(--bg-secondary);
+    position: relative;
+    z-index: 100;
+}
+
+/* ASCII Background Container */
+#ascii-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+#ascii-background > * {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+}
+
+#ascii-background table {
+    margin: 0 auto;
 }
 
 /* Responsive */
