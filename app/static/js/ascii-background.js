@@ -17,9 +17,70 @@ const themes = {
     }
 };
 
+// Weather-specific particle behaviors
+const weatherConfigs = {
+    sunny: {
+        speedMultiplier: 0.5,
+        verticalDrift: 0.3,      // Gentle upward drift (heat shimmer)
+        horizontalDrift: 0.1,
+        rotationSpeed: 0.01,
+        particleScale: 1,
+        density: 1,
+        chaos: 0
+    },
+    cloudy: {
+        speedMultiplier: 0.3,
+        verticalDrift: 0,
+        horizontalDrift: 0.8,    // Slow horizontal drift
+        rotationSpeed: 0.015,
+        particleScale: 1.2,
+        density: 1.2,
+        chaos: 0.1
+    },
+    rainy: {
+        speedMultiplier: 1.5,
+        verticalDrift: -2,       // Falling down
+        horizontalDrift: 0.3,
+        rotationSpeed: 0.02,
+        particleScale: 0.8,
+        density: 1.5,
+        chaos: 0.2
+    },
+    stormy: {
+        speedMultiplier: 3,
+        verticalDrift: -2.5,
+        horizontalDrift: 1.5,    // Strong wind
+        rotationSpeed: 0.08,
+        particleScale: 0.7,
+        density: 2,
+        chaos: 0.8              // High chaos for lightning-like bursts
+    },
+    snowy: {
+        speedMultiplier: 0.4,
+        verticalDrift: -0.5,     // Gentle snowfall
+        horizontalDrift: 0.4,    // Wind-blown snow
+        rotationSpeed: 0.03,
+        particleScale: 0.9,
+        density: 1.3,
+        chaos: 0.1
+    },
+    foggy: {
+        speedMultiplier: 0.2,
+        verticalDrift: 0,
+        horizontalDrift: 0.2,
+        rotationSpeed: 0.005,
+        particleScale: 1.5,
+        density: 0.8,           // Less particles but larger
+        chaos: 0
+    }
+};
+
 let currentEffect = null;
 let currentScene = null;
 let currentParticles = null;
+let currentWeather = null;
+let targetWeather = null;
+let weatherTransition = 0;
 
 // Mouse tracking for ripple effect
 const mouse = {
@@ -50,6 +111,36 @@ export function updateAsciiTheme(isDark) {
             particle.material.color.setHex(theme.particleColor);
         });
     }
+}
+
+// Update weather mode for ASCII background
+export function updateAsciiWeather(weatherTheme) {
+    if (!weatherConfigs[weatherTheme]) return;
+
+    targetWeather = weatherTheme;
+    weatherTransition = 0; // Start transition
+}
+
+// Get interpolated weather config during transitions
+function getWeatherConfig() {
+    if (!currentWeather || !targetWeather || currentWeather === targetWeather) {
+        return weatherConfigs[targetWeather || currentWeather || 'sunny'];
+    }
+
+    // Interpolate between current and target weather
+    const from = weatherConfigs[currentWeather];
+    const to = weatherConfigs[targetWeather];
+    const t = weatherTransition;
+
+    return {
+        speedMultiplier: from.speedMultiplier + (to.speedMultiplier - from.speedMultiplier) * t,
+        verticalDrift: from.verticalDrift + (to.verticalDrift - from.verticalDrift) * t,
+        horizontalDrift: from.horizontalDrift + (to.horizontalDrift - from.horizontalDrift) * t,
+        rotationSpeed: from.rotationSpeed + (to.rotationSpeed - from.rotationSpeed) * t,
+        particleScale: from.particleScale + (to.particleScale - from.particleScale) * t,
+        density: from.density + (to.density - from.density) * t,
+        chaos: from.chaos + (to.chaos - from.chaos) * t
+    };
 }
 
 export function initAsciiBackground(containerId = 'ascii-background', isDark = true) {
@@ -144,14 +235,56 @@ export function initAsciiBackground(containerId = 'ascii-background', isDark = t
 
         const time = clock.getElapsedTime();
 
-        // Animate each particle with wave-like motion + ripple displacement
+        // Get current weather config (with smooth transitions)
+        const weather = getWeatherConfig();
+
+        // Update weather transition
+        if (targetWeather && currentWeather !== targetWeather) {
+            weatherTransition += 0.02; // Smooth transition over ~2.5 seconds
+            if (weatherTransition >= 1) {
+                weatherTransition = 1;
+                currentWeather = targetWeather;
+            }
+        }
+
+        // Animate each particle with weather-aware motion
         particles.children.forEach((particle) => {
             const { initialX, initialY, initialZ, speed, offset } = particle.userData;
 
-            // Calculate base drift position
-            const baseX = initialX + Math.sin(time * speed * 0.3 + offset) * 30;
-            const baseY = initialY + Math.cos(time * speed * 0.2 + offset) * 20;
-            const baseZ = initialZ + Math.sin(time * speed * 0.4 + offset * 2) * 25;
+            // Weather-modified speed
+            const weatherSpeed = speed * weather.speedMultiplier;
+
+            // Calculate base drift position with weather effects
+            let baseX = initialX + Math.sin(time * weatherSpeed * 0.3 + offset) * 30;
+            let baseY = initialY + Math.cos(time * weatherSpeed * 0.2 + offset) * 20;
+            let baseZ = initialZ + Math.sin(time * weatherSpeed * 0.4 + offset * 2) * 25;
+
+            // Apply weather-specific drift
+            baseY += time * weather.verticalDrift * 10;
+            baseX += time * weather.horizontalDrift * 5;
+
+            // Wrap particles that go out of bounds (for continuous rain/snow effect)
+            if (weather.verticalDrift < 0) {
+                // Falling particles - wrap from bottom to top
+                const wrapY = ((baseY + 400) % 800) - 400;
+                baseY = wrapY;
+            } else if (weather.verticalDrift > 0) {
+                // Rising particles - wrap from top to bottom
+                const wrapY = (((baseY - 400) % 800) + 800) % 800 - 400;
+                baseY = wrapY;
+            }
+
+            // Horizontal wrapping
+            if (Math.abs(weather.horizontalDrift) > 0.1) {
+                const wrapX = ((baseX + 600) % 1200) - 600;
+                baseX = wrapX;
+            }
+
+            // Add chaos (stormy weather random bursts)
+            if (weather.chaos > 0 && Math.random() < weather.chaos * 0.02) {
+                particle.userData.displaceX += (Math.random() - 0.5) * weather.chaos * 50;
+                particle.userData.displaceY += (Math.random() - 0.5) * weather.chaos * 50;
+            }
 
             // Calculate distance from mouse (in screen-projected space)
             const dx = baseX - mouse.worldX;
@@ -160,14 +293,9 @@ export function initAsciiBackground(containerId = 'ascii-background', isDark = t
 
             // Apply ripple push if within radius
             if (distance < ripple.radius && distance > 0) {
-                // Strength falls off with distance (inverse, like water ripples)
                 const force = (1 - distance / ripple.radius) * ripple.strength;
-
-                // Push direction (away from mouse)
                 const pushX = (dx / distance) * force;
                 const pushY = (dy / distance) * force;
-
-                // Add to displacement (accumulates for smooth effect)
                 particle.userData.displaceX += pushX * 0.1;
                 particle.userData.displaceY += pushY * 0.1;
             }
@@ -180,10 +308,14 @@ export function initAsciiBackground(containerId = 'ascii-background', isDark = t
             particle.position.x = baseX + particle.userData.displaceX;
             particle.position.y = baseY + particle.userData.displaceY;
             particle.position.z = baseZ;
+
+            // Update particle scale based on weather
+            const targetScale = weather.particleScale;
+            particle.scale.setScalar(particle.scale.x + (targetScale - particle.scale.x) * 0.05);
         });
 
-        // Slow rotation of entire particle system
-        particles.rotation.y = time * 0.02;
+        // Weather-modified rotation
+        particles.rotation.y = time * weather.rotationSpeed;
         particles.rotation.x = Math.sin(time * 0.1) * 0.05;
 
         effect.render(scene, camera);
@@ -206,6 +338,15 @@ export function initAsciiBackground(containerId = 'ascii-background', isDark = t
         } else {
             clock.start();
             animate();
+        }
+    });
+
+    // Listen for weather change events from weather dashboard
+    window.addEventListener('weatherchange', (event) => {
+        const { theme } = event.detail;
+        if (theme && weatherConfigs[theme]) {
+            targetWeather = theme;
+            weatherTransition = 0;
         }
     });
 
