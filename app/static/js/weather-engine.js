@@ -9,7 +9,7 @@ const WeatherEngine = (function() {
     const WMO_CODES = {
         0: { text: 'Clear sky', theme: 'sunny', icon: 'sun' },
         1: { text: 'Mainly clear', theme: 'sunny', icon: 'sun' },
-        2: { text: 'Partly cloudy', theme: 'cloudy', icon: 'cloud-sun' },
+        2: { text: 'Partly cloudy', theme: 'partlycloudy', icon: 'cloud-sun' },
         3: { text: 'Overcast', theme: 'cloudy', icon: 'cloud' },
         45: { text: 'Foggy', theme: 'foggy', icon: 'smog' },
         48: { text: 'Depositing rime fog', theme: 'foggy', icon: 'smog' },

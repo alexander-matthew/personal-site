@@ -102,17 +102,26 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 600;
     color: var(--weather-text-primary);
     background: var(--weather-card-bg);
-    padding: 0.75rem 1.25rem;
+    padding: 0.5rem 1rem;
     border-radius: 8px;
     border: 1px solid var(--border-color, #e5e7eb);
+    max-width: 280px;
+    min-width: 0;
 }
 
 .location-current i {
     color: var(--weather-accent);
+    flex-shrink: 0;
+}
+
+.location-current span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .location-search {
@@ -237,8 +246,8 @@
     background: var(--weather-card-bg);
     border: 1px solid var(--border-color, #e5e7eb);
     border-radius: 8px;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
 }
 
 .weather-loading {
@@ -258,7 +267,7 @@
 .weather-content {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
+    gap: 1rem;
     align-items: center;
 }
 
@@ -267,13 +276,14 @@
 }
 
 .weather-icon-large {
-    font-size: 3rem;
-    margin-bottom: 0.5rem;
+    font-size: 2.5rem;
+    margin-bottom: 0.25rem;
     color: var(--weather-accent);
 }
 
 /* Weather condition icon colors */
 .weather-icon-large.sunny { color: var(--sunny-accent); }
+.weather-icon-large.partlycloudy { color: var(--cloudy-accent); }
 .weather-icon-large.cloudy { color: var(--cloudy-accent); }
 .weather-icon-large.rainy { color: var(--rainy-accent); }
 .weather-icon-large.stormy { color: var(--stormy-accent); }
@@ -281,7 +291,7 @@
 .weather-icon-large.foggy { color: var(--foggy-accent); }
 
 .weather-temp {
-    font-size: 3rem;
+    font-size: 2.5rem;
     font-weight: 700;
     color: var(--weather-text-primary);
     line-height: 1;
@@ -292,13 +302,13 @@
 }
 
 .temp-unit {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     vertical-align: super;
     opacity: 0.7;
 }
 
 .weather-condition {
-    font-size: 1.1rem;
+    font-size: 1rem;
     color: var(--weather-text-secondary);
     margin-top: 0.25rem;
 }
@@ -306,13 +316,13 @@
 .weather-details {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
+    gap: 0.75rem;
 }
 
 .detail-item {
     background: var(--bg-secondary, #f3f4f6);
-    padding: 0.75rem;
-    border-radius: 8px;
+    padding: 0.5rem;
+    border-radius: 6px;
     text-align: center;
 }
 
@@ -321,21 +331,21 @@
 }
 
 .detail-item i {
-    font-size: 1rem;
+    font-size: 0.9rem;
     color: var(--weather-accent);
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.15rem;
 }
 
 .detail-label {
     display: block;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--weather-text-secondary);
-    margin-bottom: 0.15rem;
+    margin-bottom: 0.1rem;
 }
 
 .detail-value {
     display: block;
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-weight: 600;
     color: var(--weather-text-primary);
 }
@@ -345,16 +355,16 @@
     background: var(--weather-card-bg);
     border: 1px solid var(--border-color, #e5e7eb);
     border-radius: 8px;
-    padding: 1.5rem;
+    padding: 1rem;
 }
 
 .forecast-section h3 {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
     color: var(--weather-text-primary);
-    font-size: 1.1rem;
+    font-size: 1rem;
 }
 
 .forecast-section h3 i {
@@ -369,8 +379,8 @@
 
 .forecast-day {
     text-align: center;
-    padding: 0.75rem 0.5rem;
-    border-radius: 8px;
+    padding: 0.5rem 0.25rem;
+    border-radius: 6px;
     background: var(--bg-secondary, #f3f4f6);
     transition: all 0.2s ease;
 }
@@ -390,20 +400,21 @@
 .forecast-day-name {
     font-weight: 600;
     color: var(--weather-text-primary);
-    margin-bottom: 0.5rem;
-    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+    font-size: 0.8rem;
 }
 
 .forecast-icon {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     color: var(--weather-accent);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
 }
 
 .forecast-temps {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.1rem;
+    font-size: 0.85rem;
 }
 
 .temp-high {
@@ -413,13 +424,13 @@
 
 .temp-low {
     color: var(--weather-text-secondary);
-    font-size: 0.9rem;
+    font-size: 0.8rem;
 }
 
 .forecast-precip {
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     color: #3498db;
-    margin-top: 0.5rem;
+    margin-top: 0.25rem;
 }
 
 /* Coming Soon Placeholder */

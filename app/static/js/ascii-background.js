@@ -17,60 +17,76 @@ const themes = {
     }
 };
 
-// Weather-specific particle behaviors
+// Weather-specific particle behaviors with distinct motion patterns
 const weatherConfigs = {
     sunny: {
-        speedMultiplier: 0.5,
-        verticalDrift: 0.3,      // Gentle upward drift (heat shimmer)
-        horizontalDrift: 0.1,
-        rotationSpeed: 0.01,
+        motionType: 'shimmer',   // Gentle heat shimmer effect
+        waveAmplitude: 30,       // How much particles wave side-to-side
+        waveSpeed: 0.3,          // Speed of wave motion
+        fallSpeed: 0,            // No falling
+        windSpeed: 0,            // No wind
+        rotationSpeed: 0.015,
         particleScale: 1,
-        density: 1,
+        chaos: 0
+    },
+    partlycloudy: {
+        motionType: 'billow',    // Billowing cloud effect
+        waveAmplitude: 50,       // Larger waves
+        waveSpeed: 0.15,         // Slower, more majestic
+        fallSpeed: 0,
+        windSpeed: 0.3,          // Slight drift
+        rotationSpeed: 0.01,
+        particleScale: 1.1,
         chaos: 0
     },
     cloudy: {
-        speedMultiplier: 0.3,
-        verticalDrift: 0,
-        horizontalDrift: 0.8,    // Slow horizontal drift
-        rotationSpeed: 0.015,
-        particleScale: 1.2,
-        density: 1.2,
-        chaos: 0.1
+        motionType: 'billow',    // Big billowing clouds
+        waveAmplitude: 80,       // Large wave motion
+        waveSpeed: 0.1,          // Very slow, cloud-like
+        fallSpeed: 0,
+        windSpeed: 0.5,          // Drifting
+        rotationSpeed: 0.008,
+        particleScale: 1.3,
+        chaos: 0.05
     },
     rainy: {
-        speedMultiplier: 1.5,
-        verticalDrift: -2,       // Falling down
-        horizontalDrift: 0.3,
+        motionType: 'rain',      // Rain streaks
+        waveAmplitude: 5,        // Minimal wave - mostly straight down
+        waveSpeed: 0.5,
+        fallSpeed: 8,            // Fast falling
+        windSpeed: 1,            // Some wind
         rotationSpeed: 0.02,
-        particleScale: 0.8,
-        density: 1.5,
-        chaos: 0.2
-    },
-    stormy: {
-        speedMultiplier: 3,
-        verticalDrift: -2.5,
-        horizontalDrift: 1.5,    // Strong wind
-        rotationSpeed: 0.08,
         particleScale: 0.7,
-        density: 2,
-        chaos: 0.8              // High chaos for lightning-like bursts
-    },
-    snowy: {
-        speedMultiplier: 0.4,
-        verticalDrift: -0.5,     // Gentle snowfall
-        horizontalDrift: 0.4,    // Wind-blown snow
-        rotationSpeed: 0.03,
-        particleScale: 0.9,
-        density: 1.3,
         chaos: 0.1
     },
+    stormy: {
+        motionType: 'rain',      // Heavy rain
+        waveAmplitude: 10,
+        waveSpeed: 0.8,
+        fallSpeed: 12,           // Very fast falling
+        windSpeed: 4,            // Strong wind
+        rotationSpeed: 0.05,
+        particleScale: 0.6,
+        chaos: 0.5               // Chaotic bursts
+    },
+    snowy: {
+        motionType: 'snow',      // Gentle snowfall
+        waveAmplitude: 40,       // Swaying motion
+        waveSpeed: 0.2,
+        fallSpeed: 1.5,          // Gentle falling
+        windSpeed: 0.8,          // Wind-blown
+        rotationSpeed: 0.02,
+        particleScale: 0.9,
+        chaos: 0.05
+    },
     foggy: {
-        speedMultiplier: 0.2,
-        verticalDrift: 0,
-        horizontalDrift: 0.2,
-        rotationSpeed: 0.005,
+        motionType: 'billow',    // Slow fog drift
+        waveAmplitude: 60,
+        waveSpeed: 0.05,         // Very slow
+        fallSpeed: 0,
+        windSpeed: 0.2,
+        rotationSpeed: 0.003,
         particleScale: 1.5,
-        density: 0.8,           // Less particles but larger
         chaos: 0
     }
 };
@@ -133,12 +149,13 @@ function getWeatherConfig() {
     const t = weatherTransition;
 
     return {
-        speedMultiplier: from.speedMultiplier + (to.speedMultiplier - from.speedMultiplier) * t,
-        verticalDrift: from.verticalDrift + (to.verticalDrift - from.verticalDrift) * t,
-        horizontalDrift: from.horizontalDrift + (to.horizontalDrift - from.horizontalDrift) * t,
+        motionType: t > 0.5 ? to.motionType : from.motionType,  // Switch halfway
+        waveAmplitude: from.waveAmplitude + (to.waveAmplitude - from.waveAmplitude) * t,
+        waveSpeed: from.waveSpeed + (to.waveSpeed - from.waveSpeed) * t,
+        fallSpeed: from.fallSpeed + (to.fallSpeed - from.fallSpeed) * t,
+        windSpeed: from.windSpeed + (to.windSpeed - from.windSpeed) * t,
         rotationSpeed: from.rotationSpeed + (to.rotationSpeed - from.rotationSpeed) * t,
         particleScale: from.particleScale + (to.particleScale - from.particleScale) * t,
-        density: from.density + (to.density - from.density) * t,
         chaos: from.chaos + (to.chaos - from.chaos) * t
     };
 }
@@ -251,33 +268,57 @@ export function initAsciiBackground(containerId = 'ascii-background', isDark = t
         particles.children.forEach((particle) => {
             const { initialX, initialY, initialZ, speed, offset } = particle.userData;
 
-            // Weather-modified speed
-            const weatherSpeed = speed * weather.speedMultiplier;
+            let baseX, baseY, baseZ;
 
-            // Calculate base drift position with weather effects
-            let baseX = initialX + Math.sin(time * weatherSpeed * 0.3 + offset) * 30;
-            let baseY = initialY + Math.cos(time * weatherSpeed * 0.2 + offset) * 20;
-            let baseZ = initialZ + Math.sin(time * weatherSpeed * 0.4 + offset * 2) * 25;
+            // Different motion patterns based on weather type
+            switch (weather.motionType) {
+                case 'rain':
+                    // Rain: fast downward streaks with slight angle from wind
+                    baseX = initialX + Math.sin(offset) * weather.waveAmplitude * 0.3;
+                    baseX += time * weather.windSpeed * 20;  // Wind pushes rain sideways
+                    baseY = initialY - (time * weather.fallSpeed * 30);  // Fast falling
+                    baseY += Math.sin(time * weather.waveSpeed + offset) * weather.waveAmplitude * 0.2;
+                    baseZ = initialZ;
+                    break;
 
-            // Apply weather-specific drift
-            baseY += time * weather.verticalDrift * 10;
-            baseX += time * weather.horizontalDrift * 5;
+                case 'snow':
+                    // Snow: gentle falling with swaying side-to-side motion
+                    baseX = initialX + Math.sin(time * weather.waveSpeed * 2 + offset) * weather.waveAmplitude;
+                    baseX += time * weather.windSpeed * 10;  // Wind drift
+                    baseY = initialY - (time * weather.fallSpeed * 20);  // Gentle falling
+                    baseZ = initialZ + Math.cos(time * weather.waveSpeed + offset * 2) * 20;
+                    break;
 
-            // Wrap particles that go out of bounds (for continuous rain/snow effect)
-            // Use proper modulo that handles negative numbers
-            if (Math.abs(weather.verticalDrift) > 0.1) {
-                baseY = ((baseY % 800) + 800) % 800 - 400;
+                case 'billow':
+                    // Clouds/Fog: large slow billowing waves
+                    baseX = initialX + Math.sin(time * weather.waveSpeed + offset) * weather.waveAmplitude;
+                    baseX += time * weather.windSpeed * 15;  // Slow drift
+                    baseY = initialY + Math.cos(time * weather.waveSpeed * 0.7 + offset * 0.5) * weather.waveAmplitude * 0.5;
+                    baseZ = initialZ + Math.sin(time * weather.waveSpeed * 0.5 + offset * 2) * 30;
+                    break;
+
+                case 'shimmer':
+                default:
+                    // Sunny: gentle heat shimmer rising
+                    baseX = initialX + Math.sin(time * weather.waveSpeed + offset) * weather.waveAmplitude;
+                    baseY = initialY + Math.cos(time * weather.waveSpeed * 0.8 + offset) * weather.waveAmplitude * 0.7;
+                    baseY += time * 5;  // Gentle upward drift
+                    baseZ = initialZ + Math.sin(time * weather.waveSpeed * 1.2 + offset * 2) * 25;
+                    break;
             }
 
-            // Horizontal wrapping
-            if (Math.abs(weather.horizontalDrift) > 0.1) {
+            // Wrap particles that go out of bounds
+            if (weather.fallSpeed > 0 || weather.motionType === 'shimmer') {
+                baseY = ((baseY % 800) + 800) % 800 - 400;
+            }
+            if (weather.windSpeed > 0) {
                 baseX = ((baseX % 1200) + 1200) % 1200 - 600;
             }
 
             // Add chaos (stormy weather random bursts)
             if (weather.chaos > 0 && Math.random() < weather.chaos * 0.02) {
-                particle.userData.displaceX += (Math.random() - 0.5) * weather.chaos * 50;
-                particle.userData.displaceY += (Math.random() - 0.5) * weather.chaos * 50;
+                particle.userData.displaceX += (Math.random() - 0.5) * weather.chaos * 80;
+                particle.userData.displaceY += (Math.random() - 0.5) * weather.chaos * 80;
             }
 
             // Calculate distance from mouse (in screen-projected space)
@@ -336,11 +377,14 @@ export function initAsciiBackground(containerId = 'ascii-background', isDark = t
     });
 
     // Listen for weather change events from weather dashboard
+    console.log('[ASCII Background] Registering weatherchange event listener');
     window.addEventListener('weatherchange', (event) => {
         const { theme } = event.detail;
+        console.log('[ASCII Background] Weather change event received:', theme);
         if (theme && weatherConfigs[theme]) {
             targetWeather = theme;
             weatherTransition = 0;
+            console.log('[ASCII Background] Transitioning to weather:', theme, weatherConfigs[theme]);
         }
     });
 

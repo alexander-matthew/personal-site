@@ -21,6 +21,7 @@ Personal-Site/
 │   │   ├── blackjack.py     # Blackjack trainer game
 │   │   ├── sudoku.py        # Sudoku puzzle game
 │   │   ├── pr_review.py     # PR Review tool showcase
+│   │   ├── weather.py       # Weather dashboard with Open-Meteo API
 │   │   └── tools/           # Tools framework (extensible mini-apps)
 │   ├── services/
 │   │   ├── cache.py         # File-based caching with TTL
@@ -37,6 +38,7 @@ Personal-Site/
 │   │   ├── blackjack/       # Blackjack trainer UI
 │   │   ├── sudoku/          # Sudoku game UI
 │   │   ├── pr_review/       # PR Review showcase
+│   │   ├── weather/         # Weather dashboard templates
 │   │   └── tools/           # Tools framework templates
 │   └── static/
 │       ├── css/
@@ -44,13 +46,15 @@ Personal-Site/
 │       │   ├── spotify-cyberpunk.css  # Spotify retro-futuristic theme
 │       │   ├── blackjack.css       # Blackjack game styles
 │       │   ├── sudoku.css          # Sudoku grid styles
+│       │   ├── weather.css         # Weather dashboard styles
 │       │   └── tools.css           # Tools framework styles
 │       └── js/
 │           ├── ascii-background.js      # Three.js ASCII particle animation
 │           ├── blackjack-engine.js      # Blackjack game logic + strategy
 │           ├── blackjack-engine.test.js # Jest tests
 │           ├── sudoku-engine.js         # Sudoku generation + validation
-│           └── sudoku-engine.test.js    # Jest tests
+│           ├── sudoku-engine.test.js    # Jest tests
+│           └── weather-engine.js        # Weather utilities (WMO codes, formatting)
 ├── .claude/
 │   ├── agents/
 │   │   └── ui-designer.md       # UI styling agent documentation
@@ -306,6 +310,7 @@ heroku logs --tail
 | `/projects/blackjack` | blackjack/index.html | Blackjack trainer game |
 | `/projects/sudoku` | sudoku/index.html | Sudoku puzzle game |
 | `/projects/pr-review` | pr_review/index.html | PR Review tool showcase |
+| `/projects/weather` | weather/index.html | Weather dashboard with ASCII animation |
 | `/tools` | tools/index.html | Tools framework index |
 
 ## Mini-Apps
@@ -339,6 +344,25 @@ Documentation showcase for automated code review:
 - Demonstrates `code_style.md` file system
 - GitHub CLI integration examples
 - Before/after refactoring examples
+
+### Weather Dashboard (`/projects/weather`)
+Real-time weather with dynamic ASCII background animations:
+- Current conditions with temperature, humidity, wind, precipitation
+- 7-day forecast with high/low temps and precipitation probability
+- City search with autocomplete (Open-Meteo geocoding)
+- Geolocation support for automatic location detection
+- Weather-reactive ASCII background with distinct motion patterns:
+  - **Sunny**: Gentle upward heat shimmer
+  - **Partly Cloudy**: Moderate billowing with drift
+  - **Cloudy**: Large slow horizontal waves
+  - **Rainy**: Fast downward streaks angled by wind
+  - **Stormy**: Heavy rain with chaotic bursts
+  - **Snowy**: Gentle swaying descent with wind drift
+  - **Foggy**: Very slow, large particle drift
+
+**API Endpoints:** `/api/current`, `/api/forecast`, `/api/geocode`
+
+**Integration:** Dispatches `weatherchange` custom events that the ASCII background (`ascii-background.js`) listens for to update particle animation patterns in real-time.
 
 ## Services
 
@@ -377,7 +401,7 @@ npm run test:coverage     # Coverage report
 ## Features
 
 - **Dark/Light Mode**: Toggle in navbar, preference saved in localStorage
-- **ASCII Background**: Three.js particle cloud rendered as ASCII characters (dark mode only)
+- **ASCII Background**: Three.js particle cloud rendered as ASCII characters (dark mode only), with weather-reactive animation patterns
 - **Typing animation**: Home page cycles "Alex" ↔ "Alexander"
 - **Interests carousel**: About page fades through interests list
 - **Responsive**: Mobile-friendly with breakpoint at 640px

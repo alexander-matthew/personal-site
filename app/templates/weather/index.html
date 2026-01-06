@@ -155,10 +155,12 @@
 
     // Update ASCII background based on weather (dispatches custom event)
     function updateWeatherBackground(theme) {
+        console.log('[Weather] Updating background to:', theme, 'current:', currentWeatherTheme);
         if (currentWeatherTheme === theme) return;
         currentWeatherTheme = theme;
 
         // Dispatch event for weather-ascii-background to listen to
+        console.log('[Weather] Dispatching weatherchange event:', theme);
         window.dispatchEvent(new CustomEvent('weatherchange', {
             detail: { theme }
         }));
