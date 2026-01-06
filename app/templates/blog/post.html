@@ -3,7 +3,7 @@
 {% block title %}{{ post.title }} - {{ site.name }}{% endblock %}
 
 {% block content %}
-<article class="blog-post">
+<article class="blog-post section">
     <header class="post-header">
         <a href="{{ url_for('blog.index') }}" class="back-link">&larr; Back to Blog</a>
         <h1>{{ post.title }}</h1>
@@ -15,3 +15,4 @@
     </div>
 </article>
 {% endblock %}
+

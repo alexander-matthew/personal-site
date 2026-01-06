@@ -46,10 +46,15 @@ Personal-Site/
 │       │   ├── sudoku.css          # Sudoku grid styles
 │       │   └── tools.css           # Tools framework styles
 │       └── js/
+│           ├── ascii-background.js      # Three.js ASCII particle animation
 │           ├── blackjack-engine.js      # Blackjack game logic + strategy
 │           ├── blackjack-engine.test.js # Jest tests
 │           ├── sudoku-engine.js         # Sudoku generation + validation
 │           └── sudoku-engine.test.js    # Jest tests
+├── .claude/
+│   ├── agents/
+│   │   └── ui-designer.md       # UI styling agent documentation
+│   └── CLAUDE.md                # This file
 ├── main.py                  # App entry point
 ├── Procfile                 # Heroku: gunicorn main:app
 ├── runtime.txt              # Heroku: python-3.11.9
@@ -104,10 +109,26 @@ Base template provides these blocks:
 - `{% block title %}` - Page title
 - `{% block head %}` - Extra CSS/meta tags
 - `{% block content %}` - Main page content
-- `{% block scripts %}` - JavaScript at end of body
+- `{% block scripts %}` - Page-specific JavaScript (after base scripts)
 
-### CSS Variables
-Defined in `:root` in style.css:
+### Theme System
+
+The site supports **dark mode** (default) and **light mode** with a toggle button in the navbar.
+
+**Dark Mode** (`.home-dark` class on body):
+- Black background (#0a0a0a) with animated Three.js ASCII particle cloud
+- Light text (#e5e5e5 primary, #a3a3a3 secondary)
+- Blue accent (#60a5fa) for links
+- Semi-transparent card backgrounds
+
+**Light Mode** (no class):
+- White background, dark text
+- ASCII animation hidden
+- Standard light theme styling
+
+Theme preference is stored in `localStorage` and persists across sessions. The toggle is automatic via `base.html` - no per-page configuration needed.
+
+**CSS Variables** (defined in `:root`, overridden by `.home-dark`):
 - `--primary-color`: Link/accent color
 - `--text-color`: Main text
 - `--text-light`: Secondary text
@@ -125,7 +146,9 @@ source .venv/bin/activate
 pip install -r requirements.txt
 python main.py
 ```
-App runs at http://localhost:5000 with auto-reload.
+App runs at http://localhost:5001 with auto-reload.
+
+**Note:** Port 5000 is reserved for another application on this machine. This project uses port 5001 by default. Override with `PORT=8080 python main.py` if needed.
 
 ### Parallel Development
 
@@ -213,7 +236,7 @@ Claude Code will automatically run these hooks before each commit, preventing br
 ### Development Cycle
 
 1. **Work & Commit Frequently**: Commit changes continuously as you work
-2. **Test Locally**: Run `python main.py` and verify at http://localhost:5000
+2. **Test Locally**: Run `python main.py` and verify at http://localhost:5001
 3. **Create PR on Command**: Only create a pull request when explicitly asked
 4. **Deploy After Merge**: After PR is merged, deploy to Heroku
 
@@ -245,7 +268,7 @@ Always test locally before committing:
 ```bash
 source .venv/bin/activate
 python main.py
-# Visit http://localhost:5000
+# Visit http://localhost:5001
 ```
 
 ## Heroku Configuration
@@ -353,9 +376,11 @@ npm run test:coverage     # Coverage report
 
 ## Features
 
+- **Dark/Light Mode**: Toggle in navbar, preference saved in localStorage
+- **ASCII Background**: Three.js particle cloud rendered as ASCII characters (dark mode only)
 - **Typing animation**: Home page cycles "Alex" ↔ "Alexander"
 - **Interests carousel**: About page fades through interests list
 - **Responsive**: Mobile-friendly with breakpoint at 640px
-- **Footer**: Persistent with GitHub/LinkedIn links + Claude/Heroku credit
+- **Footer**: GitHub/LinkedIn icons with Claude/Heroku credit
 - **Cyberpunk theme**: Spotify dashboard with retro-futuristic styling
 - **Game engines**: Pure JavaScript with Jest test coverage
