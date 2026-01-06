@@ -78,9 +78,9 @@ const weatherConfigs = {
 let currentEffect = null;
 let currentScene = null;
 let currentParticles = null;
-let currentWeather = null;
-let targetWeather = null;
-let weatherTransition = 0;
+let currentWeather = 'sunny';  // Default weather state
+let targetWeather = 'sunny';
+let weatherTransition = 1;     // Start fully transitioned
 
 // Mouse tracking for ripple effect
 const mouse = {
@@ -264,20 +264,14 @@ export function initAsciiBackground(containerId = 'ascii-background', isDark = t
             baseX += time * weather.horizontalDrift * 5;
 
             // Wrap particles that go out of bounds (for continuous rain/snow effect)
-            if (weather.verticalDrift < 0) {
-                // Falling particles - wrap from bottom to top
-                const wrapY = ((baseY + 400) % 800) - 400;
-                baseY = wrapY;
-            } else if (weather.verticalDrift > 0) {
-                // Rising particles - wrap from top to bottom
-                const wrapY = (((baseY - 400) % 800) + 800) % 800 - 400;
-                baseY = wrapY;
+            // Use proper modulo that handles negative numbers
+            if (Math.abs(weather.verticalDrift) > 0.1) {
+                baseY = ((baseY % 800) + 800) % 800 - 400;
             }
 
             // Horizontal wrapping
             if (Math.abs(weather.horizontalDrift) > 0.1) {
-                const wrapX = ((baseX + 600) % 1200) - 600;
-                baseX = wrapX;
+                baseX = ((baseX % 1200) + 1200) % 1200 - 600;
             }
 
             // Add chaos (stormy weather random bursts)

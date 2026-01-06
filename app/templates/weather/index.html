@@ -16,9 +16,9 @@
             <i class="fas fa-cloud-sun"></i>
             Current Weather
         </button>
-        <button class="tab-btn" data-tab="extremes">
-            <i class="fas fa-bolt"></i>
-            Extreme Weather
+        <button class="tab-btn" data-tab="coming-soon">
+            <i class="fas fa-chart-line"></i>
+            Coming Soon
         </button>
     </div>
 
@@ -33,14 +33,13 @@
             <div class="location-search">
                 <input type="text" id="citySearch" placeholder="Search city..." autocomplete="off">
                 <button id="searchBtn"><i class="fas fa-search"></i></button>
+                <!-- Search Results Dropdown -->
+                <div class="search-results" id="searchResults"></div>
             </div>
             <button id="geolocateBtn" class="geo-btn" title="Use my location">
                 <i class="fas fa-crosshairs"></i>
             </button>
         </div>
-
-        <!-- Search Results Dropdown -->
-        <div class="search-results" id="searchResults"></div>
 
         <!-- Current Weather Card -->
         <div class="current-weather-card" id="currentWeatherCard">
@@ -95,54 +94,12 @@
         </div>
     </section>
 
-    <!-- Tab 2: Extreme Weather -->
-    <section id="extremes-tab" class="tab-content">
-        <!-- Time Horizon Selector -->
-        <div class="horizon-selector">
-            <button class="horizon-btn active" data-horizon="today">Today</button>
-            <button class="horizon-btn" data-horizon="tomorrow">Tomorrow</button>
-            <button class="horizon-btn" data-horizon="3day">3 Days</button>
-            <button class="horizon-btn" data-horizon="7day">7 Days</button>
-            <button class="horizon-btn" data-horizon="season">Season</button>
-            <button class="horizon-btn" data-horizon="year">Year</button>
-        </div>
-
-        <!-- Extremes Grid -->
-        <div class="extremes-grid" id="extremesGrid">
-            <div class="extreme-card hottest" data-type="hottest">
-                <div class="extreme-icon"><i class="fas fa-fire"></i></div>
-                <div class="extreme-label">Hottest</div>
-                <div class="extreme-value" id="hottestValue">--°C</div>
-                <div class="extreme-location" id="hottestLocation">Loading...</div>
-            </div>
-            <div class="extreme-card coldest" data-type="coldest">
-                <div class="extreme-icon"><i class="fas fa-snowflake"></i></div>
-                <div class="extreme-label">Coldest</div>
-                <div class="extreme-value" id="coldestValue">--°C</div>
-                <div class="extreme-location" id="coldestLocation">Loading...</div>
-            </div>
-            <div class="extreme-card wettest" data-type="wettest">
-                <div class="extreme-icon"><i class="fas fa-cloud-showers-heavy"></i></div>
-                <div class="extreme-label">Wettest</div>
-                <div class="extreme-value" id="wettestValue">-- mm</div>
-                <div class="extreme-location" id="wettestLocation">Loading...</div>
-            </div>
-            <div class="extreme-card windiest" data-type="windiest">
-                <div class="extreme-icon"><i class="fas fa-wind"></i></div>
-                <div class="extreme-label">Windiest</div>
-                <div class="extreme-value" id="windiestValue">-- km/h</div>
-                <div class="extreme-location" id="windiestLocation">Loading...</div>
-            </div>
-        </div>
-
-        <!-- Industry Impact Panel -->
-        <div class="industry-panel" id="industryPanel" style="display: none;">
-            <div class="industry-header">
-                <h3><i class="fas fa-industry"></i> Industry Impact</h3>
-                <button class="close-panel" id="closeIndustry"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="industry-location" id="industryLocation">--</div>
-            <div class="industry-list" id="industryList"></div>
+    <!-- Tab 2: Coming Soon -->
+    <section id="coming-soon-tab" class="tab-content">
+        <div class="coming-soon-placeholder">
+            <i class="fas fa-hammer"></i>
+            <h3>Feature Coming Soon</h3>
+            <p>We're working on something new for this space.</p>
         </div>
     </section>
 </div>
@@ -180,14 +137,6 @@
     const precipitation = document.getElementById('precipitation');
     const forecastGrid = document.getElementById('forecastGrid');
 
-    // Extreme Weather Elements
-    const horizonBtns = document.querySelectorAll('.horizon-btn');
-    const extremesGrid = document.getElementById('extremesGrid');
-    const industryPanel = document.getElementById('industryPanel');
-    const industryLocation = document.getElementById('industryLocation');
-    const industryList = document.getElementById('industryList');
-    const closeIndustry = document.getElementById('closeIndustry');
-
     // Tab switching
     tabBtns.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -196,10 +145,6 @@
             tabContents.forEach(c => c.classList.remove('active'));
             btn.classList.add('active');
             document.getElementById(`${tab}-tab`).classList.add('active');
-
-            if (tab === 'extremes') {
-                loadExtremes('today');
-            }
         });
     });
 
@@ -425,97 +370,6 @@
     }
 
     geolocateBtn.addEventListener('click', getGeolocation);
-
-    // Load extreme weather
-    async function loadExtremes(horizon) {
-        // Update active button
-        horizonBtns.forEach(b => b.classList.remove('active'));
-        document.querySelector(`[data-horizon="${horizon}"]`).classList.add('active');
-
-        // Show loading state
-        document.querySelectorAll('.extreme-value').forEach(el => el.textContent = '...');
-        document.querySelectorAll('.extreme-location').forEach(el => el.textContent = 'Loading...');
-
-        try {
-            const response = await fetch(`/projects/weather/api/extremes/${horizon}`);
-            const data = await response.json();
-
-            if (data.error) throw new Error(data.error);
-
-            // Update cards
-            if (data.hottest) {
-                document.getElementById('hottestValue').textContent = `${Math.round(data.hottest.value)}°C`;
-                document.getElementById('hottestLocation').textContent = data.hottest.name;
-                document.querySelector('.extreme-card.hottest').dataset.region = data.hottest.region;
-            }
-
-            if (data.coldest) {
-                document.getElementById('coldestValue').textContent = `${Math.round(data.coldest.value)}°C`;
-                document.getElementById('coldestLocation').textContent = data.coldest.name;
-                document.querySelector('.extreme-card.coldest').dataset.region = data.coldest.region;
-            }
-
-            if (data.wettest) {
-                document.getElementById('wettestValue').textContent = `${Math.round(data.wettest.value)} mm`;
-                document.getElementById('wettestLocation').textContent = data.wettest.name;
-                document.querySelector('.extreme-card.wettest').dataset.region = data.wettest.region;
-            }
-
-            if (data.windiest) {
-                document.getElementById('windiestValue').textContent = `${Math.round(data.windiest.value)} km/h`;
-                document.getElementById('windiestLocation').textContent = data.windiest.name;
-                document.querySelector('.extreme-card.windiest').dataset.region = data.windiest.region;
-            }
-
-        } catch (error) {
-            console.error('Error loading extremes:', error);
-            document.querySelectorAll('.extreme-location').forEach(el => el.textContent = 'Error loading data');
-        }
-    }
-
-    // Horizon button clicks
-    horizonBtns.forEach(btn => {
-        btn.addEventListener('click', () => loadExtremes(btn.dataset.horizon));
-    });
-
-    // Extreme card clicks - show industry impact
-    extremesGrid.addEventListener('click', async (e) => {
-        const card = e.target.closest('.extreme-card');
-        if (!card || !card.dataset.region) return;
-
-        const region = card.dataset.region;
-        const locationText = card.querySelector('.extreme-location').textContent;
-
-        try {
-            const response = await fetch(`/projects/weather/api/industry/${region}`);
-            const data = await response.json();
-
-            if (data.error) {
-                industryList.innerHTML = '<div class="industry-item">No industry data available for this region</div>';
-            } else {
-                industryLocation.textContent = `${locationText} - ${data.name}`;
-                industryList.innerHTML = data.industries.map(ind => `
-                    <div class="industry-item sensitivity-${ind.sensitivity}">
-                        <div class="industry-name">
-                            <span class="sensitivity-badge">${ind.sensitivity}</span>
-                            ${ind.name}
-                        </div>
-                        <div class="industry-details">${ind.details}</div>
-                    </div>
-                `).join('');
-            }
-
-            industryPanel.style.display = 'block';
-
-        } catch (error) {
-            console.error('Error loading industry data:', error);
-        }
-    });
-
-    // Close industry panel
-    closeIndustry.addEventListener('click', () => {
-        industryPanel.style.display = 'none';
-    });
 
     // Initialize
     getGeolocation();
