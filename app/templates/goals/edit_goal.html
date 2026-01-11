@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Edit: {{ goal.title }} - Goal Tracker{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/goals.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="goals-nav">
+    <a href="{{ url_for('goals.dashboard') }}">Dashboard</a>
+    <a href="{{ url_for('goals.all_goals') }}">All Goals</a>
+    <a href="{{ url_for('goals.new_goal') }}">+ New Goal</a>
+    <a href="{{ url_for('goals.categories') }}">Categories</a>
+    <a href="{{ url_for('goals.logout') }}" style="margin-left: auto;">Logout</a>
+</div>
+
+<div class="terminal">
+    <div class="terminal-header">
+        <span class="terminal-dot red"></span>
+        <span class="terminal-dot yellow"></span>
+        <span class="terminal-dot green"></span>
+        <span class="terminal-title">edit-goal -- modify</span>
+    </div>
+    <div class="terminal-body">
+        <p class="prompt">editing goal: {{ goal.title }}</p>
+        <p style="color: #888; margin-top: 0.5rem;">Update the fields below to modify your goal.</p>
+    </div>
+</div>
+
+<form method="POST" class="terminal-form">
+    <div class="form-group">
+        <label class="form-label" for="title">goal title *</label>
+        <input type="text" id="title" name="title" class="form-input"
+               value="{{ goal.title }}" required>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label" for="description">description (optional)</label>
+        <textarea id="description" name="description" class="form-textarea">{{ goal.description or '' }}</textarea>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label class="form-label" for="category_id">category</label>
+            <select id="category_id" name="category_id" class="form-select">
+                <option value="">-- Uncategorized --</option>
+                {% for category in categories %}
+                <option value="{{ category.id }}" {% if goal.category_id == category.id %}selected{% endif %}>
+                    {{ category.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="priority">priority</label>
+            <select id="priority" name="priority" class="form-select">
+                <option value="normal" {% if goal.priority == 'normal' %}selected{% endif %}>Normal</option>
+                <option value="stretch" {% if goal.priority == 'stretch' %}selected{% endif %}>Stretch Goal</option>
+            </select>
+        </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="form-group">
+        <label class="form-label">goal type</label>
+        <div class="radio-group">
+            <label class="radio-option">
+                <input type="radio" name="goal_type" value="one_time"
+                       {% if goal.goal_type == 'one_time' %}checked{% endif %}>
+                One-time (achieve once)
+            </label>
+            <label class="radio-option">
+                <input type="radio" name="goal_type" value="streak"
+                       {% if goal.goal_type == 'streak' %}checked{% endif %}>
+                Streak (build a habit)
+            </label>
+            <label class="radio-option">
+                <input type="radio" name="goal_type" value="periodic"
+                       {% if goal.goal_type == 'periodic' %}checked{% endif %}>
+                Periodic (repeat each period)
+            </label>
+        </div>
+    </div>
+
+    <div class="form-group" id="frequency-group"
+         style="{% if goal.goal_type not in ['streak', 'periodic'] %}display: none;{% endif %}">
+        <label class="form-label" for="frequency">frequency</label>
+        <select id="frequency" name="frequency" class="form-select">
+            <option value="daily" {% if goal.frequency == 'daily' %}selected{% endif %}>Daily</option>
+            <option value="weekly" {% if goal.frequency == 'weekly' %}selected{% endif %}>Weekly</option>
+            <option value="monthly" {% if goal.frequency == 'monthly' %}selected{% endif %}>Monthly</option>
+        </select>
+    </div>
+
+    <hr class="divider">
+
+    <div class="form-group">
+        <label class="form-label">progress tracking</label>
+        <div class="radio-group">
+            <label class="radio-option">
+                <input type="radio" name="progress_type" value="binary"
+                       {% if goal.progress_type == 'binary' %}checked{% endif %}>
+                Binary (done / not done)
+            </label>
+            <label class="radio-option">
+                <input type="radio" name="progress_type" value="percentage"
+                       {% if goal.progress_type == 'percentage' %}checked{% endif %}>
+                Countable (track progress)
+            </label>
+        </div>
+    </div>
+
+    <div class="form-group" id="target-group"
+         style="{% if goal.progress_type != 'percentage' %}display: none;{% endif %}">
+        <label class="form-label" for="target_value">target value</label>
+        <input type="number" id="target_value" name="target_value" class="form-input"
+               value="{{ goal.target_value }}" min="1">
+    </div>
+
+    <div class="form-group">
+        <label class="form-label" for="deadline">deadline (optional)</label>
+        <input type="date" id="deadline" name="deadline" class="form-input"
+               value="{{ goal.deadline.strftime('%Y-%m-%d') if goal.deadline else '' }}">
+    </div>
+
+    <div class="actions-row">
+        <button type="submit" class="btn btn-primary">[SAVE CHANGES]</button>
+        <a href="{{ url_for('goals.view_goal', goal_id=goal.id) }}" class="btn btn-secondary">[CANCEL]</a>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Show/hide frequency based on goal type
+document.querySelectorAll('input[name="goal_type"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        const frequencyGroup = document.getElementById('frequency-group');
+        if (this.value === 'streak' || this.value === 'periodic') {
+            frequencyGroup.style.display = 'block';
+        } else {
+            frequencyGroup.style.display = 'none';
+        }
+    });
+});
+
+// Show/hide target value based on progress type
+document.querySelectorAll('input[name="progress_type"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        const targetGroup = document.getElementById('target-group');
+        if (this.value === 'percentage') {
+            targetGroup.style.display = 'block';
+        } else {
+            targetGroup.style.display = 'none';
+        }
+    });
+});
+</script>
+{% endblock %}

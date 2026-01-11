@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}New Goal - Goal Tracker{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/goals.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="goals-nav">
+    <a href="{{ url_for('goals.dashboard') }}">Dashboard</a>
+    <a href="{{ url_for('goals.all_goals') }}">All Goals</a>
+    <a href="{{ url_for('goals.new_goal') }}" class="active">+ New Goal</a>
+    <a href="{{ url_for('goals.categories') }}">Categories</a>
+    <a href="{{ url_for('goals.logout') }}" style="margin-left: auto;">Logout</a>
+</div>
+
+<div class="terminal">
+    <div class="terminal-header">
+        <span class="terminal-dot red"></span>
+        <span class="terminal-dot yellow"></span>
+        <span class="terminal-dot green"></span>
+        <span class="terminal-title">new-goal -- create</span>
+    </div>
+    <div class="terminal-body">
+        <p class="prompt">initializing new goal creation...</p>
+        <p style="color: #888; margin-top: 0.5rem;">Fill in the fields below to define your goal.</p>
+    </div>
+</div>
+
+<form method="POST" class="terminal-form">
+    <div class="form-group">
+        <label class="form-label" for="title">goal title *</label>
+        <input type="text" id="title" name="title" class="form-input"
+               placeholder="e.g., Read 24 books this year" required>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label" for="description">description (optional)</label>
+        <textarea id="description" name="description" class="form-textarea"
+                  placeholder="Add details, motivation, or notes..."></textarea>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label class="form-label" for="category_id">category</label>
+            <select id="category_id" name="category_id" class="form-select">
+                <option value="">-- Uncategorized --</option>
+                {% for category in categories %}
+                <option value="{{ category.id }}">{{ category.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="priority">priority</label>
+            <select id="priority" name="priority" class="form-select">
+                <option value="normal">Normal</option>
+                <option value="stretch">Stretch Goal</option>
+            </select>
+        </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="form-group">
+        <label class="form-label">goal type</label>
+        <div class="radio-group">
+            <label class="radio-option">
+                <input type="radio" name="goal_type" value="one_time" checked>
+                One-time (achieve once)
+            </label>
+            <label class="radio-option">
+                <input type="radio" name="goal_type" value="streak">
+                Streak (build a habit)
+            </label>
+            <label class="radio-option">
+                <input type="radio" name="goal_type" value="periodic">
+                Periodic (repeat each period)
+            </label>
+        </div>
+    </div>
+
+    <div class="form-group" id="frequency-group" style="display: none;">
+        <label class="form-label" for="frequency">frequency</label>
+        <select id="frequency" name="frequency" class="form-select">
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+        </select>
+    </div>
+
+    <hr class="divider">
+
+    <div class="form-group">
+        <label class="form-label">progress tracking</label>
+        <div class="radio-group">
+            <label class="radio-option">
+                <input type="radio" name="progress_type" value="binary" checked>
+                Binary (done / not done)
+            </label>
+            <label class="radio-option">
+                <input type="radio" name="progress_type" value="percentage">
+                Countable (track progress)
+            </label>
+        </div>
+    </div>
+
+    <div class="form-group" id="target-group" style="display: none;">
+        <label class="form-label" for="target_value">target value</label>
+        <input type="number" id="target_value" name="target_value" class="form-input"
+               placeholder="e.g., 24 (for 24 books)" min="1" value="1">
+    </div>
+
+    <div class="form-group">
+        <label class="form-label" for="deadline">deadline (optional)</label>
+        <input type="date" id="deadline" name="deadline" class="form-input">
+    </div>
+
+    <div class="actions-row">
+        <button type="submit" class="btn btn-primary">[CREATE GOAL]</button>
+        <a href="{{ url_for('goals.dashboard') }}" class="btn btn-secondary">[CANCEL]</a>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Show/hide frequency based on goal type
+document.querySelectorAll('input[name="goal_type"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        const frequencyGroup = document.getElementById('frequency-group');
+        if (this.value === 'streak' || this.value === 'periodic') {
+            frequencyGroup.style.display = 'block';
+        } else {
+            frequencyGroup.style.display = 'none';
+        }
+    });
+});
+
+// Show/hide target value based on progress type
+document.querySelectorAll('input[name="progress_type"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        const targetGroup = document.getElementById('target-group');
+        if (this.value === 'percentage') {
+            targetGroup.style.display = 'block';
+        } else {
+            targetGroup.style.display = 'none';
+        }
+    });
+});
+</script>
+{% endblock %}

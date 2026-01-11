@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}All Goals - Goal Tracker{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/goals.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="goals-nav">
+    <a href="{{ url_for('goals.dashboard') }}">Dashboard</a>
+    <a href="{{ url_for('goals.all_goals') }}" class="active">All Goals</a>
+    <a href="{{ url_for('goals.new_goal') }}">+ New Goal</a>
+    <a href="{{ url_for('goals.categories') }}">Categories</a>
+    <a href="{{ url_for('goals.logout') }}" style="margin-left: auto;">Logout</a>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+                <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<div class="terminal">
+    <div class="terminal-header">
+        <span class="terminal-dot red"></span>
+        <span class="terminal-dot yellow"></span>
+        <span class="terminal-dot green"></span>
+        <span class="terminal-title">goals -- list all</span>
+    </div>
+    <div class="terminal-body">
+        <p class="prompt">listing all active goals by category</p>
+        <p style="color: #888; margin-top: 0.5rem;">
+            View and manage all your goals organized by category.
+        </p>
+    </div>
+</div>
+
+{% for category in categories %}
+    {% if category.active_goals %}
+    <h2 class="section-header">
+        <span class="category-dot" style="background-color: {{ category.color }}"></span>
+        {{ category.name|upper }}
+    </h2>
+
+    {% for goal in category.active_goals %}
+    <div class="goal-card">
+        <div class="goal-card-header">
+            <h3 class="goal-title">
+                <a href="{{ url_for('goals.view_goal', goal_id=goal.id) }}">{{ goal.title }}</a>
+            </h3>
+            {% if goal.priority == 'stretch' %}
+                <span class="priority-stretch">[STRETCH]</span>
+            {% endif %}
+        </div>
+
+        {% if goal.progress_type == 'percentage' %}
+        <div class="ascii-progress">
+            {% set filled = (goal.progress_percent / 5)|int %}
+            {% set empty = 20 - filled %}
+            <span class="ascii-progress-bar">[{{ '=' * filled }}</span><span class="ascii-progress-empty">{{ '-' * empty }}]</span>
+            <span class="ascii-progress-label">{{ goal.current_value }}/{{ goal.target_value }}</span>
+        </div>
+        {% endif %}
+
+        <div class="goal-meta">
+            {{ goal.goal_type|replace('_', ' ')|title }}
+            {% if goal.frequency %} | {{ goal.frequency|title }}{% endif %}
+            {% if goal.deadline %} | Due: {{ goal.deadline.strftime('%b %d') }}{% endif %}
+        </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+{% endfor %}
+
+{% if uncategorized %}
+<h2 class="section-header">UNCATEGORIZED</h2>
+
+{% for goal in uncategorized %}
+<div class="goal-card">
+    <div class="goal-card-header">
+        <h3 class="goal-title">
+            <a href="{{ url_for('goals.view_goal', goal_id=goal.id) }}">{{ goal.title }}</a>
+        </h3>
+        {% if goal.priority == 'stretch' %}
+            <span class="priority-stretch">[STRETCH]</span>
+        {% endif %}
+    </div>
+
+    {% if goal.progress_type == 'percentage' %}
+    <div class="ascii-progress">
+        {% set filled = (goal.progress_percent / 5)|int %}
+        {% set empty = 20 - filled %}
+        <span class="ascii-progress-bar">[{{ '=' * filled }}</span><span class="ascii-progress-empty">{{ '-' * empty }}]</span>
+        <span class="ascii-progress-label">{{ goal.current_value }}/{{ goal.target_value }}</span>
+    </div>
+    {% endif %}
+
+    <div class="goal-meta">
+        {{ goal.goal_type|replace('_', ' ')|title }}
+        {% if goal.frequency %} | {{ goal.frequency|title }}{% endif %}
+        {% if goal.deadline %} | Due: {{ goal.deadline.strftime('%b %d') }}{% endif %}
+    </div>
+</div>
+{% endfor %}
+{% endif %}
+
+{% set has_any_goals = uncategorized|length > 0 or categories|selectattr('active_goals')|list|length > 0 %}
+{% if not has_any_goals %}
+<div class="empty-state" style="padding: 3rem;">
+    <div class="empty-state-icon">[___]</div>
+    <p>No active goals yet</p>
+    <p style="color: #666; margin: 1rem 0;">Start tracking your progress by creating your first goal.</p>
+    <a href="{{ url_for('goals.new_goal') }}" class="btn btn-primary">[+] Create Your First Goal</a>
+</div>
+{% endif %}
+
+<hr class="divider">
+
+<div style="text-align: center;">
+    <a href="{{ url_for('goals.new_goal') }}" class="btn btn-primary">[+] Add New Goal</a>
+</div>
+{% endblock %}

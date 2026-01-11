@@ -46,5 +46,11 @@ def projects():
             'link': '/projects/weather',
             'tags': ['Weather', 'Data Viz', 'API']
         },
+        {
+            'title': 'Goal Tracker',
+            'description': 'Terminal-style resolution and goal tracker with ASCII progress bars, streak tracking, and category management.',
+            'link': '/projects/goals',
+            'tags': ['Productivity', 'Terminal UI', 'Full Stack']
+        },
     ]
     return render_template('projects.html', projects=sample_projects)

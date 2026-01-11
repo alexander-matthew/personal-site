@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Categories - Goal Tracker{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/goals.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="goals-nav">
+    <a href="{{ url_for('goals.dashboard') }}">Dashboard</a>
+    <a href="{{ url_for('goals.all_goals') }}">All Goals</a>
+    <a href="{{ url_for('goals.new_goal') }}">+ New Goal</a>
+    <a href="{{ url_for('goals.categories') }}" class="active">Categories</a>
+    <a href="{{ url_for('goals.logout') }}" style="margin-left: auto;">Logout</a>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+                <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<div class="terminal">
+    <div class="terminal-header">
+        <span class="terminal-dot red"></span>
+        <span class="terminal-dot yellow"></span>
+        <span class="terminal-dot green"></span>
+        <span class="terminal-title">categories -- manage</span>
+    </div>
+    <div class="terminal-body">
+        <p class="prompt">managing goal categories</p>
+        <p style="color: #888; margin-top: 0.5rem;">
+            Organize your goals with custom categories.
+        </p>
+    </div>
+</div>
+
+<h2 class="section-header">YOUR CATEGORIES</h2>
+
+{% for category in categories %}
+<div class="goal-card" style="display: flex; align-items: center; justify-content: space-between;">
+    <div style="display: flex; align-items: center; gap: 1rem;">
+        <span class="category-dot" style="background-color: {{ category.color }}; width: 16px; height: 16px;"></span>
+        <span style="color: #e5e5e5;">{{ category.name }}</span>
+        {% if category.is_preset %}
+        <span style="color: #666; font-size: 0.8rem;">(preset)</span>
+        {% endif %}
+    </div>
+    <div style="display: flex; gap: 0.5rem; align-items: center;">
+        <span style="color: #888; font-size: 0.85rem;">
+            {{ category.goals|length }} goal{% if category.goals|length != 1 %}s{% endif %}
+        </span>
+        <form action="{{ url_for('goals.delete_category', category_id=category.id) }}" method="POST"
+              onsubmit="return confirm('Delete this category? Goals will become uncategorized.');">
+            <button type="submit" class="btn btn-danger btn-sm">[X]</button>
+        </form>
+    </div>
+</div>
+{% endfor %}
+
+<hr class="divider">
+
+<h2 class="section-header">ADD NEW CATEGORY</h2>
+
+<form method="POST" action="{{ url_for('goals.new_category') }}" class="terminal-form">
+    <div class="form-row">
+        <div class="form-group">
+            <label class="form-label" for="name">category name</label>
+            <input type="text" id="name" name="name" class="form-input"
+                   placeholder="e.g., Side Projects" required>
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="color">color</label>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <input type="color" id="color" name="color" value="#60a5fa"
+                       style="width: 50px; height: 38px; border: 1px solid #444; background: transparent; cursor: pointer;">
+                <span id="color-preview" style="color: #888; font-family: monospace;">#60a5fa</span>
+            </div>
+        </div>
+    </div>
+    <button type="submit" class="btn btn-primary">[+] Add Category</button>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Update color preview
+document.getElementById('color').addEventListener('input', function() {
+    document.getElementById('color-preview').textContent = this.value;
+});
+</script>
+{% endblock %}

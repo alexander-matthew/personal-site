@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Goal Tracker{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/goals.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="goals-nav">
+    <a href="{{ url_for('goals.dashboard') }}" class="active">Dashboard</a>
+    <a href="{{ url_for('goals.all_goals') }}">All Goals</a>
+    <a href="{{ url_for('goals.new_goal') }}">+ New Goal</a>
+    <a href="{{ url_for('goals.categories') }}">Categories</a>
+    <a href="{{ url_for('goals.logout') }}" style="margin-left: auto;">Logout</a>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+                <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<div class="terminal">
+    <div class="terminal-header">
+        <span class="terminal-dot red"></span>
+        <span class="terminal-dot yellow"></span>
+        <span class="terminal-dot green"></span>
+        <span class="terminal-title">goal-tracker -- {{ current_user.username }}@goals</span>
+    </div>
+    <div class="terminal-body">
+        <p class="prompt">system status: ONLINE</p>
+        <p class="prompt">user: {{ current_user.username }}</p>
+        <p class="prompt">date: {{ today.strftime('%Y-%m-%d') }}</p>
+
+        <div class="stats-box">
+            <div class="stats-box-title">+-- OVERVIEW --+</div>
+            <div class="stats-row">
+                <span>Total Goals:</span>
+                <span class="stats-value">{{ total_goals }}</span>
+            </div>
+            <div class="stats-row">
+                <span>Completed:</span>
+                <span class="stats-value">{{ completed_goals }}</span>
+            </div>
+            <div class="stats-row">
+                <span>Active:</span>
+                <span class="stats-value">{{ total_goals - completed_goals }}</span>
+            </div>
+            {% if total_goals > 0 %}
+            <div class="ascii-progress" style="margin-top: 0.75rem;">
+                {% set pct = ((completed_goals / total_goals) * 100)|int %}
+                {% set filled = (pct / 5)|int %}
+                {% set empty = 20 - filled %}
+                <span class="ascii-progress-bar">[{{ '=' * filled }}</span><span class="ascii-progress-empty">{{ '-' * empty }}]</span>
+                <span class="ascii-progress-label">{{ pct }}% complete</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <div>
+        <!-- Daily Goals Section -->
+        <h2 class="section-header">TODAY'S HABITS</h2>
+
+        {% if daily_goals %}
+            {% for goal in daily_goals %}
+            <div class="goal-card">
+                <div class="goal-card-header">
+                    <label class="daily-checkbox" data-goal-id="{{ goal.id }}">
+                        <input type="checkbox" {% if goal.completed_today %}checked{% endif %}>
+                        <span class="checkbox-visual">{% if goal.completed_today %}[X]{% else %}[ ]{% endif %}</span>
+                        <h3 class="goal-title" style="display: inline; margin-left: 0.5rem;">
+                            <a href="{{ url_for('goals.view_goal', goal_id=goal.id) }}">{{ goal.title }}</a>
+                        </h3>
+                    </label>
+                    {% if goal.priority == 'stretch' %}
+                        <span class="priority-stretch">[STRETCH]</span>
+                    {% endif %}
+                </div>
+                {% if goal.category %}
+                <div class="goal-meta">
+                    <span class="category-dot" style="background-color: {{ goal.category.color }}"></span>
+                    {{ goal.category.name }}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">[...]</div>
+                <p>No daily habits set up yet</p>
+                <a href="{{ url_for('goals.new_goal') }}" class="btn btn-secondary btn-sm" style="margin-top: 1rem;">Add Daily Goal</a>
+            </div>
+        {% endif %}
+
+        <!-- Upcoming Deadlines Section -->
+        <h2 class="section-header">UPCOMING DEADLINES</h2>
+
+        {% if upcoming_goals %}
+            {% for goal in upcoming_goals %}
+            <div class="goal-card">
+                <div class="goal-card-header">
+                    <h3 class="goal-title">
+                        <a href="{{ url_for('goals.view_goal', goal_id=goal.id) }}">{{ goal.title }}</a>
+                    </h3>
+                    {% set days_left = (goal.deadline - today).days %}
+                    <span class="{% if days_left <= 1 %}deadline-urgent{% elif days_left <= 3 %}deadline-warning{% endif %}">
+                        {% if days_left == 0 %}
+                            DUE TODAY
+                        {% elif days_left == 1 %}
+                            1 day left
+                        {% else %}
+                            {{ days_left }} days left
+                        {% endif %}
+                    </span>
+                </div>
+                {% if goal.progress_type == 'percentage' %}
+                <div class="ascii-progress">
+                    {% set filled = (goal.progress_percent / 5)|int %}
+                    {% set empty = 20 - filled %}
+                    <span class="ascii-progress-bar">[{{ '=' * filled }}</span><span class="ascii-progress-empty">{{ '-' * empty }}]</span>
+                    <span class="ascii-progress-label">{{ goal.current_value }}/{{ goal.target_value }}</span>
+                </div>
+                {% endif %}
+                <div class="goal-meta">
+                    {% if goal.category %}
+                    <span class="category-dot" style="background-color: {{ goal.category.color }}"></span>
+                    {{ goal.category.name }} |
+                    {% endif %}
+                    Due: {{ goal.deadline.strftime('%b %d, %Y') }}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">[---]</div>
+                <p>No upcoming deadlines</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <div>
+        <!-- Streaks Section -->
+        <h2 class="section-header">ACTIVE STREAKS</h2>
+
+        {% if streak_goals %}
+            {% for goal in streak_goals %}
+            {% set streak = goal.current_streak %}
+            <div class="goal-card">
+                <div class="goal-card-header">
+                    <h3 class="goal-title">
+                        <a href="{{ url_for('goals.view_goal', goal_id=goal.id) }}">{{ goal.title }}</a>
+                    </h3>
+                </div>
+                <div class="streak-display">
+                    {% if streak > 0 %}
+                        <span class="streak-fire">*</span> {{ streak }} day{% if streak != 1 %}s{% endif %}
+                    {% else %}
+                        <span style="color: #666;">No active streak</span>
+                    {% endif %}
+                </div>
+                {% if goal.category %}
+                <div class="goal-meta">
+                    <span class="category-dot" style="background-color: {{ goal.category.color }}"></span>
+                    {{ goal.category.name }}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">[~]</div>
+                <p>No streak goals yet</p>
+                <a href="{{ url_for('goals.new_goal') }}" class="btn btn-secondary btn-sm" style="margin-top: 1rem;">Add Streak Goal</a>
+            </div>
+        {% endif %}
+
+        <!-- Quick Actions -->
+        <h2 class="section-header">QUICK ACTIONS</h2>
+        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+            <a href="{{ url_for('goals.new_goal') }}" class="btn btn-primary">[+] New Goal</a>
+            <a href="{{ url_for('goals.all_goals') }}" class="btn btn-secondary">[*] View All Goals</a>
+            <a href="{{ url_for('goals.categories') }}" class="btn btn-secondary">[#] Manage Categories</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll('.daily-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('click', async function(e) {
+        e.preventDefault();
+        const goalId = this.dataset.goalId;
+        const input = this.querySelector('input');
+        const visual = this.querySelector('.checkbox-visual');
+
+        try {
+            const response = await fetch('{{ url_for("goals.toggle_daily") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ goal_id: parseInt(goalId) })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                input.checked = data.completed_today;
+                visual.textContent = data.completed_today ? '[X]' : '[ ]';
+            }
+        } catch (error) {
+            console.error('Error toggling daily goal:', error);
+        }
+    });
+});
+</script>
+{% endblock %}
