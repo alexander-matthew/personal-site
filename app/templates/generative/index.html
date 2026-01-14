@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Generative Art Gallery | {{ site.name }}{% endblock %}
+
+{% block body_class %}full-width-page{% endblock %}
+
+{% block head %}
+<!-- p5.js -->
+<script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.min.js"></script>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/generative.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="gallery-container">
+    <!-- Header -->
+    <header class="gallery-header">
+        <div class="header-left">
+            <h1>Generative Art Gallery</h1>
+            <span class="sketch-name" id="sketch-name">Loading...</span>
+        </div>
+        <div class="header-controls">
+            <button id="reset-btn" class="control-btn" title="Reset to original code">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                    <path d="M3 3v5h5"/>
+                </svg>
+                Reset
+            </button>
+            <button id="toggle-code-btn" class="control-btn" title="Toggle code panel">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="16 18 22 12 16 6"/>
+                    <polyline points="8 6 2 12 8 18"/>
+                </svg>
+                <span id="toggle-code-text">Hide Code</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Editor Area -->
+    <main class="editor-area" id="editor-area">
+        <!-- Code Panel -->
+        <div class="code-panel" id="code-panel">
+            <div class="panel-header">
+                <span>sketch.js</span>
+                <div class="editor-status" id="editor-status"></div>
+            </div>
+            <div id="code-editor"></div>
+        </div>
+
+        <!-- Resize Handle -->
+        <div class="resize-handle" id="resize-handle"></div>
+
+        <!-- Canvas Panel -->
+        <div class="canvas-panel" id="canvas-panel">
+            <div id="canvas-container"></div>
+            <div class="error-display" id="error-display"></div>
+        </div>
+    </main>
+
+    <!-- Thumbnail Carousel -->
+    <nav class="carousel-container">
+        <button class="carousel-btn carousel-prev" id="carousel-prev" title="Previous sketches">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="15 18 9 12 15 6"/>
+            </svg>
+        </button>
+        <div class="carousel-track-wrapper">
+            <div class="carousel-track" id="carousel-track">
+                <!-- Thumbnails populated by JS -->
+            </div>
+        </div>
+        <button class="carousel-btn carousel-next" id="carousel-next" title="Next sketches">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"/>
+            </svg>
+        </button>
+    </nav>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', filename='js/generative-gallery.js') }}"></script>
+{% endblock %}

@@ -661,6 +661,16 @@ body {
     margin: 0 auto;
 }
 
+/* Full-width page mode (for apps like generative art gallery) */
+.full-width-page .container {
+    max-width: 100%;
+    padding: 0;
+}
+
+.full-width-page .footer {
+    display: none;
+}
+
 /* Responsive */
 @media (max-width: 640px) {
     .navbar {
