@@ -46,5 +46,11 @@ def projects():
             'link': '/projects/weather',
             'tags': ['Weather', 'Data Viz', 'API']
         },
+        {
+            'title': 'Generative Art Gallery',
+            'description': 'Interactive p5.js playground with live code editing. Explore and modify generative art sketches featuring particles, fractals, and procedural patterns.',
+            'link': '/projects/generative',
+            'tags': ['Creative Coding', 'p5.js', 'Interactive']
+        },
     ]
     return render_template('projects.html', projects=sample_projects)

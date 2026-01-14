@@ -67,4 +67,8 @@ def create_app():
     from app.routes import weather
     app.register_blueprint(weather.bp)
 
+    # Register Generative Art gallery
+    from app.routes import generative
+    app.register_blueprint(generative.bp)
+
     return app
