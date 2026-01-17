@@ -67,4 +67,8 @@ def create_app():
     from app.routes import weather
     app.register_blueprint(weather.bp)
 
+    # Register Resume timeline
+    from app.routes import resume
+    app.register_blueprint(resume.bp)
+
     return app
