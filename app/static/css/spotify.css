@@ -1,0 +1,1080 @@
+/* ===============================================
+   Spotify Dashboard - ASCII Theme
+   Clean dark theme with ASCII-rendered visualizations
+   =============================================== */
+
+/* Monospace font for data/numbers */
+.mono {
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+}
+
+/* ===============================================
+   Page Container
+   =============================================== */
+.spotify-page {
+    position: relative;
+    z-index: 10;
+}
+
+.spotify-page .container {
+    max-width: 1800px !important;
+    width: 95% !important;
+    padding: 2rem 2rem;
+}
+
+.spotify-page .tool-header {
+    margin-bottom: 2rem;
+}
+
+.spotify-page .tool-header h1 {
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+}
+
+.spotify-page .tool-description {
+    color: var(--text-light);
+}
+
+/* ===============================================
+   Stats Cards Row
+   =============================================== */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: rgba(10, 10, 10, 0.85);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 1.5rem;
+}
+
+.stat-card__label {
+    font-size: 0.8125rem;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
+}
+
+.stat-card__value {
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+    font-size: 2.5rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.stat-card__value--text {
+    font-size: 1rem;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+/* ===============================================
+   Dashboard Grid
+   =============================================== */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.dashboard-full {
+    grid-column: 1 / -1;
+}
+
+.section-card {
+    min-width: 0;
+    overflow: hidden;
+}
+
+/* ===============================================
+   Section Cards
+   =============================================== */
+.section-card {
+    background: rgba(10, 10, 10, 0.85);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 2rem;
+}
+
+.section-card__title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* ===============================================
+   ASCII Bar Visualizations
+   =============================================== */
+.ascii-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+    width: 100%;
+}
+
+.ascii-bar-row {
+    display: grid;
+    grid-template-columns: 140px 1fr 50px;
+    align-items: center;
+    gap: 1rem;
+}
+
+.ascii-bar-row--wide-label {
+    grid-template-columns: 160px 1fr 50px;
+}
+
+.ascii-bar__label {
+    font-size: 0.875rem;
+    color: var(--text-light);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ascii-bar__blocks {
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+    font-size: 0.875rem;
+    color: var(--text-color);
+    letter-spacing: 0;
+    white-space: pre;
+}
+
+.ascii-bar__value {
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+    font-size: 0.875rem;
+    color: var(--text-light);
+    text-align: right;
+}
+
+/* ===============================================
+   ASCII Heatmap
+   =============================================== */
+.ascii-heatmap {
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+    font-size: 1rem;
+    line-height: 1.5;
+    overflow-x: auto;
+}
+
+.ascii-heatmap__row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.25rem;
+}
+
+.ascii-heatmap__day {
+    width: 3rem;
+    color: var(--text-light);
+    flex-shrink: 0;
+    font-size: 0.875rem;
+}
+
+.ascii-heatmap__cells {
+    display: flex;
+}
+
+.ascii-heatmap__cell {
+    width: 1.25rem;
+    text-align: center;
+    color: var(--text-color);
+    cursor: default;
+    position: relative;
+}
+
+.ascii-heatmap__cell:hover {
+    color: var(--primary-color);
+}
+
+.ascii-heatmap__header {
+    display: flex;
+    margin-bottom: 0.5rem;
+    margin-left: 3rem;
+}
+
+.ascii-heatmap__hour {
+    width: 1.25rem;
+    text-align: center;
+    color: var(--text-light);
+    font-size: 0.75rem;
+}
+
+/* ===============================================
+   ASCII Vertical Chart
+   =============================================== */
+.ascii-chart {
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+    font-size: 1rem;
+    line-height: 1.2;
+}
+
+.ascii-chart__row {
+    display: flex;
+    gap: 0.375rem;
+    justify-content: center;
+}
+
+.ascii-chart__bar {
+    width: 1.25rem;
+    text-align: center;
+    color: var(--text-color);
+}
+
+.ascii-chart__axis {
+    border-top: 1px solid var(--border-color);
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+    display: flex;
+    gap: 0.375rem;
+    justify-content: center;
+}
+
+.ascii-chart__label {
+    width: 1.25rem;
+    text-align: center;
+    color: var(--text-light);
+    font-size: 0.75rem;
+}
+
+/* ===============================================
+   Audio Profile Panel
+   =============================================== */
+.audio-profile {
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+    font-size: 0.9375rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 1.25rem;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.audio-profile__row {
+    display: grid;
+    grid-template-columns: 120px 1fr 50px;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem 0;
+}
+
+.audio-profile__label {
+    color: var(--text-light);
+    white-space: nowrap;
+}
+
+.audio-profile__meter {
+    color: var(--text-color);
+    letter-spacing: 0;
+    overflow: hidden;
+}
+
+.audio-profile__value {
+    color: var(--text-light);
+    text-align: right;
+    white-space: nowrap;
+}
+
+/* ===============================================
+   Track List
+   =============================================== */
+.track-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.track-item {
+    display: grid;
+    grid-template-columns: 2.5rem 48px 1fr auto;
+    gap: 1rem;
+    align-items: center;
+    padding: 0.625rem;
+    border-radius: 4px;
+    transition: background-color 0.15s;
+}
+
+.track-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.track-item__rank {
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+    font-size: 1rem;
+    color: var(--text-light);
+    text-align: right;
+}
+
+.track-item__cover {
+    width: 48px;
+    height: 48px;
+    border-radius: 4px;
+    object-fit: cover;
+    filter: grayscale(30%);
+}
+
+.track-item__info {
+    min-width: 0;
+}
+
+.track-item__name {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.track-item__artist {
+    font-size: 0.8125rem;
+    color: var(--text-light);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.track-item__duration {
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+    font-size: 0.8125rem;
+    color: var(--text-light);
+}
+
+/* ===============================================
+   Taste Evolution
+   =============================================== */
+.taste-evolution {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+}
+
+.taste-period {
+    min-width: 0;
+    overflow: hidden;
+}
+
+.taste-period__label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.taste-period__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.taste-artist {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.9375rem;
+    min-width: 0;
+}
+
+.taste-artist__rank {
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+    color: var(--text-light);
+    width: 1.5rem;
+    flex-shrink: 0;
+}
+
+.taste-artist__img {
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    filter: grayscale(50%);
+    flex-shrink: 0;
+}
+
+.taste-artist__name {
+    color: var(--text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+    min-width: 0;
+}
+
+/* ===============================================
+   Patterns Grid
+   =============================================== */
+.patterns-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.pattern-section__title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 1rem;
+}
+
+.peak-hours {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.peak-hour {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+}
+
+.peak-hour__time {
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+    font-size: 1.25rem;
+    color: var(--text-color);
+    min-width: 4rem;
+}
+
+.peak-hour__info {
+    font-size: 0.75rem;
+    color: var(--text-light);
+}
+
+.peak-hour__count {
+    color: var(--primary-color);
+}
+
+/* ===============================================
+   Time Range Selector
+   =============================================== */
+.time-selector {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.time-btn {
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+    font-size: 0.75rem;
+    padding: 0.5rem 1rem;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    color: var(--text-light);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.time-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.time-btn.active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #000;
+}
+
+/* ===============================================
+   Auth States
+   =============================================== */
+.auth-box {
+    background: rgba(10, 10, 10, 0.85);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    text-align: center;
+    padding: 4rem 2rem;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.auth-box__title {
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+    font-size: 0.875rem;
+    color: var(--text-light);
+    letter-spacing: 0.1em;
+    margin-bottom: 1rem;
+}
+
+.auth-box__message {
+    color: var(--text-light);
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+.auth-btn {
+    display: inline-block;
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+    font-size: 0.875rem;
+    padding: 0.875rem 2rem;
+    background: var(--primary-color);
+    border: none;
+    border-radius: 4px;
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+
+.auth-btn:hover {
+    opacity: 0.9;
+}
+
+/* ===============================================
+   Loading States
+   =============================================== */
+.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 120px;
+    color: var(--text-light);
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+    font-size: 0.875rem;
+}
+
+.loading::after {
+    content: '...';
+    animation: loading-dots 1.5s infinite;
+}
+
+@keyframes loading-dots {
+    0%, 20% { content: '.'; }
+    40% { content: '..'; }
+    60%, 100% { content: '...'; }
+}
+
+/* ===============================================
+   Empty States
+   =============================================== */
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-light);
+    font-size: 0.875rem;
+}
+
+/* ===============================================
+   Disconnect Link
+   =============================================== */
+.disconnect-link {
+    display: block;
+    text-align: center;
+    margin-top: 2rem;
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+    font-size: 0.75rem;
+    color: var(--text-light);
+}
+
+.disconnect-link:hover {
+    color: var(--primary-color);
+}
+
+/* ===============================================
+   Responsive
+   =============================================== */
+@media (max-width: 1200px) {
+    .spotify-page .container {
+        padding: 2rem 2rem;
+    }
+}
+
+@media (max-width: 1024px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .taste-evolution {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .patterns-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .ascii-bar-row {
+        grid-template-columns: 80px 1fr 40px;
+    }
+
+    .track-item {
+        grid-template-columns: 2rem 1fr;
+    }
+
+    .track-item__cover,
+    .track-item__duration {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-row {
+        grid-template-columns: 1fr;
+    }
+
+    .time-selector {
+        flex-wrap: wrap;
+    }
+}
+
+/* ===============================================
+   Player Bar
+   =============================================== */
+.player-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: rgba(10, 10, 10, 0.95);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--border-color);
+    z-index: 1000;
+    transition: height 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.player-bar.expanded {
+    height: 180px;
+}
+
+/* Add padding to main content to prevent overlap */
+.spotify-page {
+    padding-bottom: 80px;
+}
+
+/* Expand Toggle */
+.player-expand-toggle {
+    position: absolute;
+    top: -24px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 48px;
+    height: 24px;
+    background: rgba(10, 10, 10, 0.95);
+    border: 1px solid var(--border-color);
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    color: var(--text-light);
+    cursor: pointer;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s;
+}
+
+.player-expand-toggle:hover {
+    color: var(--primary-color);
+}
+
+/* Player Content */
+.player-content {
+    display: flex;
+    align-items: center;
+    height: 64px;
+    padding: 0 1rem;
+    gap: 1rem;
+}
+
+.player-bar.expanded .player-content {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 1rem;
+}
+
+/* Connect Message */
+.player-connect-message {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-light);
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+    font-size: 0.875rem;
+}
+
+/* Album Art */
+.player-album-art {
+    width: 48px;
+    height: 48px;
+    border-radius: 4px;
+    object-fit: cover;
+    filter: grayscale(30%);
+    flex-shrink: 0;
+}
+
+.player-bar.expanded .player-album-art {
+    width: 80px;
+    height: 80px;
+}
+
+/* Track Info */
+.player-track-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+}
+
+.player-track-name {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.player-artist-name {
+    font-size: 0.75rem;
+    color: var(--text-light);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.player-album-name {
+    font-size: 0.75rem;
+    color: var(--text-light);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: none;
+}
+
+.player-bar.expanded .player-album-name {
+    display: block;
+}
+
+/* Controls */
+.player-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.player-btn {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0.5rem;
+    border-radius: 4px;
+    transition: color 0.15s, background-color 0.15s;
+    font-family: inherit;
+}
+
+.player-btn:hover {
+    color: var(--primary-color);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.player-btn.active {
+    color: var(--primary-color);
+}
+
+.player-btn--play {
+    font-size: 1.25rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Progress Bar */
+.player-progress {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    max-width: 400px;
+}
+
+.player-progress-bar {
+    flex: 1;
+    height: 4px;
+    background: var(--border-color);
+    border-radius: 2px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.player-progress-fill {
+    height: 100%;
+    background: var(--primary-color);
+    border-radius: 2px;
+    width: 0%;
+    transition: width 0.1s linear;
+}
+
+.player-progress-bar:hover .player-progress-fill {
+    background: #93c5fd;
+}
+
+.player-time {
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+    font-size: 0.625rem;
+    color: var(--text-light);
+    min-width: 2.5rem;
+}
+
+.player-time--current {
+    text-align: right;
+}
+
+/* Volume */
+.player-volume {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.player-volume-slider {
+    width: 80px;
+    height: 4px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: var(--border-color);
+    border-radius: 2px;
+    cursor: pointer;
+}
+
+.player-volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    background: var(--text-color);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.player-volume-slider::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    background: var(--text-color);
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+}
+
+.player-volume-value {
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+    font-size: 0.625rem;
+    color: var(--text-light);
+    min-width: 2rem;
+    display: none;
+}
+
+.player-bar.expanded .player-volume-value {
+    display: block;
+}
+
+/* Extra Controls (shuffle, repeat) */
+.player-extra-controls {
+    display: none;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.player-bar.expanded .player-extra-controls {
+    display: flex;
+}
+
+.player-btn--small {
+    font-size: 0.875rem;
+    padding: 0.375rem;
+}
+
+/* Devices */
+.player-devices {
+    position: relative;
+}
+
+.player-devices-dropdown {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    margin-bottom: 0.5rem;
+    background: rgba(10, 10, 10, 0.98);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    min-width: 200px;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.player-devices-dropdown.active {
+    display: flex;
+}
+
+.player-devices-header {
+    padding: 0.75rem 1rem;
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+    font-size: 0.75rem;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.player-devices-list {
+    display: flex;
+    flex-direction: column;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.device-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.device-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.device-item.active {
+    background: rgba(96, 165, 250, 0.1);
+}
+
+.device-indicator {
+    font-size: 0.5rem;
+    color: var(--primary-color);
+}
+
+.device-name {
+    flex: 1;
+    font-size: 0.875rem;
+    color: var(--text-color);
+}
+
+.device-type {
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+    font-size: 0.625rem;
+    color: var(--text-light);
+}
+
+/* Expanded Layout */
+.player-bar.expanded .player-content {
+    padding: 1rem 1.5rem;
+}
+
+.player-bar.expanded .player-track-info {
+    gap: 0.25rem;
+}
+
+.player-bar.expanded .player-controls {
+    gap: 0.75rem;
+}
+
+.player-bar.expanded .player-progress {
+    max-width: none;
+    width: 100%;
+    order: 10;
+    margin-top: 0.75rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .player-progress {
+        display: none;
+    }
+
+    .player-bar.expanded .player-progress {
+        display: flex;
+    }
+
+    .player-volume {
+        display: none;
+    }
+
+    .player-bar.expanded .player-volume {
+        display: flex;
+    }
+}
+
+@media (max-width: 480px) {
+    .player-content {
+        padding: 0 0.75rem;
+    }
+
+    .player-album-art {
+        width: 40px;
+        height: 40px;
+    }
+
+    .player-btn {
+        padding: 0.375rem;
+    }
+}
+
+/* ===============================================
+   Clickable Track Items (for playback)
+   =============================================== */
+.track-item--playable {
+    cursor: pointer;
+}
+
+.track-item--playable:hover {
+    background: rgba(96, 165, 250, 0.1);
+}
+
+.track-item--playing {
+    background: rgba(96, 165, 250, 0.1);
+}
+
+.track-item--playing .track-item__rank {
+    color: var(--primary-color);
+}
+
+.track-item__play-indicator {
+    display: none;
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+    font-size: 0.75rem;
+    color: var(--primary-color);
+    animation: equalizer-pulse 0.5s ease-in-out infinite alternate;
+}
+
+.track-item--playing .track-item__play-indicator {
+    display: block;
+}
+
+@keyframes equalizer-pulse {
+    from { opacity: 0.5; }
+    to { opacity: 1; }
+}

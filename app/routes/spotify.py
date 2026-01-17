@@ -15,7 +15,14 @@ class SpotifyOAuth:
     def __init__(self):
         self.client_id = os.environ.get('SPOTIFY_CLIENT_ID')
         self.client_secret = os.environ.get('SPOTIFY_CLIENT_SECRET')
-        self.scope = 'user-read-recently-played user-top-read user-read-currently-playing'
+        self.scope = (
+            'user-read-recently-played '
+            'user-top-read '
+            'user-read-currently-playing '
+            'user-read-playback-state '
+            'user-modify-playback-state '
+            'streaming'
+        )
 
     @property
     def is_configured(self):
@@ -283,3 +290,240 @@ def api_taste_evolution():
             evolution[period] = {'label': period_labels[period], 'artists': []}
 
     return jsonify(evolution)
+
+
+# ===============================================
+# Playback API Endpoints
+# ===============================================
+
+@bp.route('/api/token')
+@require_oauth
+def api_token():
+    """Return access token for Web Playback SDK."""
+    token = session.get('spotify_access_token')
+    return jsonify({'access_token': token})
+
+
+@bp.route('/api/playback-state')
+@require_oauth
+def api_playback_state():
+    """Get current playback state."""
+    data, status = _spotify_request('/me/player')
+    if data is None:
+        return jsonify({'is_playing': False, 'item': None}), 200
+    return jsonify(data)
+
+
+@bp.route('/api/devices')
+@require_oauth
+def api_devices():
+    """Get available devices."""
+    data, status = _spotify_request('/me/player/devices')
+    if data is None:
+        return jsonify({'devices': []}), status
+    return jsonify(data)
+
+
+@bp.route('/api/transfer', methods=['POST'])
+@require_oauth
+def api_transfer():
+    """Transfer playback to a device."""
+    token = session.get('spotify_access_token')
+    device_id = request.json.get('device_id')
+
+    response = requests.put(
+        'https://api.spotify.com/v1/me/player',
+        json={'device_ids': [device_id], 'play': True},
+        headers={'Authorization': f'Bearer {token}'}
+    )
+
+    if response.status_code == 204:
+        return jsonify({'success': True})
+    return jsonify({'error': 'Transfer failed'}), response.status_code
+
+
+@bp.route('/api/play', methods=['POST'])
+@require_oauth
+def api_play():
+    """Start or resume playback."""
+    token = session.get('spotify_access_token')
+    data = request.json or {}
+
+    params = {}
+    if data.get('device_id'):
+        params['device_id'] = data['device_id']
+
+    body = {}
+    if data.get('uris'):
+        body['uris'] = data['uris']
+    elif data.get('context_uri'):
+        body['context_uri'] = data['context_uri']
+        if data.get('offset'):
+            body['offset'] = data['offset']
+
+    response = requests.put(
+        'https://api.spotify.com/v1/me/player/play',
+        params=params if params else None,
+        json=body if body else None,
+        headers={'Authorization': f'Bearer {token}'}
+    )
+
+    if response.status_code in [204, 202]:
+        return jsonify({'success': True})
+    return jsonify({'error': 'Play failed'}), response.status_code
+
+
+@bp.route('/api/pause', methods=['POST'])
+@require_oauth
+def api_pause():
+    """Pause playback."""
+    token = session.get('spotify_access_token')
+    device_id = (request.json or {}).get('device_id')
+
+    params = {'device_id': device_id} if device_id else None
+
+    response = requests.put(
+        'https://api.spotify.com/v1/me/player/pause',
+        params=params,
+        headers={'Authorization': f'Bearer {token}'}
+    )
+
+    if response.status_code in [204, 202]:
+        return jsonify({'success': True})
+    return jsonify({'error': 'Pause failed'}), response.status_code
+
+
+@bp.route('/api/next', methods=['POST'])
+@require_oauth
+def api_next():
+    """Skip to next track."""
+    token = session.get('spotify_access_token')
+    device_id = (request.json or {}).get('device_id')
+
+    params = {'device_id': device_id} if device_id else None
+
+    response = requests.post(
+        'https://api.spotify.com/v1/me/player/next',
+        params=params,
+        headers={'Authorization': f'Bearer {token}'}
+    )
+
+    if response.status_code in [204, 202]:
+        return jsonify({'success': True})
+    return jsonify({'error': 'Skip failed'}), response.status_code
+
+
+@bp.route('/api/previous', methods=['POST'])
+@require_oauth
+def api_previous():
+    """Skip to previous track."""
+    token = session.get('spotify_access_token')
+    device_id = (request.json or {}).get('device_id')
+
+    params = {'device_id': device_id} if device_id else None
+
+    response = requests.post(
+        'https://api.spotify.com/v1/me/player/previous',
+        params=params,
+        headers={'Authorization': f'Bearer {token}'}
+    )
+
+    if response.status_code in [204, 202]:
+        return jsonify({'success': True})
+    return jsonify({'error': 'Previous failed'}), response.status_code
+
+
+@bp.route('/api/seek', methods=['POST'])
+@require_oauth
+def api_seek():
+    """Seek to position in track."""
+    token = session.get('spotify_access_token')
+    data = request.json or {}
+    position_ms = data.get('position_ms', 0)
+    device_id = data.get('device_id')
+
+    params = {'position_ms': position_ms}
+    if device_id:
+        params['device_id'] = device_id
+
+    response = requests.put(
+        'https://api.spotify.com/v1/me/player/seek',
+        params=params,
+        headers={'Authorization': f'Bearer {token}'}
+    )
+
+    if response.status_code in [204, 202]:
+        return jsonify({'success': True})
+    return jsonify({'error': 'Seek failed'}), response.status_code
+
+
+@bp.route('/api/volume', methods=['POST'])
+@require_oauth
+def api_volume():
+    """Set volume level."""
+    token = session.get('spotify_access_token')
+    data = request.json or {}
+    volume_percent = data.get('volume_percent', 50)
+    device_id = data.get('device_id')
+
+    params = {'volume_percent': volume_percent}
+    if device_id:
+        params['device_id'] = device_id
+
+    response = requests.put(
+        'https://api.spotify.com/v1/me/player/volume',
+        params=params,
+        headers={'Authorization': f'Bearer {token}'}
+    )
+
+    if response.status_code in [204, 202]:
+        return jsonify({'success': True})
+    return jsonify({'error': 'Volume failed'}), response.status_code
+
+
+@bp.route('/api/shuffle', methods=['POST'])
+@require_oauth
+def api_shuffle():
+    """Toggle shuffle."""
+    token = session.get('spotify_access_token')
+    data = request.json or {}
+    state = data.get('state', True)
+    device_id = data.get('device_id')
+
+    params = {'state': str(state).lower()}
+    if device_id:
+        params['device_id'] = device_id
+
+    response = requests.put(
+        'https://api.spotify.com/v1/me/player/shuffle',
+        params=params,
+        headers={'Authorization': f'Bearer {token}'}
+    )
+
+    if response.status_code in [204, 202]:
+        return jsonify({'success': True})
+    return jsonify({'error': 'Shuffle failed'}), response.status_code
+
+
+@bp.route('/api/repeat', methods=['POST'])
+@require_oauth
+def api_repeat():
+    """Set repeat mode (off, context, track)."""
+    token = session.get('spotify_access_token')
+    data = request.json or {}
+    state = data.get('state', 'off')  # off, context, track
+    device_id = data.get('device_id')
+
+    params = {'state': state}
+    if device_id:
+        params['device_id'] = device_id
+
+    response = requests.put(
+        'https://api.spotify.com/v1/me/player/repeat',
+        params=params,
+        headers={'Authorization': f'Bearer {token}'}
+    )
+
+    if response.status_code in [204, 202]:
+        return jsonify({'success': True})
+    return jsonify({'error': 'Repeat failed'}), response.status_code
