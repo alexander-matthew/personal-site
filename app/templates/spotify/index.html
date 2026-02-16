@@ -552,6 +552,7 @@
     async function loadRecentData() {
         try {
             const response = await fetch('/projects/spotify/api/recent');
+            if (!response.ok) return;
             const data = await response.json();
             if (data.items && data.items.length > 0) {
                 updateStats(data.items);
@@ -568,6 +569,7 @@
         timeRange = timeRange || 'short_term';
         try {
             const response = await fetch('/projects/spotify/api/top/' + timeRange);
+            if (!response.ok) return;
             const data = await response.json();
             if (data.artists && data.artists.items) {
                 updateTopArtist(data.artists.items);
@@ -585,6 +587,7 @@
         const container = document.getElementById('evolution-container');
         try {
             const response = await fetch('/projects/spotify/api/taste-evolution');
+            if (!response.ok) { container.textContent = 'Failed to load data'; return; }
             const data = await response.json();
             container.textContent = '';
             const content = SpotifyASCII.renderTasteEvolution(data);
@@ -601,6 +604,7 @@
         const container = document.getElementById('audio-profile-container');
         try {
             const response = await fetch('/projects/spotify/api/audio-features');
+            if (!response.ok) { container.textContent = 'Failed to load data'; return; }
             const data = await response.json();
             container.textContent = '';
             if (data.features) {
@@ -621,6 +625,7 @@
         const container = document.getElementById('genre-container');
         try {
             const response = await fetch('/projects/spotify/api/genres');
+            if (!response.ok) { container.textContent = 'Failed to load genres'; return; }
             const data = await response.json();
             container.textContent = '';
             const content = SpotifyASCII.renderGenreBars(data.genres);

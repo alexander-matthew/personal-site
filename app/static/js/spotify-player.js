@@ -206,12 +206,19 @@ const SpotifyPlayer = (function() {
         pollInterval = setInterval(async () => {
             try {
                 const response = await fetch('/projects/spotify/api/playback-state');
+                if (response.status === 401) {
+                    console.warn('Playback polling: authentication expired');
+                    showConnectMessage('Session expired - please reconnect');
+                    clearInterval(pollInterval);
+                    return;
+                }
+                if (!response.ok) return;
                 const state = await response.json();
                 if (state && state.item) {
                     updateUIFromAPIState(state);
                 }
             } catch (error) {
-                // Silent fail for polling
+                console.error('Playback polling error:', error);
             }
         }, 3000);
     }
@@ -606,6 +613,7 @@ const SpotifyPlayer = (function() {
     async function fetchPlaybackState() {
         try {
             const response = await fetch('/projects/spotify/api/playback-state');
+            if (!response.ok) return null;
             return await response.json();
         } catch (error) {
             return null;
@@ -624,6 +632,11 @@ const SpotifyPlayer = (function() {
             options.body = JSON.stringify(body);
         }
         const response = await fetch('/projects/spotify' + endpoint, options);
+        if (!response.ok) {
+            console.error('API request failed:', endpoint, response.status);
+            return { error: true, status: response.status };
+        }
+        if (response.status === 204) return {};
         return response.json();
     }
 
