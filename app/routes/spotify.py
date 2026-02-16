@@ -2,15 +2,18 @@
 Spotify Listening Trends
 Visualizes recently played tracks and top artists/tracks.
 """
+import logging
 import secrets
 
 from fastapi import APIRouter, Request, HTTPException, Depends
 from fastapi.responses import RedirectResponse
-import httpx
 
 from app.templating import templates
+from app.services.oauth import OAuthError
 from app.services.spotify_helpers import spotify_oauth, require_oauth, spotify_request
 from app.services.rate_limit import rate_limit
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix='/projects/spotify')
 
@@ -18,7 +21,7 @@ router = APIRouter(prefix='/projects/spotify')
 @router.get('/', name='spotify.index')
 async def index(request: Request):
     """Spotify dashboard main page."""
-    is_authenticated = 'spotify_access_token' in request.session
+    is_authenticated = bool(request.session.get('spotify_access_token'))
     is_configured = spotify_oauth.is_configured
     return templates.TemplateResponse(request, 'spotify/index.html',
                                       {'is_authenticated': is_authenticated,
@@ -53,9 +56,13 @@ async def callback(request: Request):
         raise HTTPException(status_code=403, detail='OAuth state mismatch')
 
     redirect_uri = str(request.url_for('spotify.callback'))
-    tokens = await spotify_oauth.exchange_code(code, redirect_uri)
+    try:
+        tokens = await spotify_oauth.exchange_code(code, redirect_uri)
+    except OAuthError:
+        logger.warning("OAuth token exchange failed during callback")
+        return RedirectResponse(url=str(request.url_for('spotify.index')), status_code=302)
 
-    request.session['spotify_access_token'] = tokens.get('access_token')
+    request.session['spotify_access_token'] = tokens['access_token']
     request.session['spotify_refresh_token'] = tokens.get('refresh_token')
 
     return RedirectResponse(url=str(request.url_for('spotify.index')), status_code=302)
@@ -90,15 +97,18 @@ async def api_top(request: Request, time_range: str):
     if time_range not in ['short_term', 'medium_term', 'long_term']:
         time_range = 'medium_term'
 
-    tracks_data, _ = await spotify_request(request, '/me/top/tracks', {
+    tracks_data, tracks_status = await spotify_request(request, '/me/top/tracks', {
         'limit': 20,
         'time_range': time_range
     })
 
-    artists_data, _ = await spotify_request(request, '/me/top/artists', {
+    artists_data, artists_status = await spotify_request(request, '/me/top/artists', {
         'limit': 10,
         'time_range': time_range
     })
+
+    if tracks_data is None and artists_data is None:
+        raise HTTPException(status_code=tracks_status, detail='Failed to fetch data')
 
     return {'tracks': tracks_data, 'artists': artists_data}
 
@@ -210,7 +220,8 @@ async def api_taste_evolution(request: Request):
 # Playback API Endpoints
 # ===============================================
 
-@router.get('/api/token', name='spotify.api_token')
+@router.get('/api/token', name='spotify.api_token',
+            dependencies=[Depends(rate_limit(max_requests=10, window_seconds=60))])
 async def api_token(request: Request):
     """Return access token for Web Playback SDK."""
     require_oauth(request)
@@ -218,23 +229,27 @@ async def api_token(request: Request):
     return {'access_token': token}
 
 
-@router.get('/api/playback-state', name='spotify.api_playback_state')
+@router.get('/api/playback-state', name='spotify.api_playback_state',
+            dependencies=[Depends(rate_limit(max_requests=30, window_seconds=60))])
 async def api_playback_state(request: Request):
     """Get current playback state."""
     require_oauth(request)
     data, status = await spotify_request(request, '/me/player')
-    if data is None:
+    if status == 204:
         return {'is_playing': False, 'item': None}
+    if data is None:
+        raise HTTPException(status_code=status, detail='Failed to fetch playback state')
     return data
 
 
-@router.get('/api/devices', name='spotify.api_devices')
+@router.get('/api/devices', name='spotify.api_devices',
+            dependencies=[Depends(rate_limit(max_requests=30, window_seconds=60))])
 async def api_devices(request: Request):
     """Get available devices."""
     require_oauth(request)
     data, status = await spotify_request(request, '/me/player/devices')
     if data is None:
-        return {'devices': []}
+        raise HTTPException(status_code=status, detail='Failed to fetch devices')
     return data
 
 
@@ -246,219 +261,192 @@ async def _get_json_body(request: Request):
     return await request.json()
 
 
-@router.post('/api/transfer', name='spotify.api_transfer')
+@router.post('/api/transfer', name='spotify.api_transfer',
+             dependencies=[Depends(rate_limit(max_requests=30, window_seconds=60))])
 async def api_transfer(request: Request):
     """Transfer playback to a device."""
     require_oauth(request)
-    token = request.session.get('spotify_access_token')
-    data = await _get_json_body(request)
-    device_id = data.get('device_id')
+    body = await _get_json_body(request)
+    device_id = body.get('device_id')
+    if not device_id:
+        raise HTTPException(status_code=400, detail='device_id is required')
 
-    async with httpx.AsyncClient(timeout=10) as client:
-        response = await client.put(
-            'https://api.spotify.com/v1/me/player',
-            json={'device_ids': [device_id], 'play': True},
-            headers={'Authorization': f'Bearer {token}'}
-        )
-
-    if response.status_code == 204:
+    data, status = await spotify_request(
+        request, '/me/player', method='PUT',
+        json_body={'device_ids': [device_id], 'play': True}
+    )
+    if status in [204, 200]:
         return {'success': True}
-    raise HTTPException(status_code=response.status_code, detail='Transfer failed')
+    raise HTTPException(status_code=status, detail='Transfer failed')
 
 
-@router.post('/api/play', name='spotify.api_play')
+@router.post('/api/play', name='spotify.api_play',
+             dependencies=[Depends(rate_limit(max_requests=30, window_seconds=60))])
 async def api_play(request: Request):
     """Start or resume playback."""
     require_oauth(request)
-    token = request.session.get('spotify_access_token')
-    data = await _get_json_body(request)
+    body = await _get_json_body(request)
 
     params = {}
-    if data.get('device_id'):
-        params['device_id'] = data['device_id']
+    if body.get('device_id'):
+        params['device_id'] = body['device_id']
 
-    body = {}
-    if data.get('uris'):
-        body['uris'] = data['uris']
-    elif data.get('context_uri'):
-        body['context_uri'] = data['context_uri']
-        if data.get('offset'):
-            body['offset'] = data['offset']
+    json_body = {}
+    if body.get('uris'):
+        json_body['uris'] = body['uris']
+    elif body.get('context_uri'):
+        json_body['context_uri'] = body['context_uri']
+        if body.get('offset'):
+            json_body['offset'] = body['offset']
 
-    async with httpx.AsyncClient(timeout=10) as client:
-        response = await client.put(
-            'https://api.spotify.com/v1/me/player/play',
-            params=params if params else None,
-            json=body if body else None,
-            headers={'Authorization': f'Bearer {token}'}
-        )
-
-    if response.status_code in [204, 202]:
+    data, status = await spotify_request(
+        request, '/me/player/play', params=params if params else None,
+        method='PUT', json_body=json_body if json_body else None
+    )
+    if status in [204, 202, 200]:
         return {'success': True}
-    raise HTTPException(status_code=response.status_code, detail='Play failed')
+    raise HTTPException(status_code=status, detail='Play failed')
 
 
-@router.post('/api/pause', name='spotify.api_pause')
+@router.post('/api/pause', name='spotify.api_pause',
+             dependencies=[Depends(rate_limit(max_requests=30, window_seconds=60))])
 async def api_pause(request: Request):
     """Pause playback."""
     require_oauth(request)
-    token = request.session.get('spotify_access_token')
-    data = await _get_json_body(request)
-    device_id = data.get('device_id')
+    body = await _get_json_body(request)
+    device_id = body.get('device_id')
 
     params = {'device_id': device_id} if device_id else None
 
-    async with httpx.AsyncClient(timeout=10) as client:
-        response = await client.put(
-            'https://api.spotify.com/v1/me/player/pause',
-            params=params,
-            headers={'Authorization': f'Bearer {token}'}
-        )
-
-    if response.status_code in [204, 202]:
+    data, status = await spotify_request(
+        request, '/me/player/pause', params=params, method='PUT'
+    )
+    if status in [204, 202, 200]:
         return {'success': True}
-    raise HTTPException(status_code=response.status_code, detail='Pause failed')
+    raise HTTPException(status_code=status, detail='Pause failed')
 
 
-@router.post('/api/next', name='spotify.api_next')
+@router.post('/api/next', name='spotify.api_next',
+             dependencies=[Depends(rate_limit(max_requests=30, window_seconds=60))])
 async def api_next(request: Request):
     """Skip to next track."""
     require_oauth(request)
-    token = request.session.get('spotify_access_token')
-    data = await _get_json_body(request)
-    device_id = data.get('device_id')
+    body = await _get_json_body(request)
+    device_id = body.get('device_id')
 
     params = {'device_id': device_id} if device_id else None
 
-    async with httpx.AsyncClient(timeout=10) as client:
-        response = await client.post(
-            'https://api.spotify.com/v1/me/player/next',
-            params=params,
-            headers={'Authorization': f'Bearer {token}'}
-        )
-
-    if response.status_code in [204, 202]:
+    data, status = await spotify_request(
+        request, '/me/player/next', params=params, method='POST'
+    )
+    if status in [204, 202, 200]:
         return {'success': True}
-    raise HTTPException(status_code=response.status_code, detail='Skip failed')
+    raise HTTPException(status_code=status, detail='Skip failed')
 
 
-@router.post('/api/previous', name='spotify.api_previous')
+@router.post('/api/previous', name='spotify.api_previous',
+             dependencies=[Depends(rate_limit(max_requests=30, window_seconds=60))])
 async def api_previous(request: Request):
     """Skip to previous track."""
     require_oauth(request)
-    token = request.session.get('spotify_access_token')
-    data = await _get_json_body(request)
-    device_id = data.get('device_id')
+    body = await _get_json_body(request)
+    device_id = body.get('device_id')
 
     params = {'device_id': device_id} if device_id else None
 
-    async with httpx.AsyncClient(timeout=10) as client:
-        response = await client.post(
-            'https://api.spotify.com/v1/me/player/previous',
-            params=params,
-            headers={'Authorization': f'Bearer {token}'}
-        )
-
-    if response.status_code in [204, 202]:
+    data, status = await spotify_request(
+        request, '/me/player/previous', params=params, method='POST'
+    )
+    if status in [204, 202, 200]:
         return {'success': True}
-    raise HTTPException(status_code=response.status_code, detail='Previous failed')
+    raise HTTPException(status_code=status, detail='Previous failed')
 
 
-@router.post('/api/seek', name='spotify.api_seek')
+@router.post('/api/seek', name='spotify.api_seek',
+             dependencies=[Depends(rate_limit(max_requests=30, window_seconds=60))])
 async def api_seek(request: Request):
     """Seek to position in track."""
     require_oauth(request)
-    token = request.session.get('spotify_access_token')
-    data = await _get_json_body(request)
-    position_ms = data.get('position_ms', 0)
-    device_id = data.get('device_id')
+    body = await _get_json_body(request)
+    position_ms = body.get('position_ms', 0)
+    if not isinstance(position_ms, int) or position_ms < 0:
+        raise HTTPException(status_code=400, detail='position_ms must be a non-negative integer')
+    device_id = body.get('device_id')
 
     params = {'position_ms': position_ms}
     if device_id:
         params['device_id'] = device_id
 
-    async with httpx.AsyncClient(timeout=10) as client:
-        response = await client.put(
-            'https://api.spotify.com/v1/me/player/seek',
-            params=params,
-            headers={'Authorization': f'Bearer {token}'}
-        )
-
-    if response.status_code in [204, 202]:
+    data, status = await spotify_request(
+        request, '/me/player/seek', params=params, method='PUT'
+    )
+    if status in [204, 202, 200]:
         return {'success': True}
-    raise HTTPException(status_code=response.status_code, detail='Seek failed')
+    raise HTTPException(status_code=status, detail='Seek failed')
 
 
-@router.post('/api/volume', name='spotify.api_volume')
+@router.post('/api/volume', name='spotify.api_volume',
+             dependencies=[Depends(rate_limit(max_requests=30, window_seconds=60))])
 async def api_volume(request: Request):
     """Set volume level."""
     require_oauth(request)
-    token = request.session.get('spotify_access_token')
-    data = await _get_json_body(request)
-    volume_percent = data.get('volume_percent', 50)
-    device_id = data.get('device_id')
+    body = await _get_json_body(request)
+    volume_percent = body.get('volume_percent', 50)
+    if not isinstance(volume_percent, int) or not (0 <= volume_percent <= 100):
+        raise HTTPException(status_code=400, detail='volume_percent must be 0-100')
+    device_id = body.get('device_id')
 
     params = {'volume_percent': volume_percent}
     if device_id:
         params['device_id'] = device_id
 
-    async with httpx.AsyncClient(timeout=10) as client:
-        response = await client.put(
-            'https://api.spotify.com/v1/me/player/volume',
-            params=params,
-            headers={'Authorization': f'Bearer {token}'}
-        )
-
-    if response.status_code in [204, 202]:
+    data, status = await spotify_request(
+        request, '/me/player/volume', params=params, method='PUT'
+    )
+    if status in [204, 202, 200]:
         return {'success': True}
-    raise HTTPException(status_code=response.status_code, detail='Volume failed')
+    raise HTTPException(status_code=status, detail='Volume failed')
 
 
-@router.post('/api/shuffle', name='spotify.api_shuffle')
+@router.post('/api/shuffle', name='spotify.api_shuffle',
+             dependencies=[Depends(rate_limit(max_requests=30, window_seconds=60))])
 async def api_shuffle(request: Request):
     """Toggle shuffle."""
     require_oauth(request)
-    token = request.session.get('spotify_access_token')
-    data = await _get_json_body(request)
-    state = data.get('state', True)
-    device_id = data.get('device_id')
+    body = await _get_json_body(request)
+    state = body.get('state', True)
+    device_id = body.get('device_id')
 
     params = {'state': str(state).lower()}
     if device_id:
         params['device_id'] = device_id
 
-    async with httpx.AsyncClient(timeout=10) as client:
-        response = await client.put(
-            'https://api.spotify.com/v1/me/player/shuffle',
-            params=params,
-            headers={'Authorization': f'Bearer {token}'}
-        )
-
-    if response.status_code in [204, 202]:
+    data, status = await spotify_request(
+        request, '/me/player/shuffle', params=params, method='PUT'
+    )
+    if status in [204, 202, 200]:
         return {'success': True}
-    raise HTTPException(status_code=response.status_code, detail='Shuffle failed')
+    raise HTTPException(status_code=status, detail='Shuffle failed')
 
 
-@router.post('/api/repeat', name='spotify.api_repeat')
+@router.post('/api/repeat', name='spotify.api_repeat',
+             dependencies=[Depends(rate_limit(max_requests=30, window_seconds=60))])
 async def api_repeat(request: Request):
     """Set repeat mode (off, context, track)."""
     require_oauth(request)
-    token = request.session.get('spotify_access_token')
-    data = await _get_json_body(request)
-    state = data.get('state', 'off')
-    device_id = data.get('device_id')
+    body = await _get_json_body(request)
+    state = body.get('state', 'off')
+    if state not in ('off', 'context', 'track'):
+        raise HTTPException(status_code=400, detail='state must be off, context, or track')
+    device_id = body.get('device_id')
 
     params = {'state': state}
     if device_id:
         params['device_id'] = device_id
 
-    async with httpx.AsyncClient(timeout=10) as client:
-        response = await client.put(
-            'https://api.spotify.com/v1/me/player/repeat',
-            params=params,
-            headers={'Authorization': f'Bearer {token}'}
-        )
-
-    if response.status_code in [204, 202]:
+    data, status = await spotify_request(
+        request, '/me/player/repeat', params=params, method='PUT'
+    )
+    if status in [204, 202, 200]:
         return {'success': True}
-    raise HTTPException(status_code=response.status_code, detail='Repeat failed')
+    raise HTTPException(status_code=status, detail='Repeat failed')

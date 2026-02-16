@@ -4,13 +4,18 @@ Visualizes recently played tracks and top artists/tracks.
 """
 import secrets
 
+import logging
+
 from fastapi import Request, HTTPException, Depends
 from fastapi.responses import RedirectResponse
 
 from app.routes.tools import router, register_tool
+from app.services.oauth import OAuthError
 from app.services.spotify_helpers import spotify_oauth, require_oauth, spotify_request
 from app.services.rate_limit import rate_limit
 from app.templating import templates
+
+logger = logging.getLogger(__name__)
 
 # Register this tool with the framework
 register_tool({
@@ -61,9 +66,13 @@ async def spotify_callback(request: Request):
         raise HTTPException(status_code=403, detail='OAuth state mismatch')
 
     redirect_uri = str(request.url_for('tools.spotify_callback'))
-    tokens = await spotify_oauth.exchange_code(code, redirect_uri)
+    try:
+        tokens = await spotify_oauth.exchange_code(code, redirect_uri)
+    except OAuthError:
+        logger.warning("OAuth token exchange failed during tools callback")
+        return RedirectResponse(url=str(request.url_for('tools.spotify_index')), status_code=302)
 
-    request.session['spotify_access_token'] = tokens.get('access_token')
+    request.session['spotify_access_token'] = tokens['access_token']
     request.session['spotify_refresh_token'] = tokens.get('refresh_token')
 
     return RedirectResponse(url=str(request.url_for('tools.spotify_index')), status_code=302)

@@ -13,6 +13,11 @@ import httpx
 logger = logging.getLogger(__name__)
 
 
+class OAuthError(Exception):
+    """Raised when an OAuth token exchange or refresh fails."""
+    pass
+
+
 class OAuthClient:
     """Base OAuth 2.0 client."""
 
@@ -41,7 +46,7 @@ class OAuthClient:
         ).decode()
 
     async def exchange_code(self, code, redirect_uri):
-        """Exchange authorization code for tokens."""
+        """Exchange authorization code for tokens. Raises OAuthError on failure."""
         async with httpx.AsyncClient(timeout=10) as client:
             response = await client.post(self.token_url, data={
                 'grant_type': 'authorization_code',
@@ -51,10 +56,13 @@ class OAuthClient:
                 'Authorization': f'Basic {self._auth_header()}',
                 'Content-Type': 'application/x-www-form-urlencoded'
             })
-        return response.json() if response.is_success else {}
+        if response.is_success:
+            return response.json()
+        logger.error("OAuth exchange_code failed: %s %s", response.status_code, response.text)
+        raise OAuthError(f"Token exchange failed with status {response.status_code}")
 
     async def refresh_token(self, refresh_token):
-        """Refresh access token."""
+        """Refresh access token. Raises OAuthError on failure."""
         async with httpx.AsyncClient(timeout=10) as client:
             response = await client.post(self.token_url, data={
                 'grant_type': 'refresh_token',
@@ -63,7 +71,10 @@ class OAuthClient:
                 'Authorization': f'Basic {self._auth_header()}',
                 'Content-Type': 'application/x-www-form-urlencoded'
             })
-        return response.json() if response.is_success else {}
+        if response.is_success:
+            return response.json()
+        logger.error("OAuth refresh_token failed: %s %s", response.status_code, response.text)
+        raise OAuthError(f"Token refresh failed with status {response.status_code}")
 
 
 class SpotifyOAuth(OAuthClient):

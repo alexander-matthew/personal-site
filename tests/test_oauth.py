@@ -7,7 +7,7 @@ import httpx
 import pytest
 import respx
 
-from app.services.oauth import OAuthClient, SpotifyOAuth
+from app.services.oauth import OAuthClient, OAuthError, SpotifyOAuth
 
 
 class TestOAuthClient:
@@ -58,13 +58,13 @@ class TestOAuthClient:
         assert tokens['refresh_token'] == 'new_refresh'
 
     @respx.mock
-    async def test_exchange_code_failure_returns_empty_dict(self):
+    async def test_exchange_code_failure_raises_oauth_error(self):
         client = self._make_client()
         respx.post("https://auth.example.com/token").mock(
             return_value=httpx.Response(400, json={'error': 'invalid_grant'})
         )
-        tokens = await client.exchange_code('bad_code', 'https://app.example.com/callback')
-        assert tokens == {}
+        with pytest.raises(OAuthError):
+            await client.exchange_code('bad_code', 'https://app.example.com/callback')
 
     @respx.mock
     async def test_refresh_token_success(self):
@@ -79,13 +79,13 @@ class TestOAuthClient:
         assert tokens['access_token'] == 'refreshed_token'
 
     @respx.mock
-    async def test_refresh_token_failure_returns_empty_dict(self):
+    async def test_refresh_token_failure_raises_oauth_error(self):
         client = self._make_client()
         respx.post("https://auth.example.com/token").mock(
             return_value=httpx.Response(401, json={'error': 'invalid_token'})
         )
-        tokens = await client.refresh_token('bad_refresh')
-        assert tokens == {}
+        with pytest.raises(OAuthError):
+            await client.refresh_token('bad_refresh')
 
     def test_auth_header_is_base64_encoded(self):
         client = self._make_client()
