@@ -307,6 +307,8 @@ async def api_geocode(
 ):
     """Convert city name to coordinates using Open-Meteo geocoding API."""
     city = city.strip()
+    if not city:
+        raise HTTPException(status_code=400, detail='City name cannot be blank')
     cache_key = f"geocode:{city.lower()}"
     cached_val = cache.get(cache_key)
     if cached_val is not None:

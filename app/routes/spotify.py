@@ -2,6 +2,7 @@
 Spotify Listening Trends
 Visualizes recently played tracks and top artists/tracks.
 """
+import json
 import logging
 import secrets
 
@@ -257,13 +258,12 @@ async def api_devices(request: Request):
 
 async def _get_json_body(request: Request):
     """Safely parse JSON body, returning empty dict if body is empty."""
-    import json as _json
     body = await request.body()
     if not body:
         return {}
     try:
-        return _json.loads(body)
-    except (ValueError, _json.JSONDecodeError):
+        return json.loads(body)
+    except (ValueError, json.JSONDecodeError):
         raise HTTPException(status_code=400, detail='Invalid JSON body')
 
 
