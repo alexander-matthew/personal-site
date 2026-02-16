@@ -9,11 +9,20 @@ from fastapi import HTTPException
 from app.services.spotify_helpers import require_oauth, spotify_request
 
 
+class FakeApp:
+    """Minimal app stub with state containing shared HTTP client."""
+
+    def __init__(self):
+        self.state = MagicMock()
+        self.state.http_client = httpx.AsyncClient()
+
+
 class FakeRequest:
     """Minimal request stub with a dict-backed session."""
 
     def __init__(self, session=None):
         self.session = session or {}
+        self.app = FakeApp()
 
 
 class TestRequireOAuth:

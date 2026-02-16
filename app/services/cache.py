@@ -2,6 +2,7 @@
 Simple file-based caching for API responses.
 For production with persistence, consider Redis.
 """
+import inspect
 import os
 import json
 import hashlib
@@ -68,18 +69,28 @@ cache = SimpleCache()
 
 
 def cached(ttl_seconds=3600, key_prefix=''):
-    """Decorator to cache function results."""
+    """Decorator to cache function results. Works with both sync and async functions."""
     def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            cache_key = f"{key_prefix}:{f.__name__}:{str(args)}:{str(kwargs)}"
-
-            cached_value = cache.get(cache_key)
-            if cached_value is not None:
-                return cached_value
-
-            result = f(*args, **kwargs)
-            cache.set(cache_key, result, ttl_seconds)
-            return result
-        return decorated_function
+        if inspect.iscoroutinefunction(f):
+            @wraps(f)
+            async def async_wrapper(*args, **kwargs):
+                cache_key = f"{key_prefix}:{f.__name__}:{str(args)}:{str(kwargs)}"
+                cached_value = cache.get(cache_key)
+                if cached_value is not None:
+                    return cached_value
+                result = await f(*args, **kwargs)
+                cache.set(cache_key, result, ttl_seconds)
+                return result
+            return async_wrapper
+        else:
+            @wraps(f)
+            def sync_wrapper(*args, **kwargs):
+                cache_key = f"{key_prefix}:{f.__name__}:{str(args)}:{str(kwargs)}"
+                cached_value = cache.get(cache_key)
+                if cached_value is not None:
+                    return cached_value
+                result = f(*args, **kwargs)
+                cache.set(cache_key, result, ttl_seconds)
+                return result
+            return sync_wrapper
     return decorator

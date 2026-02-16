@@ -57,7 +57,9 @@ async def callback(request: Request):
 
     redirect_uri = str(request.url_for('spotify.callback'))
     try:
-        tokens = await spotify_oauth.exchange_code(code, redirect_uri)
+        tokens = await spotify_oauth.exchange_code(
+            code, redirect_uri, http_client=request.app.state.http_client
+        )
     except OAuthError:
         logger.warning("OAuth token exchange failed during callback")
         return RedirectResponse(url=str(request.url_for('spotify.index')), status_code=302)
@@ -255,10 +257,14 @@ async def api_devices(request: Request):
 
 async def _get_json_body(request: Request):
     """Safely parse JSON body, returning empty dict if body is empty."""
+    import json as _json
     body = await request.body()
     if not body:
         return {}
-    return await request.json()
+    try:
+        return _json.loads(body)
+    except (ValueError, _json.JSONDecodeError):
+        raise HTTPException(status_code=400, detail='Invalid JSON body')
 
 
 @router.post('/api/transfer', name='spotify.api_transfer',

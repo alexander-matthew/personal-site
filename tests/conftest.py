@@ -7,6 +7,7 @@ import time
 import pytest
 from fastapi.testclient import TestClient
 
+import app.services.rate_limit as _rl_module
 from app.services.rate_limit import _rate_limit_store
 
 
@@ -37,5 +38,7 @@ def tmp_cache_dir(tmp_path):
 def clean_rate_limit():
     """Clear rate limit store before each test."""
     _rate_limit_store.clear()
+    _rl_module._last_cleanup = 0.0
     yield
     _rate_limit_store.clear()
+    _rl_module._last_cleanup = 0.0

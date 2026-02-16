@@ -1,7 +1,8 @@
 import asyncio
+from typing import Literal
 
 import httpx
-from fastapi import APIRouter, Request, HTTPException, Depends
+from fastapi import APIRouter, Request, HTTPException, Depends, Query
 
 from app.templating import templates
 from app.services.cache import cache
@@ -300,26 +301,25 @@ async def index(request: Request):
 
 @router.get('/api/geocode', name='weather.api_geocode',
             dependencies=[Depends(rate_limit(max_requests=30, window_seconds=60))])
-async def api_geocode(request: Request):
+async def api_geocode(
+    request: Request,
+    city: str = Query(..., min_length=1, max_length=200, description="City name to search for"),
+):
     """Convert city name to coordinates using Open-Meteo geocoding API."""
-    city = request.query_params.get('city', '').strip()
-    if not city:
-        raise HTTPException(status_code=400, detail='City parameter required')
-
+    city = city.strip()
     cache_key = f"geocode:{city.lower()}"
     cached_val = cache.get(cache_key)
     if cached_val is not None:
         return cached_val
 
+    client = request.app.state.http_client
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                'https://geocoding-api.open-meteo.com/v1/search',
-                params={'name': city, 'count': 5, 'language': 'en', 'format': 'json'},
-                timeout=10
-            )
-            response.raise_for_status()
-            data = response.json()
+        response = await client.get(
+            'https://geocoding-api.open-meteo.com/v1/search',
+            params={'name': city, 'count': 5, 'language': 'en', 'format': 'json'},
+        )
+        response.raise_for_status()
+        data = response.json()
 
         if not data.get('results'):
             raise HTTPException(status_code=404, detail='City not found')
@@ -345,42 +345,33 @@ async def api_geocode(request: Request):
 
 @router.get('/api/current', name='weather.api_current',
             dependencies=[Depends(rate_limit(max_requests=60, window_seconds=60))])
-async def api_current(request: Request):
+async def api_current(
+    request: Request,
+    lat: float = Query(..., ge=-90, le=90, description="Latitude"),
+    lon: float = Query(..., ge=-180, le=180, description="Longitude"),
+):
     """Get current weather for coordinates."""
-    lat = request.query_params.get('lat')
-    lon = request.query_params.get('lon')
-
-    if not lat or not lon:
-        raise HTTPException(status_code=400, detail='lat and lon parameters required')
-
-    try:
-        lat = round(float(lat), 4)
-        lon = round(float(lon), 4)
-    except ValueError:
-        raise HTTPException(status_code=400, detail='Invalid coordinates')
-
-    if not (-90 <= lat <= 90) or not (-180 <= lon <= 180):
-        raise HTTPException(status_code=400, detail='Coordinates out of range')
+    lat = round(lat, 4)
+    lon = round(lon, 4)
 
     cache_key = f"current:{lat}:{lon}"
     cached_val = cache.get(cache_key)
     if cached_val is not None:
         return cached_val
 
+    client = request.app.state.http_client
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                'https://api.open-meteo.com/v1/forecast',
-                params={
-                    'latitude': lat,
-                    'longitude': lon,
-                    'current': 'temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,precipitation',
-                    'timezone': 'auto',
-                },
-                timeout=10
-            )
-            response.raise_for_status()
-            data = response.json()
+        response = await client.get(
+            'https://api.open-meteo.com/v1/forecast',
+            params={
+                'latitude': lat,
+                'longitude': lon,
+                'current': 'temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,precipitation',
+                'timezone': 'auto',
+            },
+        )
+        response.raise_for_status()
+        data = response.json()
 
         current = data.get('current', {})
         weather_code = current.get('weather_code', 0)
@@ -410,42 +401,33 @@ async def api_current(request: Request):
 
 @router.get('/api/forecast', name='weather.api_forecast',
             dependencies=[Depends(rate_limit(max_requests=30, window_seconds=60))])
-async def api_forecast(request: Request):
+async def api_forecast(
+    request: Request,
+    lat: float = Query(..., ge=-90, le=90, description="Latitude"),
+    lon: float = Query(..., ge=-180, le=180, description="Longitude"),
+):
     """Get 7-day forecast for coordinates."""
-    lat = request.query_params.get('lat')
-    lon = request.query_params.get('lon')
-
-    if not lat or not lon:
-        raise HTTPException(status_code=400, detail='lat and lon parameters required')
-
-    try:
-        lat = round(float(lat), 4)
-        lon = round(float(lon), 4)
-    except ValueError:
-        raise HTTPException(status_code=400, detail='Invalid coordinates')
-
-    if not (-90 <= lat <= 90) or not (-180 <= lon <= 180):
-        raise HTTPException(status_code=400, detail='Coordinates out of range')
+    lat = round(lat, 4)
+    lon = round(lon, 4)
 
     cache_key = f"forecast:{lat}:{lon}"
     cached_val = cache.get(cache_key)
     if cached_val is not None:
         return cached_val
 
+    client = request.app.state.http_client
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                'https://api.open-meteo.com/v1/forecast',
-                params={
-                    'latitude': lat,
-                    'longitude': lon,
-                    'daily': 'temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,precipitation_sum,wind_speed_10m_max',
-                    'timezone': 'auto',
-                },
-                timeout=10
-            )
-            response.raise_for_status()
-            data = response.json()
+        response = await client.get(
+            'https://api.open-meteo.com/v1/forecast',
+            params={
+                'latitude': lat,
+                'longitude': lon,
+                'daily': 'temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,precipitation_sum,wind_speed_10m_max',
+                'timezone': 'auto',
+            },
+        )
+        response.raise_for_status()
+        data = response.json()
 
         daily = data.get('daily', {})
         days = []
@@ -548,11 +530,11 @@ async def _fetch_location_weather(client: httpx.AsyncClient, loc: dict, horizon:
 
 @router.get('/api/extremes/{horizon}', name='weather.api_extremes',
             dependencies=[Depends(rate_limit(max_requests=10, window_seconds=60))])
-async def api_extremes(request: Request, horizon: str):
+async def api_extremes(
+    request: Request,
+    horizon: Literal['today', 'tomorrow', '3day', '7day', 'season', 'year'],
+):
     """Get extreme weather data for specified time horizon."""
-    valid_horizons = ['today', 'tomorrow', '3day', '7day', 'season', 'year']
-    if horizon not in valid_horizons:
-        raise HTTPException(status_code=400, detail=f'Invalid horizon. Valid options: {valid_horizons}')
 
     ttl_map = {
         'today': 1800, 'tomorrow': 1800, '3day': 3600,
@@ -565,9 +547,9 @@ async def api_extremes(request: Request, horizon: str):
         return cached_val
 
     # Fetch all locations in parallel with asyncio.gather
-    async with httpx.AsyncClient() as client:
-        tasks = [_fetch_location_weather(client, loc, horizon) for loc in EXTREME_LOCATIONS]
-        results = await asyncio.gather(*tasks)
+    client = request.app.state.http_client
+    tasks = [_fetch_location_weather(client, loc, horizon) for loc in EXTREME_LOCATIONS]
+    results = await asyncio.gather(*tasks)
 
     locations = [r for r in results if r is not None]
 
@@ -599,16 +581,15 @@ async def api_extremes(request: Request, horizon: str):
 
 @router.get('/api/industry/{region}', name='weather.api_industry',
             dependencies=[Depends(rate_limit(max_requests=60, window_seconds=60))])
-async def api_industry(request: Request, region: str):
+async def api_industry(region: str):
     """Get industry impact data for a region."""
     region = region.lower().replace('-', '_').replace(' ', '_')
 
     if region not in INDUSTRY_MAPPINGS:
-        for key in INDUSTRY_MAPPINGS:
-            if region in key or key in region:
-                region = key
-                break
-        else:
-            raise HTTPException(status_code=404, detail={'error': 'Region not found', 'available': list(INDUSTRY_MAPPINGS.keys())})
+        available = ', '.join(sorted(INDUSTRY_MAPPINGS.keys()))
+        raise HTTPException(
+            status_code=404,
+            detail=f'Region not found. Available regions: {available}'
+        )
 
     return INDUSTRY_MAPPINGS[region]
