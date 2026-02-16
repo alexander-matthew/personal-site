@@ -2,9 +2,12 @@
 Simple in-memory rate limiting as FastAPI dependency.
 For production, consider Redis-based rate limiting.
 """
+import logging
 import time
 from collections import defaultdict
 from fastapi import Request, HTTPException
+
+logger = logging.getLogger(__name__)
 
 # In-memory store (resets on app restart)
 _rate_limit_store = defaultdict(list)

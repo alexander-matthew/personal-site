@@ -2,8 +2,12 @@
 Shared Spotify helpers used by both the main spotify blueprint
 and the tools/spotify blueprint.
 """
+import logging
+
 import httpx
 from fastapi import Request, HTTPException
+
+logger = logging.getLogger(__name__)
 
 from app.services.oauth import SpotifyOAuth
 

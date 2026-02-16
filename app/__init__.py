@@ -1,3 +1,4 @@
+import logging
 import os
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
@@ -19,6 +20,7 @@ SITE_CONFIG = {
 
 
 def create_app() -> FastAPI:
+    logging.basicConfig(level=logging.INFO)
     app = FastAPI(docs_url=None, redoc_url=None)
 
     # Session middleware (replaces Flask's signed cookie sessions)

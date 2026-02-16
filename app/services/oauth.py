@@ -6,7 +6,11 @@ import os
 import base64
 from urllib.parse import urlencode
 
+import logging
+
 import httpx
+
+logger = logging.getLogger(__name__)
 
 
 class OAuthClient:

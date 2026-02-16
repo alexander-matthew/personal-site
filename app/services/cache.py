@@ -5,8 +5,11 @@ For production with persistence, consider Redis.
 import os
 import json
 import hashlib
+import logging
 from datetime import datetime, timedelta
 from functools import wraps
+
+logger = logging.getLogger(__name__)
 
 
 class SimpleCache:
