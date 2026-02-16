@@ -48,6 +48,15 @@ class TestSimpleCache:
             f.write("not valid json{{{")
         assert c.get("key1") is None
 
+    def test_corrupted_cache_file_is_deleted(self, tmp_cache_dir):
+        c = SimpleCache(cache_dir=tmp_cache_dir)
+        c.set("key1", "value", ttl_seconds=60)
+        path = c._get_cache_path("key1")
+        with open(path, 'w') as f:
+            f.write("not valid json{{{")
+        c.get("key1")
+        assert not os.path.exists(path)
+
     def test_cache_stores_various_types(self, tmp_cache_dir):
         c = SimpleCache(cache_dir=tmp_cache_dir)
         c.set("str", "hello", ttl_seconds=60)
@@ -64,6 +73,12 @@ class TestSimpleCache:
         assert not os.path.exists(cache_dir)
         c = SimpleCache(cache_dir=cache_dir)
         assert os.path.exists(cache_dir)
+
+    def test_set_handles_unserializable_value(self, tmp_cache_dir):
+        c = SimpleCache(cache_dir=tmp_cache_dir)
+        # Sets with non-JSON-serializable object should not raise
+        c.set("key1", object(), ttl_seconds=60)
+        assert c.get("key1") is None
 
 
 class TestCachedDecorator:

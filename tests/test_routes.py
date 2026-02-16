@@ -72,3 +72,21 @@ class TestApiEndpoints:
     def test_spotify_api_requires_auth(self, client):
         resp = client.get("/projects/spotify/api/recent")
         assert resp.status_code == 401
+
+
+class TestSecurityHeaders:
+    """Verify security headers are present on responses."""
+
+    def test_security_headers_present(self, client):
+        resp = client.get("/")
+        assert resp.headers.get("x-content-type-options") == "nosniff"
+        assert resp.headers.get("x-frame-options") == "DENY"
+        assert resp.headers.get("referrer-policy") == "strict-origin-when-cross-origin"
+
+    def test_security_headers_on_api(self, client):
+        resp = client.get("/projects/weather/api/industry/florida")
+        assert resp.headers.get("x-content-type-options") == "nosniff"
+
+    def test_security_headers_on_404(self, client):
+        resp = client.get("/nonexistent-page")
+        assert resp.headers.get("x-frame-options") == "DENY"

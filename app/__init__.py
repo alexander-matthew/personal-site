@@ -2,6 +2,7 @@ import logging
 import os
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from dotenv import load_dotenv
@@ -23,8 +24,22 @@ def create_app() -> FastAPI:
     logging.basicConfig(level=logging.INFO)
     app = FastAPI(docs_url=None, redoc_url=None)
 
-    # Session middleware (replaces Flask's signed cookie sessions)
+    # Security headers middleware
     is_production = os.environ.get('FLASK_DEBUG', 'true').lower() == 'false'
+
+    class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+        async def dispatch(self, request, call_next):
+            response = await call_next(request)
+            response.headers['X-Content-Type-Options'] = 'nosniff'
+            response.headers['X-Frame-Options'] = 'DENY'
+            response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+            if is_production:
+                response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+            return response
+
+    app.add_middleware(SecurityHeadersMiddleware)
+
+    # Session middleware (replaces Flask's signed cookie sessions)
     app.add_middleware(
         SessionMiddleware,
         secret_key=os.environ.get('SECRET_KEY', 'dev-key-for-local-only'),
