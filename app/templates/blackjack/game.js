@@ -1,5 +1,5 @@
 /* Blackjack Trainer - UI Controller
- * Wires BlackjackGame engine to the Win98-themed HTML interface.
+ * Wires BlackjackGame engine to the Win98 Solitaire-themed HTML interface.
  * All data rendered is from local game state constants - no user/external input.
  */
 (function() {
@@ -7,50 +7,71 @@
 
     // --- DOM refs ---
     const $ = id => document.getElementById(id);
-    const balanceEl       = $('balance');
-    const currentBetEl    = $('current-bet');
-    const betAmountEl     = $('bet-amount');
-    const dealerCardsEl   = $('dealer-cards');
-    const dealerTotalEl   = $('dealer-total');
-    const resultMsg       = $('result-message');
-    const playerHandsEl   = $('player-hands');
-    const hitBtn          = $('hit-btn');
-    const standBtn        = $('stand-btn');
-    const doubleBtn       = $('double-btn');
-    const splitBtn        = $('split-btn');
-    const insuranceBtn    = $('insurance-btn');
-    const dealBtn         = $('deal-btn');
-    const clearBetBtn     = $('clear-bet');
-    const bettingZone     = $('betting-zone');
-    const actionButtons   = $('action-buttons');
-    const hintCheckbox    = $('hint-mode');
-    const strategyModal   = $('strategy-modal');
-    const strategyChart   = $('strategy-chart');
-    const mistakesPanel   = $('mistakes-panel');
-    const mistakesList    = $('mistakes-list');
+
+    // Toolbar buttons
+    const hitBtn       = $('hit-btn');
+    const standBtn     = $('stand-btn');
+    const doubleBtn    = $('double-btn');
+    const splitBtn     = $('split-btn');
+    const insuranceBtn = $('insurance-btn');
+    const dealBtn      = $('deal-btn');
+    const clearBetBtn  = $('clear-bet');
+    const hintCheckbox = $('hint-mode');
+
+    // Felt areas
+    const dealerCardsEl = $('dealer-cards');
+    const dealerTotalEl = $('dealer-total');
+    const playerHandsEl = $('player-hands');
+
+    // Result dialog
+    const resultDialog = $('result-dialog');
+    const resultText   = $('result-text');
+    const resultOkBtn  = $('result-ok');
+
+    // Status bar
+    const statusBalance  = $('status-balance');
+    const statusBet      = $('status-bet');
+    const statusFeedback = $('status-feedback');
+    const statusAccuracy = $('status-accuracy');
+    const statusHands    = $('status-hands');
+
+    // Dialogs
+    const statsDialog    = $('stats-dialog');
+    const strategyDialog = $('strategy-dialog');
+    const aboutDialog    = $('about-dialog');
+    const strategyChart  = $('strategy-chart');
+    const mistakesList   = $('mistakes-list');
+
+    // Chip buttons
+    const chipBtns = document.querySelectorAll('.bj-chip-btn');
 
     // --- Stats ---
     let stats = loadStats();
     let pendingBet = 0;
+    let feedbackTimer = null;
 
     function defaultStats() {
         return {
             handsPlayed: 0, optimalPlays: 0, totalPlays: 0,
             startBalance: 1000,
-            byType: { hard: { correct: 0, total: 0 }, soft: { correct: 0, total: 0 },
-                      pair: { correct: 0, total: 0 }, double: { correct: 0, total: 0 } },
+            byType: {
+                hard: { correct: 0, total: 0 }, soft: { correct: 0, total: 0 },
+                pair: { correct: 0, total: 0 }, double: { correct: 0, total: 0 }
+            },
             mistakes: []
         };
     }
+
     function loadStats() {
         try { return JSON.parse(localStorage.getItem('bj_stats')) || defaultStats(); }
         catch { return defaultStats(); }
     }
+
     function saveStats() { localStorage.setItem('bj_stats', JSON.stringify(stats)); }
 
     // --- Card Rendering ---
     const SUIT_SYMBOLS = { hearts: '\u2665', diamonds: '\u2666', clubs: '\u2663', spades: '\u2660' };
-    const SUIT_COLORS  = { hearts: 'red', diamonds: 'red', clubs: 'black', spades: 'black' };
+    const SUIT_COLORS  = { hearts: '#c00', diamonds: '#c00', clubs: '#000', spades: '#000' };
 
     function renderCard(card) {
         const el = document.createElement('div');
@@ -58,24 +79,24 @@
         if (!card.faceDown) {
             const sym = SUIT_SYMBOLS[card.suit];
             const color = SUIT_COLORS[card.suit];
-            // All values come from engine constants (RANKS, SUITS) - safe to use
-            const topLeft = document.createElement('span');
-            topLeft.style.cssText = 'position:absolute;top:4px;left:6px;font-size:14px;font-weight:bold;color:' + color;
-            topLeft.textContent = card.rank;
+
+            const topRank = document.createElement('span');
+            topRank.style.cssText = 'position:absolute;top:4px;left:5px;font-size:15px;font-weight:bold;color:' + color;
+            topRank.textContent = card.rank;
 
             const topSuit = document.createElement('span');
-            topSuit.style.cssText = 'position:absolute;top:16px;left:6px;font-size:12px;color:' + color;
+            topSuit.style.cssText = 'position:absolute;top:19px;left:5px;font-size:12px;color:' + color;
             topSuit.textContent = sym;
 
-            const bottomRight = document.createElement('span');
-            bottomRight.style.cssText = 'position:absolute;bottom:4px;right:6px;font-size:14px;font-weight:bold;color:' + color + ';transform:rotate(180deg)';
-            bottomRight.textContent = card.rank;
+            const bottomRank = document.createElement('span');
+            bottomRank.style.cssText = 'position:absolute;bottom:4px;right:5px;font-size:15px;font-weight:bold;color:' + color + ';transform:rotate(180deg)';
+            bottomRank.textContent = card.rank;
 
             const center = document.createElement('span');
-            center.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:24px;color:' + color;
+            center.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:26px;color:' + color;
             center.textContent = sym;
 
-            el.append(topLeft, topSuit, bottomRight, center);
+            el.append(topRank, topSuit, bottomRank, center);
         }
         return el;
     }
@@ -94,42 +115,46 @@
         playerHandsEl.replaceChildren();
         game.playerHands.forEach((hand, i) => {
             const div = document.createElement('div');
-            div.className = 'player-hand' + (i === game.currentHandIndex && game.isPlaying ? ' active-hand' : '');
-            if (game.playerHands.length > 1) {
-                div.style.border = i === game.currentHandIndex ? '2px solid #ffd700' : '1px solid transparent';
-                div.style.padding = '4px';
-                div.style.borderRadius = '4px';
-            }
+            div.className = 'bj-player-hand' + (i === game.currentHandIndex && game.isPlaying ? ' active-hand' : '');
+
             const cardsDiv = document.createElement('div');
-            cardsDiv.className = 'cards';
-            cardsDiv.style.display = 'flex';
-            cardsDiv.style.gap = '4px';
+            cardsDiv.className = 'bj-cards';
             hand.forEach(c => cardsDiv.appendChild(renderCard(c)));
             div.appendChild(cardsDiv);
 
             const totalDiv = document.createElement('div');
-            totalDiv.className = 'hand-total';
+            totalDiv.className = 'bj-hand-total';
             const total = calculateHand(hand);
             const soft = isSoft(hand);
             totalDiv.textContent = total + (soft ? ' (soft)' : '');
+            if (total > 21) totalDiv.classList.add('bust');
             div.appendChild(totalDiv);
 
             playerHandsEl.appendChild(div);
         });
     }
 
+    // --- UI State ---
     function updateUI() {
-        balanceEl.textContent = game.balance;
-        currentBetEl.textContent = pendingBet;
-        betAmountEl.textContent = '$' + pendingBet;
-        dealBtn.disabled = pendingBet === 0;
+        // Status bar
+        statusBalance.textContent = 'Balance: $' + game.balance;
+        statusBet.textContent = 'Bet: $' + pendingBet;
+
+        // Toolbar state
+        dealBtn.disabled = pendingBet === 0 || game.isPlaying;
+
+        // Chip buttons: disabled during play
+        chipBtns.forEach(btn => { btn.disabled = game.isPlaying; });
+        clearBetBtn.disabled = game.isPlaying || pendingBet === 0;
+
         updateActionButtons();
-        updateStats();
+        updateStatusBar();
     }
 
     function updateActionButtons() {
         if (!game.isPlaying) {
             hitBtn.disabled = standBtn.disabled = doubleBtn.disabled = splitBtn.disabled = insuranceBtn.disabled = true;
+            clearHints();
             return;
         }
         hitBtn.disabled = false;
@@ -147,31 +172,62 @@
         const upcard = game.dealerHand[0];
         const optimal = getOptimalAction(hand, upcard, game.canDouble(), game.canSplit());
         const btnMap = { hit: hitBtn, stand: standBtn, double: doubleBtn, split: splitBtn };
-        Object.values(btnMap).forEach(b => { b.style.fontWeight = ''; b.style.textDecoration = ''; });
+        Object.values(btnMap).forEach(b => b.classList.remove('hint-active'));
         if (btnMap[optimal.action]) {
-            btnMap[optimal.action].style.fontWeight = 'bold';
-            btnMap[optimal.action].style.textDecoration = 'underline';
+            btnMap[optimal.action].classList.add('hint-active');
         }
     }
 
     function clearHints() {
-        [hitBtn, standBtn, doubleBtn, splitBtn].forEach(b => {
-            b.style.fontWeight = '';
-            b.style.textDecoration = '';
-        });
+        [hitBtn, standBtn, doubleBtn, splitBtn].forEach(b => b.classList.remove('hint-active'));
     }
 
-    // --- Stats Display ---
-    function updateStats() {
-        $('hands-played').textContent = stats.handsPlayed;
-        $('session-result').textContent = '$' + (game.balance - stats.startBalance);
+    // --- Status Bar ---
+    function updateStatusBar() {
         const pct = stats.totalPlays > 0 ? Math.round(stats.optimalPlays / stats.totalPlays * 100) : null;
-        $('accuracy-pct').textContent = pct !== null ? pct + '%' : '--';
+        statusAccuracy.textContent = (pct !== null ? pct + '%' : '--') + ' Optimal';
+        statusHands.textContent = stats.handsPlayed + ' hands';
+    }
+
+    function showFeedback(correct, optimalAction) {
+        if (feedbackTimer) clearTimeout(feedbackTimer);
+        statusFeedback.textContent = correct ? 'Optimal play!' : 'Optimal: ' + optimalAction.toUpperCase();
+        statusFeedback.className = 'win98-status-section bj-status-feedback ' + (correct ? 'correct' : 'incorrect');
+        feedbackTimer = setTimeout(() => {
+            statusFeedback.textContent = '';
+            statusFeedback.className = 'win98-status-section bj-status-feedback';
+        }, 3000);
+    }
+
+    // --- Stats ---
+    function updateStatsDialog() {
+        $('stat-hands').textContent = stats.handsPlayed;
+        $('stat-pl').textContent = '$' + (game.balance - stats.startBalance);
+        const pct = stats.totalPlays > 0 ? Math.round(stats.optimalPlays / stats.totalPlays * 100) : null;
+        $('stat-accuracy').textContent = pct !== null ? pct + '%' : '--';
 
         ['hard', 'soft', 'pair', 'double'].forEach(type => {
             const s = stats.byType[type];
-            const el = $(type + '-accuracy');
-            el.textContent = s.total > 0 ? Math.round(s.correct / s.total * 100) + '%' : '--';
+            $('stat-' + type).textContent = s.total > 0 ? Math.round(s.correct / s.total * 100) + '%' : '--';
+        });
+
+        renderMistakes();
+    }
+
+    function renderMistakes() {
+        mistakesList.replaceChildren();
+        if (stats.mistakes.length === 0) {
+            const msg = document.createElement('div');
+            msg.className = 'bj-no-mistakes';
+            msg.textContent = 'No mistakes yet!';
+            mistakesList.appendChild(msg);
+            return;
+        }
+        stats.mistakes.slice(0, 15).forEach(m => {
+            const div = document.createElement('div');
+            div.className = 'bj-mistake-item';
+            div.textContent = m.hand + ' vs ' + m.dealer + ' (' + m.type + ') \u2014 played ' + m.played + ', optimal ' + m.optimal;
+            mistakesList.appendChild(div);
         });
     }
 
@@ -206,31 +262,25 @@
         showFeedback(isCorrect, optimal.action);
     }
 
-    function showFeedback(correct, optimalAction) {
-        const toast = document.createElement('div');
-        toast.className = 'feedback-toast ' + (correct ? 'correct' : 'incorrect');
-        toast.textContent = correct ? 'Optimal!' : 'Optimal: ' + optimalAction.toUpperCase();
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 1200);
+    // --- Result ---
+    function showResult(text) {
+        resultText.textContent = text;
+        resultDialog.style.display = '';
     }
 
-    function showResult(text) {
-        resultMsg.textContent = text;
-        resultMsg.style.display = 'block';
-    }
     function hideResult() {
-        resultMsg.style.display = 'none';
+        resultDialog.style.display = 'none';
     }
 
     // --- Game Flow ---
     function startDeal() {
+        if (pendingBet === 0 || game.isPlaying) return;
         hideResult();
         clearHints();
         game.placeBet(pendingBet);
         const result = game.deal();
         if (!result.success) return;
 
-        bettingZone.style.display = 'none';
         renderHands();
 
         if (result.playerBlackjack || result.dealerBlackjack) {
@@ -270,7 +320,7 @@
     }
 
     function finishRound() {
-        const dealerResult = game.playDealer();
+        game.playDealer();
         renderHands();
 
         setTimeout(() => {
@@ -292,17 +342,17 @@
             stats.handsPlayed++;
             saveStats();
 
-            bettingZone.style.display = '';
             pendingBet = game.balance >= pendingBet ? pendingBet : 0;
             updateUI();
         }, 400);
     }
 
-    // --- Chip / Betting ---
-    document.querySelectorAll('.chip').forEach(chip => {
-        chip.addEventListener('click', () => {
+    // --- Toolbar Button Handlers ---
+    chipBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
             if (game.isPlaying) return;
-            const val = parseInt(chip.dataset.value);
+            hideResult();
+            const val = parseInt(btn.dataset.value);
             if (pendingBet + val <= game.balance) {
                 pendingBet += val;
                 updateUI();
@@ -310,7 +360,12 @@
         });
     });
 
-    clearBetBtn.addEventListener('click', () => { pendingBet = 0; updateUI(); });
+    clearBetBtn.addEventListener('click', () => {
+        hideResult();
+        pendingBet = 0;
+        updateUI();
+    });
+
     dealBtn.addEventListener('click', startDeal);
     hitBtn.addEventListener('click', () => doAction('hit'));
     standBtn.addEventListener('click', () => doAction('stand'));
@@ -321,23 +376,89 @@
         if (result.success) updateUI();
     });
 
-    // --- Strategy Chart ---
-    $('show-strategy').addEventListener('click', () => {
-        renderStrategyChart();
-        strategyModal.style.display = 'flex';
-        strategyModal.style.position = 'fixed';
-        strategyModal.style.inset = '0';
-        strategyModal.style.alignItems = 'center';
-        strategyModal.style.justifyContent = 'center';
-        strategyModal.style.zIndex = '9999';
-    });
-    $('close-strategy').addEventListener('click', () => { strategyModal.style.display = 'none'; });
+    resultOkBtn.addEventListener('click', hideResult);
 
+    // --- Menu System ---
+    const menuMap = { game: $('menu-game'), help: $('menu-help') };
+    let openMenu = null;
+
+    document.querySelectorAll('[data-menu]').forEach(trigger => {
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const menuId = trigger.dataset.menu;
+            const dropdown = menuMap[menuId];
+            if (openMenu === dropdown) {
+                closeMenus();
+            } else {
+                closeMenus();
+                dropdown.classList.add('open');
+                openMenu = dropdown;
+            }
+        });
+    });
+
+    document.querySelectorAll('.bj-dropdown-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const action = item.dataset.action;
+            closeMenus();
+            handleMenuAction(action);
+        });
+    });
+
+    document.addEventListener('click', closeMenus);
+
+    function closeMenus() {
+        Object.values(menuMap).forEach(d => d.classList.remove('open'));
+        openMenu = null;
+    }
+
+    function handleMenuAction(action) {
+        switch (action) {
+            case 'deal':
+                if (pendingBet > 0 && !game.isPlaying) startDeal();
+                break;
+            case 'stats':
+                updateStatsDialog();
+                statsDialog.style.display = '';
+                break;
+            case 'strategy':
+                renderStrategyChart();
+                strategyDialog.style.display = '';
+                break;
+            case 'reset':
+                if (confirm('Reset all training stats?')) {
+                    stats = defaultStats();
+                    stats.startBalance = game.balance;
+                    saveStats();
+                    updateStatusBar();
+                }
+                break;
+            case 'about':
+                aboutDialog.style.display = '';
+                break;
+        }
+    }
+
+    // --- Dialog Close ---
+    document.querySelectorAll('[data-close]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const dialogId = btn.dataset.close;
+            $(dialogId).style.display = 'none';
+        });
+    });
+
+    // Close dialogs when clicking overlay background
+    document.querySelectorAll('.bj-dialog-overlay').forEach(overlay => {
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) overlay.style.display = 'none';
+        });
+    });
+
+    // --- Strategy Chart ---
     function renderStrategyChart() {
         const dealerCols = [2, 3, 4, 5, 6, 7, 8, 9, 10, 'A'];
         const colors = { H: '#ddf', S: '#fdd', D: '#dfd', P: '#ffd', Ds: '#bfb' };
 
-        // Build chart using DOM methods - all data from engine constants
         strategyChart.replaceChildren();
 
         function makeTable(title, chart, rows) {
@@ -349,15 +470,12 @@
             wrapper.appendChild(heading);
 
             const table = document.createElement('table');
-            table.style.cssText = 'border-collapse:collapse;font-size:10px;width:100%';
-
             const headerRow = table.insertRow();
             const emptyTh = document.createElement('th');
-            emptyTh.style.cssText = 'padding:2px 4px';
+            emptyTh.style.padding = '2px 4px';
             headerRow.appendChild(emptyTh);
             dealerCols.forEach(d => {
                 const th = document.createElement('th');
-                th.style.cssText = 'padding:2px 4px;border:1px solid #888';
                 th.textContent = d;
                 headerRow.appendChild(th);
             });
@@ -365,12 +483,11 @@
             rows.forEach(r => {
                 const tr = table.insertRow();
                 const label = tr.insertCell();
-                label.style.cssText = 'padding:2px 4px;border:1px solid #888;font-weight:bold';
                 label.textContent = r;
                 dealerCols.forEach(d => {
                     const td = tr.insertCell();
                     const a = chart[r] && chart[r][d] ? chart[r][d] : '';
-                    td.style.cssText = 'padding:2px 4px;border:1px solid #888;text-align:center;background:' + (colors[a] || '#fff');
+                    td.style.background = colors[a] || '#fff';
                     td.textContent = a;
                 });
             });
@@ -389,40 +506,6 @@
         strategyChart.appendChild(legend);
     }
 
-    // --- Mistakes Panel ---
-    $('toggle-mistakes').addEventListener('click', () => {
-        const vis = mistakesPanel.style.display === 'none';
-        mistakesPanel.style.display = vis ? 'block' : 'none';
-        if (vis) renderMistakes();
-    });
-
-    function renderMistakes() {
-        mistakesList.replaceChildren();
-        if (stats.mistakes.length === 0) {
-            const msg = document.createElement('div');
-            msg.style.cssText = 'font-size:11px;color:#666';
-            msg.textContent = 'No mistakes yet!';
-            mistakesList.appendChild(msg);
-            return;
-        }
-        stats.mistakes.slice(0, 10).forEach(m => {
-            const div = document.createElement('div');
-            div.style.cssText = 'font-size:10px;margin-bottom:4px;padding:2px 4px;background:#fff;border:1px solid #ccc';
-            div.textContent = m.hand + ' vs ' + m.dealer + ' (' + m.type + ') \u2014 played ' + m.played + ', optimal ' + m.optimal;
-            mistakesList.appendChild(div);
-        });
-    }
-
-    // --- Reset Stats ---
-    $('reset-stats').addEventListener('click', () => {
-        if (confirm('Reset all training stats?')) {
-            stats = defaultStats();
-            stats.startBalance = game.balance;
-            saveStats();
-            updateStats();
-        }
-    });
-
-    // Init
+    // --- Init ---
     updateUI();
 })();
