@@ -1,0 +1,25 @@
+[project]
+name = "personal-site"
+version = "1.0.0"
+description = "Personal website built with FastAPI"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.34.0",
+    "jinja2>=3.1.0",
+    "httpx>=0.28.0",
+    "python-dotenv>=1.0.0",
+    "itsdangerous>=2.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24.0",
+    "respx>=0.22.0",
+    "pytest-playwright>=0.5.0",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

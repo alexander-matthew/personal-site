@@ -1,108 +1,158 @@
-{% extends "base.html" %}
+{% extends "win98_window.html" %}
 
-{% block title %}About | {{ site.name }}{% endblock %}
+{% block title %}System Properties{% endblock %}
+{% block window_title %}System Properties{% endblock %}
+{% block taskbar_title %}System Properties{% endblock %}
 
-{% block content %}
-<section class="section">
-    <h2>About Me</h2>
-    <div class="about-content">
-        <p>
-            Hello! I'm Alexander — a quant by trade and curious generalist at heart.
-        </p>
-        <p>
-            This site is a project and learning experience in itself — built from scratch
-            to sharpen my skills while also serving as a place to showcase my other work.
-        </p>
-        <p class="interests-line">
-            My interests include <span id="cycling-interest" class="interest-highlight">Machine Learning</span>
-        </p>
+{% set window_icon = 'computer.svg' %}
+
+{% block window_content %}
+<div class="win98-tabs">
+    <div class="win98-tab-buttons">
+        <button class="win98-tab-btn active">General</button>
+        <button class="win98-tab-btn">Interests</button>
+        <button class="win98-tab-btn">Skills</button>
+        <button class="win98-tab-btn">Contact</button>
     </div>
-</section>
+    <div class="win98-tab-content">
+        <!-- General Tab -->
+        <div class="win98-tab-panel active">
+            <div class="win98-flex win98-gap-lg">
+                <div style="text-align: center; padding: 16px;">
+                    <img src="{{ url_for('static', filename='icons/computer.svg') }}" alt="Computer" style="width: 64px; height: 64px;">
+                </div>
+                <div class="win98-flex-1">
+                    <div class="win98-groupbox">
+                        <span class="win98-groupbox-label">System</span>
+                        <p style="margin: 8px 0;"><strong>Alexander</strong></p>
+                        <p style="margin: 4px 0;">Quant & Curious Generalist</p>
+                        <p style="margin: 4px 0; color: #808080;">Version 1.0</p>
+                    </div>
+                    <div class="win98-groupbox">
+                        <span class="win98-groupbox-label">About</span>
+                        <p style="margin: 8px 0; line-height: 1.6;">
+                            Hello! I'm Alexander — a quant by trade and curious generalist at heart.
+                        </p>
+                        <p style="margin: 8px 0; line-height: 1.6;">
+                            This site is a project and learning experience in itself — built from scratch
+                            to sharpen my skills while also serving as a place to showcase my other work.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-<section class="section">
-    <h2>Skills</h2>
-    <div class="tags">
-        <span class="tag">Python</span>
-        <span class="tag">Flask</span>
-        <span class="tag">JavaScript</span>
-        <span class="tag">SQL</span>
+        <!-- Interests Tab -->
+        <div class="win98-tab-panel">
+            <div class="win98-groupbox">
+                <span class="win98-groupbox-label">Current Interests</span>
+                <div class="win98-listview" style="height: 200px; overflow-y: auto;">
+                    <div class="win98-listview-item" id="interest-ml">Machine Learning</div>
+                    <div class="win98-listview-item">Artificial Intelligence</div>
+                    <div class="win98-listview-item">3D Printing</div>
+                    <div class="win98-listview-item">Computer Graphics</div>
+                    <div class="win98-listview-item">Electronic Music</div>
+                    <div class="win98-listview-item">Weightlifting</div>
+                    <div class="win98-listview-item">Snowboarding</div>
+                    <div class="win98-listview-item">Fencing</div>
+                    <div class="win98-listview-item">Painting</div>
+                    <div class="win98-listview-item">Strategy Games</div>
+                    <div class="win98-listview-item">World History</div>
+                    <div class="win98-listview-item">Finance</div>
+                    <div class="win98-listview-item">Functional Programming</div>
+                </div>
+            </div>
+            <p style="margin-top: 8px; color: #808080; font-size: 11px;">
+                Click an interest to learn more (just kidding, this is decorative).
+            </p>
+        </div>
+
+        <!-- Skills Tab -->
+        <div class="win98-tab-panel">
+            <div class="win98-groupbox">
+                <span class="win98-groupbox-label">Programming Languages</span>
+                <div class="win98-flex win98-gap-sm" style="flex-wrap: wrap; padding: 8px;">
+                    <button class="win98-btn" style="min-width: auto;">Python</button>
+                    <button class="win98-btn" style="min-width: auto;">JavaScript</button>
+                    <button class="win98-btn" style="min-width: auto;">SQL</button>
+                    <button class="win98-btn" style="min-width: auto;">HTML/CSS</button>
+                </div>
+            </div>
+            <div class="win98-groupbox">
+                <span class="win98-groupbox-label">Frameworks & Tools</span>
+                <div class="win98-flex win98-gap-sm" style="flex-wrap: wrap; padding: 8px;">
+                    <button class="win98-btn" style="min-width: auto;">FastAPI</button>
+                    <button class="win98-btn" style="min-width: auto;">React</button>
+                    <button class="win98-btn" style="min-width: auto;">Git</button>
+                    <button class="win98-btn" style="min-width: auto;">Docker</button>
+                </div>
+            </div>
+            <div class="win98-groupbox">
+                <span class="win98-groupbox-label">Specializations</span>
+                <div class="win98-flex win98-gap-sm" style="flex-wrap: wrap; padding: 8px;">
+                    <button class="win98-btn" style="min-width: auto;">Quantitative Finance</button>
+                    <button class="win98-btn" style="min-width: auto;">Data Analysis</button>
+                    <button class="win98-btn" style="min-width: auto;">Machine Learning</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Tab -->
+        <div class="win98-tab-panel">
+            <div class="win98-groupbox">
+                <span class="win98-groupbox-label">Professional</span>
+                <p style="margin: 8px 0; line-height: 1.6;">
+                    This site is dedicated to my personal projects and side interests.
+                    For my professional work, check out my LinkedIn profile.
+                </p>
+                <div style="margin-top: 16px;">
+                    <a href="{{ site.linkedin_url }}" target="_blank" rel="noopener noreferrer">
+                        <button class="win98-btn">
+                            <img src="{{ url_for('static', filename='icons/internet.svg') }}" alt="" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;">
+                            Open LinkedIn
+                        </button>
+                    </a>
+                </div>
+            </div>
+            <div class="win98-groupbox">
+                <span class="win98-groupbox-label">Code</span>
+                <p style="margin: 8px 0; line-height: 1.6;">
+                    Check out my projects and contributions on GitHub.
+                </p>
+                <div style="margin-top: 16px;">
+                    <a href="{{ site.github_url }}" target="_blank" rel="noopener noreferrer">
+                        <button class="win98-btn">
+                            <img src="{{ url_for('static', filename='icons/internet.svg') }}" alt="" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;">
+                            Open GitHub
+                        </button>
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
-</section>
+</div>
 
-<section class="section">
-    <h2>Get in Touch</h2>
-    <p>
-        This site is dedicated to my personal projects and side interests.
-        For my professional work, check out my <a href="{{ site.linkedin_url }}" target="_blank" rel="noopener noreferrer">LinkedIn</a>.
-    </p>
-</section>
-{% endblock %}
-
-{% block head %}
-<style>
-    .interest-highlight {
-        color: var(--primary-color);
-        font-weight: 500;
-        display: inline-block;
-        transition: opacity 0.4s ease, transform 0.4s ease;
-    }
-
-    .interest-highlight.fade-out {
-        opacity: 0;
-        transform: translateY(-8px);
-    }
-
-    .interest-highlight.fade-in {
-        opacity: 1;
-        transform: translateY(0);
-    }
-</style>
+<div style="margin-top: 16px; text-align: right;">
+    <a href="{{ url_for('main.home') }}"><button class="win98-btn win98-btn-default">OK</button></a>
+    <a href="{{ url_for('main.home') }}"><button class="win98-btn">Cancel</button></a>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
+// Highlight cycling interest
 (function() {
-    // Add more interests here anytime
-    const interests = [
-        'Machine Learning',
-        'Artificial Intelligence',
-        '3D Printing',
-        'Computer Graphics',
-        'Electronic Music',
-        'Weightlifting',
-        'Snowboarding',
-        'Fencing',
-        'Painting',
-        'Strategy Games',
-        'World History',
-        'Finance',
-        'Functional Programming'
-    ];
-
-    const interestEl = document.getElementById('cycling-interest');
+    const interests = document.querySelectorAll('.win98-listview-item');
     let currentIndex = 0;
-    const displayDuration = 2000;
-    const fadeDuration = 400;
 
-    function cycleInterest() {
-        // Fade out
-        interestEl.classList.remove('fade-in');
-        interestEl.classList.add('fade-out');
-
-        setTimeout(() => {
-            // Change text
-            currentIndex = (currentIndex + 1) % interests.length;
-            interestEl.textContent = interests[currentIndex];
-
-            // Fade in
-            interestEl.classList.remove('fade-out');
-            interestEl.classList.add('fade-in');
-        }, fadeDuration);
+    function cycleHighlight() {
+        interests.forEach(i => i.classList.remove('selected'));
+        interests[currentIndex].classList.add('selected');
+        currentIndex = (currentIndex + 1) % interests.length;
     }
 
-    // Start cycling
-    interestEl.classList.add('fade-in');
-    setInterval(cycleInterest, displayDuration + fadeDuration);
+    cycleHighlight();
+    setInterval(cycleHighlight, 2000);
 })();
 </script>
 {% endblock %}

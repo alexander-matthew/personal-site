@@ -1,24 +1,54 @@
-{% extends "base.html" %}
+{% extends "win98_window.html" %}
 
-{% block title %}Blog - {{ site.name }}{% endblock %}
+{% block title %}My Documents{% endblock %}
+{% block window_title %}C:\My Documents{% endblock %}
+{% block taskbar_title %}My Documents{% endblock %}
 
-{% block content %}
-<div class="section">
-    <h1>Blog</h1>
-    <p class="section-intro">Thoughts, projects, and things I find interesting.</p>
+{% set window_icon = 'notepad.svg' %}
+
+{% block menu_bar %}
+<div class="win98-menu-bar">
+    <span class="win98-menu-item">File</span>
+    <span class="win98-menu-item">Edit</span>
+    <span class="win98-menu-item">View</span>
+    <span class="win98-menu-item">Help</span>
 </div>
-
-<div class="posts-list">
-    {% for post in posts %}
-    <article class="post-card">
-        <time class="post-date">{{ post.date }}</time>
-        <h2><a href="{{ url_for('blog.post', slug=post.slug) }}">{{ post.title }}</a></h2>
-        <p>{{ post.summary }}</p>
-        <a href="{{ url_for('blog.post', slug=post.slug) }}" class="read-more">Read more</a>
-    </article>
-    {% else %}
-    <p>No posts yet. Check back soon!</p>
-    {% endfor %}
+<div class="win98-address-bar">
+    <span class="win98-address-label">Address:</span>
+    <input type="text" class="win98-address-input" value="C:\My Documents" readonly>
 </div>
 {% endblock %}
 
+{% block window_content %}
+<div class="win98-content-inset" style="min-height: 300px;">
+    {% if posts %}
+    <div class="win98-file-grid">
+        {% for post in posts %}
+        <a href="{{ url_for('blog.post', slug=post.slug) }}" class="win98-file-icon">
+            <img src="{{ url_for('static', filename='icons/document.svg') }}" alt="">
+            <span>{{ post.title }}</span>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="padding: 20px; text-align: center; color: #808080;">
+        <p>This folder is empty.</p>
+        <p style="font-size: 10px;">No blog posts yet. Check back soon!</p>
+    </div>
+    {% endif %}
+</div>
+
+<div class="win98-groupbox win98-mt-md">
+    <span class="win98-groupbox-label">Blog</span>
+    <p style="margin: 8px; color: #808080;">
+        Thoughts, projects, and things I find interesting. Double-click a document to read.
+    </p>
+</div>
+{% endblock %}
+
+{% block status_bar %}
+<div class="win98-status-bar">
+    <span class="win98-status-section">{{ posts|length }} object(s)</span>
+    <span class="win98-status-section" style="flex: 1;">Personal blog posts</span>
+</div>
+{% endblock %}

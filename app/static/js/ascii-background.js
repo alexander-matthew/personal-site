@@ -17,6 +17,10 @@ const themes = {
     }
 };
 
+// Audio profile configurations (for Spotify page)
+// Values are normalized 0-100 from Spotify audio features
+let audioProfile = null;
+
 // Weather-specific particle behaviors with distinct motion patterns
 const weatherConfigs = {
     sunny: {
@@ -264,6 +268,16 @@ export function initAsciiBackground(containerId = 'ascii-background', isDark = t
             }
         }
 
+        // Audio profile modifiers (when on Spotify page)
+        let audioSpeedMod = 1;
+        let audioWaveMod = 1;
+        let audioVerticalBias = 0;
+        if (audioProfile) {
+            audioSpeedMod = 0.5 + (audioProfile.energy / 100) * 1.0;  // 0.5x to 1.5x speed
+            audioWaveMod = 0.7 + (audioProfile.danceability / 100) * 0.6;  // 0.7x to 1.3x wave
+            audioVerticalBias = (audioProfile.valence - 50) * 0.3;  // -15 to +15 vertical drift
+        }
+
         // Animate each particle with weather-aware motion
         particles.children.forEach((particle) => {
             const { initialX, initialY, initialZ, speed, offset } = particle.userData;
@@ -299,11 +313,13 @@ export function initAsciiBackground(containerId = 'ascii-background', isDark = t
 
                 case 'shimmer':
                 default:
-                    // Sunny: gentle heat shimmer rising
-                    baseX = initialX + Math.sin(time * weather.waveSpeed + offset) * weather.waveAmplitude;
-                    baseY = initialY + Math.cos(time * weather.waveSpeed * 0.8 + offset) * weather.waveAmplitude * 0.7;
-                    baseY += time * 5;  // Gentle upward drift
-                    baseZ = initialZ + Math.sin(time * weather.waveSpeed * 1.2 + offset * 2) * 25;
+                    // Sunny: gentle heat shimmer rising (modified by audio profile if present)
+                    const effectiveWaveSpeed = weather.waveSpeed * audioSpeedMod;
+                    const effectiveWaveAmp = weather.waveAmplitude * audioWaveMod;
+                    baseX = initialX + Math.sin(time * effectiveWaveSpeed + offset) * effectiveWaveAmp;
+                    baseY = initialY + Math.cos(time * effectiveWaveSpeed * 0.8 + offset) * effectiveWaveAmp * 0.7;
+                    baseY += time * 5 + audioVerticalBias;  // Drift modified by valence
+                    baseZ = initialZ + Math.sin(time * effectiveWaveSpeed * 1.2 + offset * 2) * 25;
                     break;
             }
 
@@ -386,6 +402,19 @@ export function initAsciiBackground(containerId = 'ascii-background', isDark = t
             weatherTransition = 0;
             console.log('[ASCII Background] Transitioning to weather:', theme, weatherConfigs[theme]);
         }
+    });
+
+    // Listen for audio profile changes from Spotify dashboard
+    window.addEventListener('audioProfileChange', (event) => {
+        const { energy, danceability, valence, acousticness, tempo } = event.detail;
+        console.log('[ASCII Background] Audio profile change:', event.detail);
+        audioProfile = {
+            energy: energy || 50,
+            danceability: danceability || 50,
+            valence: valence || 50,
+            acousticness: acousticness || 50,
+            tempo: tempo || 120
+        };
     });
 
     // Start animation

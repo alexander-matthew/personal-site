@@ -4,14 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A Flask-based personal website designed for Heroku deployment. Built to showcase personal projects and side interests (not professional work - see LinkedIn for that).
+A FastAPI-based personal website designed for Heroku deployment. Built to showcase personal projects and side interests (not professional work - see LinkedIn for that). Uses uvicorn (ASGI) for serving, httpx for async HTTP calls, and uv for dependency management.
 
 ## Project Structure
 
 ```
 Personal-Site/
 ├── app/
-│   ├── __init__.py          # Flask app factory + SITE_CONFIG
+│   ├── __init__.py          # FastAPI app factory + SITE_CONFIG
+│   ├── templating.py        # Jinja2 setup with Flask-compatible url_for
 │   ├── routes/
 │   │   ├── __init__.py
 │   │   ├── main.py          # Main routes (home, about, projects)
@@ -21,20 +22,25 @@ Personal-Site/
 │   │   ├── blackjack.py     # Blackjack trainer game
 │   │   ├── sudoku.py        # Sudoku puzzle game
 │   │   ├── pr_review.py     # PR Review tool showcase
+│   │   ├── resume.py        # Resume timeline
 │   │   ├── weather.py       # Weather dashboard with Open-Meteo API
 │   │   └── tools/           # Tools framework (extensible mini-apps)
 │   ├── services/
-│   │   ├── cache.py         # File-based caching with TTL
-│   │   ├── oauth.py         # OAuth2 client (Spotify)
-│   │   └── rate_limit.py    # In-memory rate limiting
+│   │   ├── cache.py             # File-based caching with TTL
+│   │   ├── oauth.py             # Async OAuth2 client (Spotify, httpx)
+│   │   ├── rate_limit.py        # Rate limiting (FastAPI dependency)
+│   │   └── spotify_helpers.py   # Shared Spotify helpers (require_oauth, spotify_request)
 │   ├── templates/
-│   │   ├── base.html        # Base layout with nav + footer
-│   │   ├── home.html        # Landing page with typing animation
+│   │   ├── win98_base.html  # Win98 desktop base (primary template)
+│   │   ├── win98_window.html # Win98 window chrome wrapper
+│   │   ├── base.html        # Legacy base layout (used by 500.html, tools)
+│   │   ├── home.html        # Landing page (Win98 desktop with icons)
 │   │   ├── about.html       # Bio with cycling interests animation
 │   │   ├── projects.html    # Project showcase grid
 │   │   ├── blog/            # Blog templates
 │   │   ├── news/            # News templates
-│   │   ├── spotify/         # Spotify dashboard (cyberpunk theme)
+│   │   ├── resume/          # Resume timeline
+│   │   ├── spotify/         # Spotify dashboard (ASCII theme)
 │   │   ├── blackjack/       # Blackjack trainer UI
 │   │   ├── sudoku/          # Sudoku game UI
 │   │   ├── pr_review/       # PR Review showcase
@@ -42,27 +48,36 @@ Personal-Site/
 │   │   └── tools/           # Tools framework templates
 │   └── static/
 │       ├── css/
-│       │   ├── style.css           # Global styles with CSS variables
-│       │   ├── spotify-cyberpunk.css  # Spotify retro-futuristic theme
+│       │   ├── win98.css           # Win98 design system (primary)
+│       │   ├── style.css           # Legacy styles with CSS variables
+│       │   ├── spotify.css         # Spotify ASCII dashboard theme
+│       │   ├── resume.css          # Resume timeline styles
 │       │   ├── blackjack.css       # Blackjack game styles
 │       │   ├── sudoku.css          # Sudoku grid styles
 │       │   ├── weather.css         # Weather dashboard styles
 │       │   └── tools.css           # Tools framework styles
+│       ├── icons/                  # Win98 SVG icons (13 files)
 │       └── js/
+│           ├── win98.js                 # Win98 interactivity (clock, start menu, dialogs)
 │           ├── ascii-background.js      # Three.js ASCII particle animation
+│           ├── spotify-ascii.js         # Spotify ASCII rendering (bars, charts)
+│           ├── spotify-player.js        # Spotify Web Playback SDK integration
 │           ├── blackjack-engine.js      # Blackjack game logic + strategy
 │           ├── blackjack-engine.test.js # Jest tests
 │           ├── sudoku-engine.js         # Sudoku generation + validation
 │           ├── sudoku-engine.test.js    # Jest tests
-│           └── weather-engine.js        # Weather utilities (WMO codes, formatting)
+│           ├── weather-engine.js        # Weather utilities (WMO codes, formatting)
+│           └── weather-engine.test.js   # Jest tests
 ├── .claude/
-│   ├── agents/
-│   │   └── ui-designer.md       # UI styling agent documentation
+│   ├── agents/                  # Subagent definitions (5 agents)
 │   └── CLAUDE.md                # This file
-├── main.py                  # App entry point
-├── Procfile                 # Heroku: gunicorn main:app
-├── runtime.txt              # Heroku: python-3.11.9
-├── requirements.txt         # Flask + gunicorn + requests
+├── tests/                   # Python tests (pytest)
+├── docs/
+│   └── ARCHITECTURE.md      # Detailed architecture reference
+├── main.py                  # App entry point (uvicorn)
+├── pyproject.toml           # Dependencies (managed by uv)
+├── Procfile                 # Heroku: uvicorn main:app
+├── requirements.txt         # Auto-generated by uv export (for Heroku)
 ├── package.json             # Jest testing for JS engines
 └── jest.config.js           # Jest configuration
 ```
@@ -82,63 +97,64 @@ SITE_CONFIG = {
 Access in templates via `{{ site.name }}`, `{{ site.linkedin_url }}`, etc.
 
 ### Environment Variables
-- `SECRET_KEY` - Flask session secret (required in production)
-- `FLASK_DEBUG` - Set to `false` in production (defaults to `true` locally)
+- `SECRET_KEY` - Session cookie signing secret (required in production)
+- `FLASK_DEBUG` - Set to `false` in production (defaults to `true` locally, controls uvicorn reload)
 - `SPOTIFY_CLIENT_ID` - Spotify API client ID (for Spotify dashboard)
 - `SPOTIFY_CLIENT_SECRET` - Spotify API client secret (for Spotify dashboard)
 
-### Adding New Mini-Apps (Blueprints)
-1. Create blueprint in `app/routes/myapp.py`:
+### Adding New Mini-Apps (Routers)
+1. Create router in `app/routes/myapp.py`:
    ```python
-   from flask import Blueprint, render_template
-   bp = Blueprint('myapp', __name__, url_prefix='/myapp')
+   from fastapi import APIRouter, Request
+   from app.templating import templates
 
-   @bp.route('/')
-   def index():
-       return render_template('myapp/index.html')
+   router = APIRouter(prefix='/myapp')
+
+   @router.get('/', name='myapp.index')
+   async def index(request: Request):
+       return templates.TemplateResponse(request, 'myapp/index.html')
    ```
 
 2. Register in `app/__init__.py`:
    ```python
    from app.routes import myapp
-   app.register_blueprint(myapp.bp)
+   app.include_router(myapp.router)
    ```
 
 3. Add templates in `app/templates/myapp/`
 
-4. Add nav link in `app/templates/base.html`
+4. Add nav link in `app/templates/win98_base.html` (Start Menu)
 
-### Template Blocks
-Base template provides these blocks:
-- `{% block title %}` - Page title
-- `{% block head %}` - Extra CSS/meta tags
-- `{% block content %}` - Main page content
-- `{% block scripts %}` - Page-specific JavaScript (after base scripts)
+**Important:** Route names must follow `blueprint.endpoint` convention (e.g., `name='myapp.index'`) to match the custom `url_for()` in templates.
 
-### Theme System
+### Template System (Win98 — Primary)
 
-The site supports **dark mode** (default) and **light mode** with a toggle button in the navbar.
+The site uses a **Windows 98 desktop** theme as the primary UI. Two template chains exist:
 
-**Dark Mode** (`.home-dark` class on body):
-- Black background (#0a0a0a) with animated Three.js ASCII particle cloud
-- Light text (#e5e5e5 primary, #a3a3a3 secondary)
-- Blue accent (#60a5fa) for links
-- Semi-transparent card backgrounds
+**Chain 1: Win98 (active)** — `win98_base.html` → `win98_window.html` → page templates
+- `win98_base.html`: Desktop area, Start Menu, Taskbar, loads `win98.css` + `win98.js`
+- `win98_window.html`: Adds window chrome (title bar, menu bar, status bar)
+- `home.html` extends `win98_base.html` directly (desktop with icons)
+- All other pages extend `win98_window.html`
 
-**Light Mode** (no class):
-- White background, dark text
-- ASCII animation hidden
-- Standard light theme styling
+**Chain 2: Legacy** — `base.html` → `500.html`, `tools/` templates
+- Retained for error pages and inactive tools framework
+- Has dark/light toggle with CSS variables, Three.js ASCII background
 
-Theme preference is stored in `localStorage` and persists across sessions. The toggle is automatic via `base.html` - no per-page configuration needed.
+**Win98 Template Blocks:**
+- `{% block title %}` - Page title (win98_base)
+- `{% block head %}` - Extra CSS/meta in `<head>` (win98_base)
+- `{% block body %}` - Entire body content (win98_base)
+- `{% block main %}` - Desktop area (win98_base)
+- `{% block taskbar_buttons %}` - Taskbar button area (win98_base)
+- `{% block scripts %}` - Page-specific JavaScript (win98_base)
+- `{% block window_title %}` - Title bar text (win98_window)
+- `{% block window_content %}` - Main content area (win98_window)
+- `{% block menu_bar %}` - Menu bar row (win98_window)
+- `{% block status_bar %}` - Status bar row (win98_window)
+- `{% block taskbar_title %}` - Taskbar button text (win98_window)
 
-**CSS Variables** (defined in `:root`, overridden by `.home-dark`):
-- `--primary-color`: Link/accent color
-- `--text-color`: Main text
-- `--text-light`: Secondary text
-- `--bg-color`: Background
-- `--bg-secondary`: Footer/card backgrounds
-- `--border-color`: Borders
+**Window Icon Convention:** Set `{% set window_icon = 'filename.svg' %}` at the top of child templates.
 
 ### External Links
 Always use `rel="noopener noreferrer"` with `target="_blank"` for security.
@@ -146,13 +162,14 @@ Always use `rel="noopener noreferrer"` with `target="_blank"` for security.
 ## Development
 
 ```bash
-source .venv/bin/activate
-pip install -r requirements.txt
-python main.py
+uv sync              # Install/update dependencies
+uv run python main.py  # Start dev server with uvicorn
 ```
-App runs at http://localhost:5001 with auto-reload.
+App runs at http://localhost:5005 with auto-reload.
 
-**Note:** Port 5000 is reserved for another application on this machine. This project uses port 5001 by default. Override with `PORT=8080 python main.py` if needed.
+**Note:** Port 5000 is reserved for another application on this machine. Override with `PORT=8080 uv run python main.py` if needed.
+
+**Dependency management:** Use `uv add <package>` to add new dependencies. After changing `pyproject.toml`, regenerate the Heroku-compatible requirements: `uv export --format requirements-txt --no-hashes > requirements.txt`
 
 ### Parallel Development
 
@@ -170,7 +187,7 @@ git worktree add ../Personal-Site-feature-name -b feature/feature-name
 cd ../Personal-Site-feature-name
 python -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+uv sync
 
 # Run Claude in this worktree
 claude
@@ -195,7 +212,7 @@ git checkout -b feature/feature-name
 # Set up the clone
 python -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+uv sync
 
 # Run Claude in this clone
 claude
@@ -240,7 +257,7 @@ Claude Code will automatically run these hooks before each commit, preventing br
 ### Development Cycle
 
 1. **Work & Commit Frequently**: Commit changes continuously as you work
-2. **Test Locally**: Run `python main.py` and verify at http://localhost:5001
+2. **Test Locally**: Run `python main.py` and verify at http://localhost:5005
 3. **Create PR on Command**: Only create a pull request when explicitly asked
 4. **Deploy After Merge**: After PR is merged, deploy to Heroku
 
@@ -270,9 +287,8 @@ git push heroku main
 ### Local Testing
 Always test locally before committing:
 ```bash
-source .venv/bin/activate
-python main.py
-# Visit http://localhost:5001
+uv run python main.py  # Start dev server with uvicorn
+# Visit http://localhost:5005
 ```
 
 ## Heroku Configuration
@@ -305,25 +321,28 @@ heroku logs --tail
 | `/about` | about.html | Bio with cycling interests |
 | `/projects` | projects.html | Project showcase |
 | `/blog` | blog/index.html | Blog posts |
+| `/blog/{slug}` | blog/post.html | Individual blog post |
 | `/news` | news/index.html | Press/news mentions |
 | `/projects/spotify` | spotify/index.html | Spotify dashboard with OAuth |
 | `/projects/blackjack` | blackjack/index.html | Blackjack trainer game |
 | `/projects/sudoku` | sudoku/index.html | Sudoku puzzle game |
 | `/projects/pr-review` | pr_review/index.html | PR Review tool showcase |
+| `/resume` | resume/index.html | Resume timeline |
 | `/projects/weather` | weather/index.html | Weather dashboard with ASCII animation |
 | `/tools` | tools/index.html | Tools framework index |
 
 ## Mini-Apps
 
 ### Spotify Dashboard (`/projects/spotify`)
-OAuth-authenticated data visualization with cyberpunk theme:
+OAuth-authenticated data visualization with ASCII theme and Web Playback SDK:
 - Recently played tracks (last 50)
 - Top artists/tracks by time range (4 weeks, 6 months, all time)
 - Genre breakdown with percentages
 - Audio feature analysis (danceability, energy, valence, etc.)
 - Taste evolution comparison
+- In-browser playback with Spotify Web Playback SDK
 
-**API Endpoints:** `/api/recent`, `/api/top/<time_range>`, `/api/genres`, `/api/audio-features`, `/api/taste-evolution`
+**API Endpoints:** `/api/recent`, `/api/top/<time_range>`, `/api/genres`, `/api/audio-features`, `/api/taste-evolution`, `/api/token`, `/api/playback-state`, `/api/devices`, and playback control endpoints (`/api/play`, `/api/pause`, `/api/next`, etc.)
 
 ### Blackjack Trainer (`/projects/blackjack`)
 Interactive game with basic strategy guidance:
@@ -360,36 +379,48 @@ Real-time weather with dynamic ASCII background animations:
   - **Snowy**: Gentle swaying descent with wind drift
   - **Foggy**: Very slow, large particle drift
 
-**API Endpoints:** `/api/current`, `/api/forecast`, `/api/geocode`
+**API Endpoints:** `/api/current`, `/api/forecast`, `/api/geocode`, `/api/extremes/<horizon>`, `/api/industry/<region>`
 
 **Integration:** Dispatches `weatherchange` custom events that the ASCII background (`ascii-background.js`) listens for to update particle animation patterns in real-time.
 
 ## Services
 
 ### Cache (`app/services/cache.py`)
-File-based caching with TTL support:
+File-based caching with TTL support. The `@cached` decorator only works with sync functions. Async endpoints should use the cache instance directly (`cache.get(key)`, `cache.set(key, value, ttl_seconds=N)`):
 ```python
-from app.services.cache import cached
+from app.services.cache import cache, cached
 
+# Sync decorator
 @cached(ttl_seconds=300, key_prefix='spotify')
 def get_spotify_data():
     ...
+
+# Async — use instance directly
+cached_val = cache.get(cache_key)
+cache.set(cache_key, result, ttl_seconds=600)
 ```
 
 ### Rate Limiting (`app/services/rate_limit.py`)
-In-memory rate limiting decorator:
+In-memory rate limiting as FastAPI dependency:
 ```python
+from fastapi import Depends
 from app.services.rate_limit import rate_limit
 
-@rate_limit(max_requests=30, window_seconds=60)
-def api_endpoint():
+@router.get('/api/data', dependencies=[Depends(rate_limit(30, 60))])
+async def api_endpoint():
     ...
 ```
 
 ### OAuth (`app/services/oauth.py`)
-OAuth2 client for external services (currently Spotify).
+Async OAuth2 client for external services (currently Spotify). Uses httpx for async HTTP requests.
 
 ## Testing
+
+Run Python tests:
+```bash
+uv sync --dev             # Install test deps (pytest, pytest-asyncio, respx)
+uv run pytest -v          # Run all Python tests
+```
 
 Run JavaScript tests (game engines):
 ```bash
@@ -400,11 +431,11 @@ npm run test:coverage     # Coverage report
 
 ## Features
 
-- **Dark/Light Mode**: Toggle in navbar, preference saved in localStorage
-- **ASCII Background**: Three.js particle cloud rendered as ASCII characters (dark mode only), with weather-reactive animation patterns
+- **Win98 Desktop UI**: Primary theme with desktop icons, Start Menu, taskbar, and window chrome
+- **Dark/Light Mode**: Toggle in legacy base template only (used by 500 error page)
+- **ASCII Background**: Three.js particle cloud with weather-reactive animation patterns (legacy template)
 - **Typing animation**: Home page cycles "Alex" ↔ "Alexander"
 - **Interests carousel**: About page fades through interests list
 - **Responsive**: Mobile-friendly with breakpoint at 640px
-- **Footer**: GitHub/LinkedIn icons with Claude/Heroku credit
-- **Cyberpunk theme**: Spotify dashboard with retro-futuristic styling
+- **ASCII theme**: Spotify dashboard with ASCII-rendered visualizations and Web Playback SDK
 - **Game engines**: Pure JavaScript with Jest test coverage

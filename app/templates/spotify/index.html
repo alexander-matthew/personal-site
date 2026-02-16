@@ -1,441 +1,581 @@
-{% extends "base.html" %}
+{% extends "win98_window.html" %}
 
-{% block title %}Spotify Dashboard - {{ site.name }}{% endblock %}
+{% block title %}Spotify Dashboard{% endblock %}
+{% block window_title %}Spotify Dashboard - Windows Media Player{% endblock %}
+{% block taskbar_title %}Media Player{% endblock %}
+
+{% set window_icon = 'cd.svg' %}
 
 {% block head %}
-{{ super() }}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/spotify-cyberpunk.css') }}">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/spotify.css') }}">
+<style>
+/* Win98 Media Player Overrides */
+.spotify-page {
+    background: var(--win98-gray);
+    padding: 0;
+    min-height: 100%;
+}
+
+.spotify-page .container {
+    max-width: none;
+    padding: 8px;
+}
+
+.tool-header {
+    display: none;
+}
+
+.auth-box {
+    background: var(--win98-gray);
+    border: 2px solid;
+    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
+    padding: 20px;
+    text-align: center;
+    max-width: 400px;
+    margin: 40px auto;
+}
+
+.auth-box__title {
+    font-family: var(--win98-font);
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 12px;
+    color: var(--win98-title-blue);
+}
+
+.auth-box__message {
+    font-family: var(--win98-font);
+    font-size: 11px;
+    margin-bottom: 16px;
+    line-height: 1.5;
+}
+
+.auth-btn {
+    display: inline-block;
+    padding: 4px 16px;
+    background: var(--win98-gray);
+    border: 2px solid;
+    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
+    box-shadow: inset -1px -1px 0 var(--win98-btn-shadow), inset 1px 1px 0 var(--win98-btn-light);
+    font-family: var(--win98-font);
+    font-size: 11px;
+    text-decoration: none;
+    color: black;
+    cursor: pointer;
+}
+
+.auth-btn:hover {
+    background: #d4d4d4;
+}
+
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.stat-card {
+    background: white;
+    border: 2px solid;
+    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
+    padding: 8px;
+    text-align: center;
+}
+
+.stat-card__label {
+    font-size: 10px;
+    color: #666;
+    margin-bottom: 4px;
+}
+
+.stat-card__value {
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--win98-title-blue);
+}
+
+.stat-card__value--text {
+    font-size: 11px;
+    word-break: break-word;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.dashboard-full {
+    margin-bottom: 8px;
+}
+
+.section-card {
+    background: white;
+    border: 2px solid;
+    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
+    padding: 8px;
+}
+
+.section-card__title {
+    font-size: 12px;
+    font-weight: bold;
+    margin: 0 0 8px 0;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #ccc;
+    color: var(--win98-title-blue);
+}
+
+.time-selector {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+.time-btn {
+    padding: 2px 8px;
+    background: var(--win98-gray);
+    border: 2px solid;
+    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
+    font-family: var(--win98-font);
+    font-size: 10px;
+    cursor: pointer;
+}
+
+.time-btn.active {
+    border-color: var(--win98-btn-dark-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-dark-shadow);
+    box-shadow: inset 1px 1px 0 var(--win98-btn-shadow);
+}
+
+.loading {
+    text-align: center;
+    padding: 20px;
+    font-size: 11px;
+    color: #666;
+}
+
+.disconnect-link {
+    display: block;
+    text-align: center;
+    font-size: 10px;
+    color: #666;
+    text-decoration: none;
+    padding: 8px;
+}
+
+.disconnect-link:hover {
+    color: red;
+}
+
+/* Player Bar Win98 Style */
+.player-bar {
+    position: fixed;
+    bottom: 28px;
+    left: 0;
+    right: 0;
+    background: var(--win98-gray);
+    border-top: 2px solid;
+    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
+    padding: 8px;
+    z-index: 999;
+}
+
+.player-expand-toggle {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--win98-gray);
+    border: 2px solid;
+    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
+    border-bottom: none;
+    padding: 2px 16px;
+    font-size: 10px;
+    cursor: pointer;
+}
+
+.player-connect-message {
+    text-align: center;
+    font-size: 11px;
+    color: #666;
+}
+
+.player-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.player-album-art {
+    width: 48px;
+    height: 48px;
+    border: 2px solid;
+    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
+}
+
+.player-track-info {
+    flex: 1;
+    min-width: 150px;
+}
+
+.player-track-name {
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.player-artist-name, .player-album-name {
+    font-size: 10px;
+    color: #666;
+}
+
+.player-controls {
+    display: flex;
+    gap: 4px;
+}
+
+.player-btn {
+    width: 28px;
+    height: 28px;
+    background: var(--win98-gray);
+    border: 2px solid;
+    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.player-btn:active {
+    border-color: var(--win98-btn-dark-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-dark-shadow);
+}
+
+.player-btn--play {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+}
+
+.player-btn--small {
+    width: 24px;
+    height: 24px;
+    font-size: 10px;
+}
+
+.player-extra-controls {
+    display: flex;
+    gap: 4px;
+}
+
+.player-progress {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 200px;
+}
+
+.player-time {
+    font-size: 10px;
+    font-family: monospace;
+    min-width: 35px;
+}
+
+.player-progress-bar {
+    flex: 1;
+    height: 12px;
+    background: white;
+    border: 2px solid;
+    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
+    cursor: pointer;
+}
+
+.player-progress-fill {
+    height: 100%;
+    background: var(--win98-title-blue);
+    width: 0%;
+}
+
+.player-volume {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.player-volume-slider {
+    width: 80px;
+}
+
+.player-volume-value {
+    font-size: 10px;
+    min-width: 30px;
+}
+
+.player-devices {
+    position: relative;
+}
+
+.player-devices-dropdown {
+    display: none;
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    background: var(--win98-gray);
+    border: 2px solid;
+    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
+    min-width: 200px;
+    margin-bottom: 4px;
+}
+
+.player-devices-header {
+    background: var(--win98-title-blue);
+    color: white;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.player-devices-list {
+    padding: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* ASCII visualizations */
+.ascii-bar, .genre-bars, .heatmap-grid, .track-list, .evolution-chart, .audio-profile, .activity-chart, .patterns-display {
+    font-family: monospace;
+    font-size: 10px;
+    line-height: 1.4;
+    white-space: pre;
+    overflow-x: auto;
+}
+
+@media (max-width: 768px) {
+    .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    .player-content {
+        justify-content: center;
+    }
+    .player-progress {
+        width: 100%;
+        order: 10;
+    }
+}
+</style>
 {% endblock %}
 
-{% block content %}
-<div class="spotify-cyberpunk">
-<div class="tool-page">
-    <header class="tool-header">
-        <a href="{{ url_for('main.projects') }}" class="back-link">&larr; Projects</a>
-        <h1>Spotify Dashboard</h1>
-        <p class="tool-description">Visualize your listening habits and discover patterns in your music taste.</p>
-    </header>
-
-    <div class="tool-content">
-{% if not is_configured %}
-<div class="auth-required">
-    <h3>// SYSTEM OFFLINE</h3>
-    <p>Spotify API credentials not configured. Set SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET to enable this module.</p>
+{% block menu_bar %}
+<div class="win98-menu-bar">
+    <span class="win98-menu-item">File</span>
+    <span class="win98-menu-item">View</span>
+    <span class="win98-menu-item">Play</span>
+    <span class="win98-menu-item">Help</span>
 </div>
-{% elif not is_authenticated %}
-<div class="auth-required">
-    <h3>// ACCESS REQUIRED</h3>
-    <p>Initialize connection to Spotify network to access your listening data.</p>
-    <a href="{{ url_for('spotify.auth') }}" class="auth-button">
-        &gt; CONNECT_SPOTIFY
-    </a>
-</div>
-{% else %}
+{% endblock %}
 
-<!-- Stats Overview -->
-<div class="data-cards">
-    <div class="data-card data-card--primary" id="stat-tracks">
-        <h4 class="data-card__title">Recent Tracks</h4>
-        <div class="data-card__value">--</div>
-    </div>
-    <div class="data-card data-card--success" id="stat-artists">
-        <h4 class="data-card__title">Unique Artists</h4>
-        <div class="data-card__value">--</div>
-    </div>
-    <div class="data-card" id="stat-top-artist">
-        <h4 class="data-card__title">Top Artist</h4>
-        <div class="data-card__value" style="font-size: 1rem;">--</div>
-    </div>
-    <div class="data-card" id="stat-top-track">
-        <h4 class="data-card__title">Most Played</h4>
-        <div class="data-card__value" style="font-size: 1rem;">--</div>
-    </div>
-</div>
-
-<!-- Row 1: Taste Evolution + Audio Profile -->
-<div class="dashboard-grid">
-    <div class="cyber-card dashboard-item">
-        <h3 class="cyber-card-title">// Taste Evolution</h3>
-        <div id="evolution-container">
-            <div class="loading-spinner"></div>
+{% block window_content %}
+<div class="spotify-page">
+    <div class="container">
+        {% if not is_configured %}
+        <div class="auth-box">
+            <div class="auth-box__title">SPOTIFY API NOT CONFIGURED</div>
+            <p class="auth-box__message">
+                Set SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET<br>
+                environment variables to enable this feature.
+            </p>
         </div>
-    </div>
-    <div class="cyber-card dashboard-item">
-        <h3 class="cyber-card-title">// Audio Profile</h3>
-        <div id="audio-profile-container">
-            <div class="loading-spinner"></div>
-        </div>
-    </div>
-</div>
 
-<!-- Row 2: Listening Patterns + Genre Breakdown -->
-<div class="dashboard-grid">
-    <div class="cyber-card dashboard-item">
-        <h3 class="cyber-card-title">// Listening Patterns</h3>
-        <div id="patterns-container">
-            <div class="loading-spinner"></div>
+        {% elif not is_authenticated %}
+        <div class="auth-box">
+            <div class="auth-box__title">CONNECTION REQUIRED</div>
+            <p class="auth-box__message">
+                Connect to Spotify to view your<br>
+                listening statistics and patterns.
+            </p>
+            <a href="{{ url_for('spotify.auth') }}" class="auth-btn">Connect Spotify</a>
         </div>
-    </div>
-    <div class="cyber-card dashboard-item">
-        <h3 class="cyber-card-title">// Genre Analysis</h3>
-        <div id="genre-container">
-            <div class="loading-spinner"></div>
-        </div>
-    </div>
-</div>
 
-<!-- Row 3: Timeline Heatmap (full width) -->
-<div class="cyber-card timeline-heatmap">
-    <h3 class="cyber-card-title">// Weekly Timeline</h3>
-    <div id="heatmap-container">
-        <div class="loading-spinner"></div>
-    </div>
-</div>
-
-<!-- Row 4: Activity Chart + Top Tracks -->
-<div class="dashboard-grid">
-    <div class="chart-container dashboard-item">
-        <h3 class="chart-title">// Hourly Activity</h3>
-        <canvas id="activityChart"></canvas>
-    </div>
-    <div class="dashboard-item">
-        <div class="time-range-selector">
-            <button class="time-btn active" data-range="short_term">&gt; 4_WEEKS</button>
-            <button class="time-btn" data-range="medium_term">&gt; 6_MONTHS</button>
-            <button class="time-btn" data-range="long_term">&gt; ALL_TIME</button>
+        {% else %}
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-card__label">Recent Tracks</div>
+                <div class="stat-card__value" id="stat-tracks">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card__label">Unique Artists</div>
+                <div class="stat-card__value" id="stat-artists">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card__label">Top Artist</div>
+                <div class="stat-card__value stat-card__value--text" id="stat-top-artist">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card__label">Most Played</div>
+                <div class="stat-card__value stat-card__value--text" id="stat-top-track">--</div>
+            </div>
         </div>
-        <h3>// Top Tracks</h3>
-        <div id="tracks-list" class="tracks-list">
-            <div class="loading-spinner"></div>
-        </div>
-    </div>
-</div>
 
-<p style="text-align: center; margin-top: 2rem;">
-    <a href="{{ url_for('spotify.logout') }}" class="back-link">&gt; DISCONNECT_SESSION</a>
-</p>
-{% endif %}
+        <div class="dashboard-grid">
+            <div class="section-card">
+                <h3 class="section-card__title">Taste Evolution</h3>
+                <div id="evolution-container">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+            <div class="section-card">
+                <h3 class="section-card__title">Audio Profile</h3>
+                <div id="audio-profile-container">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="section-card">
+                <h3 class="section-card__title">Listening Patterns</h3>
+                <div id="patterns-container">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+            <div class="section-card">
+                <h3 class="section-card__title">Genre Analysis</h3>
+                <div id="genre-container">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-card dashboard-full">
+            <h3 class="section-card__title">Weekly Timeline</h3>
+            <div id="heatmap-container">
+                <div class="loading">Loading...</div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="section-card">
+                <h3 class="section-card__title">Hourly Activity</h3>
+                <div id="activity-container">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+            <div class="section-card">
+                <div class="time-selector">
+                    <button class="time-btn active" data-range="short_term">4 Weeks</button>
+                    <button class="time-btn" data-range="medium_term">6 Months</button>
+                    <button class="time-btn" data-range="long_term">All Time</button>
+                </div>
+                <h3 class="section-card__title">Top Tracks</h3>
+                <div id="tracks-container">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <a href="{{ url_for('spotify.logout') }}" class="disconnect-link">&gt; disconnect</a>
+
+        <div id="player-bar" class="player-bar">
+            <button id="player-expand-toggle" class="player-expand-toggle" aria-label="Expand player">&#9650;</button>
+
+            <div id="player-connect-message" class="player-connect-message">
+                Connecting to Spotify...
+            </div>
+
+            <div id="player-content" class="player-content" style="display: none;">
+                <img id="player-album-art" class="player-album-art" src="" alt="" style="display: none;">
+
+                <div class="player-track-info">
+                    <div id="player-track-name" class="player-track-name">--</div>
+                    <div id="player-artist-name" class="player-artist-name">--</div>
+                    <div id="player-album-name" class="player-album-name">--</div>
+                </div>
+
+                <div class="player-extra-controls">
+                    <button id="player-shuffle" class="player-btn player-btn--small" aria-label="Shuffle">&#8646;</button>
+                    <button id="player-repeat" class="player-btn player-btn--small" aria-label="Repeat">&#8635;</button>
+                </div>
+
+                <div class="player-controls">
+                    <button id="player-prev" class="player-btn" aria-label="Previous">&#9198;</button>
+                    <button id="player-play-pause" class="player-btn player-btn--play" aria-label="Play">&#9654;</button>
+                    <button id="player-next" class="player-btn" aria-label="Next">&#9197;</button>
+                </div>
+
+                <div class="player-progress">
+                    <span id="player-current-time" class="player-time player-time--current">0:00</span>
+                    <div id="player-progress-bar" class="player-progress-bar">
+                        <div id="player-progress-fill" class="player-progress-fill"></div>
+                    </div>
+                    <span id="player-total-time" class="player-time">0:00</span>
+                </div>
+
+                <div class="player-volume">
+                    <input type="range" id="player-volume" class="player-volume-slider" min="0" max="100" value="50">
+                    <span id="player-volume-value" class="player-volume-value">50%</span>
+                </div>
+
+                <div class="player-devices">
+                    <button id="player-devices" class="player-btn" aria-label="Devices">&#128241;</button>
+                    <div id="player-devices-dropdown" class="player-devices-dropdown">
+                        <div class="player-devices-header">Devices</div>
+                        <div id="player-devices-list" class="player-devices-list">
+                            Loading...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block status_bar %}
+<div class="win98-status-bar">
+    <span class="win98-status-section" style="flex: 1;">{% if is_authenticated %}Connected to Spotify{% else %}Not connected{% endif %}</span>
+    <span class="win98-status-section">Windows Media Player</span>
 </div>
 {% endblock %}
 
 {% block scripts %}
-{{ super() }}
 {% if is_authenticated %}
+<script src="{{ url_for('static', filename='js/spotify-ascii.js') }}"></script>
+<script src="{{ url_for('static', filename='js/spotify-player.js') }}"></script>
 <script>
 (function() {
-    const chartColors = {
-        cyan: '#00ffff',
-        magenta: '#ff00ff',
-        yellow: '#ffff00',
-        green: '#00ff88',
-        red: '#ff3366'
-    };
-    let activityChart = null;
-    let audioProfileChart = null;
-
-    // ===============================================
-    // Taste Evolution
-    // ===============================================
-    async function loadTasteEvolution() {
-        const container = document.getElementById('evolution-container');
-        try {
-            const response = await fetch('/projects/spotify/api/taste-evolution');
-            const data = await response.json();
-
-            const periods = ['short_term', 'medium_term', 'long_term'];
-            let html = '<div class="taste-evolution">';
-
-            for (const period of periods) {
-                const periodData = data[period];
-                if (periodData && periodData.artists.length > 0) {
-                    html += `
-                        <div class="evolution-period">
-                            <div class="evolution-period-label">${periodData.label}</div>
-                            <div class="evolution-artists">
-                                ${periodData.artists.map((artist, i) => `
-                                    <div class="evolution-artist">
-                                        <span class="evolution-artist-rank">#${i + 1}</span>
-                                        ${artist.image ? `<img src="${artist.image}" alt="">` : ''}
-                                        <span>${escapeHtml(artist.name)}</span>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    `;
-                }
-            }
-
-            html += '</div>';
-            container.innerHTML = html;
-        } catch (error) {
-            console.error('Failed to load taste evolution:', error);
-            container.innerHTML = '<p class="empty-state">Failed to load data</p>';
-        }
-    }
-
-    // ===============================================
-    // Audio Profile Radar Chart
-    // ===============================================
-    async function loadAudioProfile() {
-        const container = document.getElementById('audio-profile-container');
-        try {
-            const response = await fetch('/projects/spotify/api/audio-features');
-            const data = await response.json();
-
-            if (!data.features) {
-                container.innerHTML = '<p class="empty-state">No audio data available</p>';
-                return;
-            }
-
-            const features = data.features;
-            const labels = ['Danceability', 'Energy', 'Acousticness', 'Valence', 'Instrumentalness', 'Liveness'];
-            const values = [
-                features.danceability,
-                features.energy,
-                features.acousticness,
-                features.valence,
-                features.instrumentalness,
-                features.liveness
-            ];
-
-            container.innerHTML = `
-                <div class="audio-profile">
-                    <canvas id="audioRadarChart"></canvas>
-                    <div class="audio-legend">
-                        <div class="audio-legend-item"><span class="audio-legend-dot"></span> Danceability: ${features.danceability}%</div>
-                        <div class="audio-legend-item"><span class="audio-legend-dot"></span> Energy: ${features.energy}%</div>
-                        <div class="audio-legend-item"><span class="audio-legend-dot"></span> Acousticness: ${features.acousticness}%</div>
-                        <div class="audio-legend-item"><span class="audio-legend-dot"></span> Valence (Mood): ${features.valence}%</div>
-                        <div class="audio-legend-item"><span class="audio-legend-dot"></span> Instrumentalness: ${features.instrumentalness}%</div>
-                        <div class="audio-legend-item"><span class="audio-legend-dot"></span> Liveness: ${features.liveness}%</div>
-                    </div>
-                </div>
-            `;
-
-            const ctx = document.getElementById('audioRadarChart').getContext('2d');
-            audioProfileChart = new Chart(ctx, {
-                type: 'radar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: values,
-                        backgroundColor: 'rgba(0, 255, 255, 0.2)',
-                        borderColor: chartColors.cyan,
-                        borderWidth: 2,
-                        pointBackgroundColor: chartColors.magenta,
-                        pointBorderColor: chartColors.magenta,
-                        pointRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        r: {
-                            beginAtZero: true,
-                            max: 100,
-                            ticks: { display: false },
-                            grid: { color: 'rgba(0, 255, 255, 0.15)' },
-                            angleLines: { color: 'rgba(0, 255, 255, 0.15)' },
-                            pointLabels: { color: '#888899', font: { family: 'VT323', size: 11 } }
-                        }
-                    }
-                }
-            });
-        } catch (error) {
-            console.error('Failed to load audio profile:', error);
-            container.innerHTML = '<p class="empty-state">Failed to load data</p>';
-        }
-    }
-
-    // ===============================================
-    // Listening Patterns
-    // ===============================================
-    async function loadListeningPatterns() {
-        const container = document.getElementById('patterns-container');
-        try {
-            const response = await fetch('/projects/spotify/api/recent');
-            const data = await response.json();
-
-            if (!data.items || data.items.length === 0) {
-                container.innerHTML = '<p class="empty-state">No recent data</p>';
-                return;
-            }
-
-            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            const dayData = new Array(7).fill(0);
-            const hourData = new Array(24).fill(0);
-
-            data.items.forEach(item => {
-                const date = new Date(item.played_at);
-                dayData[date.getDay()]++;
-                hourData[date.getHours()]++;
-            });
-
-            const maxDay = Math.max(...dayData);
-            const peakHours = hourData
-                .map((count, hour) => ({ hour, count }))
-                .sort((a, b) => b.count - a.count)
-                .slice(0, 3);
-
-            container.innerHTML = `
-                <div class="patterns-grid">
-                    <div class="pattern-section">
-                        <h4>By Day of Week</h4>
-                        <div class="day-bars">
-                            ${days.map((day, i) => `
-                                <div class="day-bar-row">
-                                    <span class="day-bar-label">${day}</span>
-                                    <div class="day-bar-container">
-                                        <div class="day-bar" style="width: ${maxDay ? (dayData[i] / maxDay * 100) : 0}%"></div>
-                                    </div>
-                                    <span class="day-bar-value">${dayData[i]}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                    <div class="pattern-section">
-                        <h4>Peak Hours</h4>
-                        <div class="peak-hours">
-                            ${peakHours.map((peak, i) => `
-                                <div class="peak-hour-item">
-                                    <span class="peak-hour-time">${String(peak.hour).padStart(2, '0')}:00</span>
-                                    <div class="peak-hour-info">
-                                        <span class="peak-hour-count">${peak.count} tracks</span><br>
-                                        ${i === 0 ? 'Most active hour' : `#${i + 1} peak`}
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                </div>
-            `;
-        } catch (error) {
-            console.error('Failed to load patterns:', error);
-            container.innerHTML = '<p class="empty-state">Failed to load data</p>';
-        }
-    }
-
-    // ===============================================
-    // Genre Breakdown
-    // ===============================================
-    async function loadGenres() {
-        const container = document.getElementById('genre-container');
-        try {
-            const response = await fetch('/projects/spotify/api/genres');
-            const data = await response.json();
-
-            if (data.genres && data.genres.length > 0) {
-                const barClasses = ['genre-bar-1', 'genre-bar-2', 'genre-bar-3', 'genre-bar-4', 'genre-bar-5'];
-                container.innerHTML = `
-                    <div class="genre-bars">
-                        ${data.genres.map((genre, i) => `
-                            <div class="genre-item">
-                                <span class="genre-name">${escapeHtml(genre.name)}</span>
-                                <div class="genre-bar-container">
-                                    <div class="genre-bar ${barClasses[i % barClasses.length]}" style="width: ${genre.percent}%"></div>
-                                </div>
-                                <span class="genre-percent">${genre.percent}%</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-            } else {
-                container.innerHTML = '<p class="empty-state">No genre data available</p>';
-            }
-        } catch (error) {
-            console.error('Failed to load genres:', error);
-            container.innerHTML = '<p class="empty-state">Failed to load genres</p>';
-        }
-    }
-
-    // ===============================================
-    // Timeline Heatmap
-    // ===============================================
-    async function loadHeatmap() {
-        const container = document.getElementById('heatmap-container');
-        try {
-            const response = await fetch('/projects/spotify/api/recent');
-            const data = await response.json();
-
-            if (!data.items || data.items.length === 0) {
-                container.innerHTML = '<p class="empty-state">No recent listening data</p>';
-                return;
-            }
-
-            const heatmapData = {};
-            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-            data.items.forEach(item => {
-                const date = new Date(item.played_at);
-                const day = date.getDay();
-                const hour = date.getHours();
-                const key = `${day}-${hour}`;
-                heatmapData[key] = (heatmapData[key] || 0) + 1;
-            });
-
-            const maxCount = Math.max(...Object.values(heatmapData), 1);
-
-            let html = '<div class="heatmap-grid">';
-            html += '<div class="heatmap-header"></div>';
-            for (let h = 0; h < 24; h++) {
-                html += `<div class="heatmap-header">${h}</div>`;
-            }
-
-            for (let d = 0; d < 7; d++) {
-                html += `<div class="heatmap-day-label">${days[d]}</div>`;
-                for (let h = 0; h < 24; h++) {
-                    const count = heatmapData[`${d}-${h}`] || 0;
-                    const level = count === 0 ? 0 : Math.min(4, Math.ceil((count / maxCount) * 4));
-                    html += `
-                        <div class="heatmap-cell" data-level="${level}">
-                            <div class="heatmap-tooltip">${count} track${count !== 1 ? 's' : ''}</div>
-                        </div>
-                    `;
-                }
-            }
-
-            html += '</div>';
-            container.innerHTML = html;
-        } catch (error) {
-            console.error('Failed to load heatmap:', error);
-            container.innerHTML = '<p class="empty-state">Failed to load timeline</p>';
-        }
-    }
-
-    // ===============================================
-    // Recent Data & Stats
-    // ===============================================
     async function loadRecentData() {
         try {
             const response = await fetch('/projects/spotify/api/recent');
+            if (!response.ok) return;
             const data = await response.json();
-
-            if (data.items) {
+            if (data.items && data.items.length > 0) {
                 updateStats(data.items);
-                renderActivityChart(data.items);
+                renderPatterns(data.items);
+                renderHeatmap(data.items);
+                renderActivity(data.items);
             }
         } catch (error) {
             console.error('Failed to load recent data:', error);
         }
     }
 
-    // ===============================================
-    // Top Data
-    // ===============================================
-    async function loadTopData(timeRange = 'short_term') {
+    async function loadTopData(timeRange) {
+        timeRange = timeRange || 'short_term';
         try {
-            const response = await fetch(`/projects/spotify/api/top/${timeRange}`);
+            const response = await fetch('/projects/spotify/api/top/' + timeRange);
+            if (!response.ok) return;
             const data = await response.json();
-
             if (data.artists && data.artists.items) {
                 updateTopArtist(data.artists.items);
             }
             if (data.tracks && data.tracks.items) {
-                renderTracksList(data.tracks.items);
+                renderTracks(data.tracks.items);
                 updateTopTrack(data.tracks.items);
             }
         } catch (error) {
@@ -443,121 +583,166 @@
         }
     }
 
+    async function loadTasteEvolution() {
+        const container = document.getElementById('evolution-container');
+        try {
+            const response = await fetch('/projects/spotify/api/taste-evolution');
+            if (!response.ok) { container.textContent = 'Failed to load data'; return; }
+            const data = await response.json();
+            container.textContent = '';
+            const content = SpotifyASCII.renderTasteEvolution(data);
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = content;
+            container.appendChild(wrapper.firstElementChild || wrapper);
+        } catch (error) {
+            console.error('Failed to load taste evolution:', error);
+            container.textContent = 'Failed to load data';
+        }
+    }
+
+    async function loadAudioProfile() {
+        const container = document.getElementById('audio-profile-container');
+        try {
+            const response = await fetch('/projects/spotify/api/audio-features');
+            if (!response.ok) { container.textContent = 'Failed to load data'; return; }
+            const data = await response.json();
+            container.textContent = '';
+            if (data.features) {
+                const content = SpotifyASCII.renderAudioProfile(data.features);
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = content;
+                container.appendChild(wrapper.firstElementChild || wrapper);
+            } else {
+                container.textContent = 'No audio data available';
+            }
+        } catch (error) {
+            console.error('Failed to load audio profile:', error);
+            container.textContent = 'Failed to load data';
+        }
+    }
+
+    async function loadGenres() {
+        const container = document.getElementById('genre-container');
+        try {
+            const response = await fetch('/projects/spotify/api/genres');
+            if (!response.ok) { container.textContent = 'Failed to load genres'; return; }
+            const data = await response.json();
+            container.textContent = '';
+            const content = SpotifyASCII.renderGenreBars(data.genres);
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = content;
+            container.appendChild(wrapper.firstElementChild || wrapper);
+        } catch (error) {
+            console.error('Failed to load genres:', error);
+            container.textContent = 'Failed to load genres';
+        }
+    }
+
     function updateStats(items) {
-        const uniqueArtists = new Set(items.map(i => i.track.artists[0].name));
-        document.querySelector('#stat-tracks .data-card__value').textContent = items.length;
-        document.querySelector('#stat-artists .data-card__value').textContent = uniqueArtists.size;
+        var uniqueArtists = new Set(items.map(function(i) { return i.track.artists[0].name; }));
+        document.getElementById('stat-tracks').textContent = items.length;
+        document.getElementById('stat-artists').textContent = uniqueArtists.size;
     }
 
     function updateTopArtist(artists) {
         if (artists.length > 0) {
-            document.querySelector('#stat-top-artist .data-card__value').textContent = artists[0].name;
+            document.getElementById('stat-top-artist').textContent = artists[0].name;
         }
     }
 
     function updateTopTrack(tracks) {
         if (tracks.length > 0) {
-            document.querySelector('#stat-top-track .data-card__value').textContent = tracks[0].name;
+            document.getElementById('stat-top-track').textContent = tracks[0].name;
         }
     }
 
-    function renderActivityChart(items) {
-        const hourData = new Array(24).fill(0);
-        items.forEach(item => {
-            const hour = new Date(item.played_at).getHours();
+    function renderPatterns(items) {
+        var container = document.getElementById('patterns-container');
+        var dayData = [0, 0, 0, 0, 0, 0, 0];
+        var hourData = [];
+        for (var h = 0; h < 24; h++) hourData.push(0);
+
+        items.forEach(function(item) {
+            var date = new Date(item.played_at);
+            dayData[date.getDay()]++;
+            hourData[date.getHours()]++;
+        });
+
+        var peakHours = hourData
+            .map(function(count, hour) { return { hour: hour, count: count }; })
+            .sort(function(a, b) { return b.count - a.count; });
+
+        container.textContent = '';
+        var content = SpotifyASCII.renderListeningPatterns(dayData, peakHours);
+        var wrapper = document.createElement('div');
+        wrapper.innerHTML = content;
+        container.appendChild(wrapper.firstElementChild || wrapper);
+    }
+
+    function renderHeatmap(items) {
+        var container = document.getElementById('heatmap-container');
+        var heatmapData = {};
+        items.forEach(function(item) {
+            var date = new Date(item.played_at);
+            var key = date.getDay() + '-' + date.getHours();
+            heatmapData[key] = (heatmapData[key] || 0) + 1;
+        });
+
+        container.textContent = '';
+        var content = SpotifyASCII.renderHeatmap(heatmapData);
+        var wrapper = document.createElement('div');
+        wrapper.innerHTML = content;
+        container.appendChild(wrapper.firstElementChild || wrapper);
+    }
+
+    function renderActivity(items) {
+        var container = document.getElementById('activity-container');
+        var hourData = [];
+        for (var h = 0; h < 24; h++) hourData.push(0);
+        items.forEach(function(item) {
+            var hour = new Date(item.played_at).getHours();
             hourData[hour]++;
         });
 
-        const ctx = document.getElementById('activityChart').getContext('2d');
-        if (activityChart) activityChart.destroy();
-
-        activityChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: hourData.map((_, i) => `${i}:00`),
-                datasets: [{
-                    label: 'Tracks',
-                    data: hourData,
-                    backgroundColor: chartColors.cyan,
-                    borderColor: chartColors.cyan,
-                    borderWidth: 1,
-                    borderRadius: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: 'rgba(0, 255, 255, 0.1)' },
-                        ticks: { color: '#888899', font: { family: 'VT323' } }
-                    },
-                    x: {
-                        grid: { color: 'rgba(0, 255, 255, 0.05)' },
-                        ticks: {
-                            color: '#888899',
-                            font: { family: 'VT323' },
-                            callback: function(val, index) {
-                                return index % 4 === 0 ? this.getLabelForValue(val) : '';
-                            }
-                        }
-                    }
-                }
-            }
-        });
+        container.textContent = '';
+        var content = SpotifyASCII.renderActivityChart(hourData);
+        var wrapper = document.createElement('div');
+        wrapper.innerHTML = content;
+        container.appendChild(wrapper.firstElementChild || wrapper);
     }
 
-    function renderTracksList(tracks) {
-        const container = document.getElementById('tracks-list');
-        if (!tracks || tracks.length === 0) {
-            container.innerHTML = '<p class="empty-state">No tracks found.</p>';
-            return;
-        }
-
-        container.innerHTML = tracks.slice(0, 8).map((track, i) => `
-            <div class="track-item">
-                <span class="track-rank">${String(i + 1).padStart(2, '0')}</span>
-                <img src="${track.album.images[2]?.url || ''}" alt="" class="track-cover">
-                <div class="track-info">
-                    <span class="track-name">${escapeHtml(track.name)}</span>
-                    <span class="track-artist">${escapeHtml(track.artists[0].name)}</span>
-                </div>
-            </div>
-        `).join('');
+    function renderTracks(tracks) {
+        var container = document.getElementById('tracks-container');
+        container.textContent = '';
+        var content = SpotifyASCII.renderTrackList(tracks, 8);
+        var wrapper = document.createElement('div');
+        wrapper.innerHTML = content;
+        container.appendChild(wrapper.firstElementChild || wrapper);
     }
 
-    // ===============================================
-    // Utilities
-    // ===============================================
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    // ===============================================
-    // Event Listeners
-    // ===============================================
-    document.querySelectorAll('.time-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.time-btn').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            document.querySelectorAll('.time-btn').forEach(function(b) { b.classList.remove('active'); });
             e.target.classList.add('active');
             loadTopData(e.target.dataset.range);
         });
     });
 
-    // ===============================================
-    // Initial Load
-    // ===============================================
+    document.addEventListener('click', function(e) {
+        var trackItem = e.target.closest('.track-item--playable');
+        if (trackItem && trackItem.dataset.trackUri) {
+            e.preventDefault();
+            if (typeof SpotifyPlayer !== 'undefined' && SpotifyPlayer.playTrack) {
+                SpotifyPlayer.playTrack(trackItem.dataset.trackUri);
+            }
+        }
+    });
+
     loadRecentData();
     loadTopData();
     loadTasteEvolution();
     loadAudioProfile();
-    loadListeningPatterns();
     loadGenres();
-    loadHeatmap();
 })();
 </script>
 {% endif %}

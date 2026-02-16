@@ -1,49 +1,46 @@
 """
-Simple in-memory rate limiting.
+Simple in-memory rate limiting as FastAPI dependency.
 For production, consider Redis-based rate limiting.
 """
+import logging
 import time
-from functools import wraps
-from flask import request, jsonify
 from collections import defaultdict
+from fastapi import Request, HTTPException
+
+logger = logging.getLogger(__name__)
 
 # In-memory store (resets on app restart)
 _rate_limit_store = defaultdict(list)
 
 
-def rate_limit(max_requests=60, window_seconds=60):
+def rate_limit(max_requests: int = 60, window_seconds: int = 60):
     """
-    Decorator to rate limit routes.
+    Create a FastAPI dependency for rate limiting.
 
-    Args:
-        max_requests: Maximum requests allowed in window
-        window_seconds: Time window in seconds
+    Usage:
+        @router.get("/api/data", dependencies=[Depends(rate_limit(30, 60))])
+        async def get_data(): ...
     """
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            # Use IP address as identifier
-            client_id = request.remote_addr
-            key = f"{f.__name__}:{client_id}"
+    async def dependency(request: Request):
+        client_id = request.client.host if request.client else 'unknown'
+        key = f"{request.url.path}:{client_id}"
 
-            now = time.time()
-            window_start = now - window_seconds
+        now = time.time()
+        window_start = now - window_seconds
 
-            # Clean old entries
-            _rate_limit_store[key] = [
-                t for t in _rate_limit_store[key] if t > window_start
-            ]
+        # Clean old entries
+        _rate_limit_store[key] = [
+            t for t in _rate_limit_store[key] if t > window_start
+        ]
 
-            # Check limit
-            if len(_rate_limit_store[key]) >= max_requests:
-                return jsonify({
-                    'error': 'Rate limit exceeded',
-                    'retry_after': window_seconds
-                }), 429
+        # Check limit
+        if len(_rate_limit_store[key]) >= max_requests:
+            raise HTTPException(
+                status_code=429,
+                detail={'error': 'Rate limit exceeded', 'retry_after': window_seconds}
+            )
 
-            # Record request
-            _rate_limit_store[key].append(now)
+        # Record request
+        _rate_limit_store[key].append(now)
 
-            return f(*args, **kwargs)
-        return decorated_function
-    return decorator
+    return dependency

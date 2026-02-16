@@ -1,0 +1,45 @@
+{% extends "win98_base.html" %}
+
+{% block body %}
+<div class="win98-desktop">
+    <!-- Window -->
+    <div class="win98-window win98-window-page">
+        <!-- Title Bar -->
+        <div class="win98-title-bar">
+            {% if window_icon %}
+            <img src="{{ url_for('static', filename='icons/' ~ window_icon) }}" alt="" class="win98-title-bar-icon">
+            {% endif %}
+            <span class="win98-title-bar-text">{% block window_title %}{{ site.name }}{% endblock %}</span>
+            <div class="win98-title-bar-controls">
+                <button class="win98-title-btn win98-minimize-btn" title="Minimize">
+                    <span>_</span>
+                </button>
+                <button class="win98-title-btn win98-maximize-btn" title="Maximize">
+                    <span>□</span>
+                </button>
+                <button class="win98-title-btn win98-close-btn" title="Close">
+                    <span>×</span>
+                </button>
+            </div>
+        </div>
+
+        {% block menu_bar %}{% endblock %}
+
+        <!-- Window Content -->
+        <div class="win98-window-content win98-scrollable">
+            {% block window_content %}{% endblock %}
+        </div>
+
+        {% block status_bar %}{% endblock %}
+    </div>
+</div>
+{% endblock %}
+
+{% block taskbar_buttons %}
+<div class="win98-task-btn active">
+    {% if window_icon %}
+    <img src="{{ url_for('static', filename='icons/' ~ window_icon) }}" alt="">
+    {% endif %}
+    <span>{% block taskbar_title %}{% endblock %}</span>
+</div>
+{% endblock %}

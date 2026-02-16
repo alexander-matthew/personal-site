@@ -55,6 +55,7 @@ const PAIR_STRATEGY = {
 // ===== Expected Value Tables (approximate EV per $1 bet) =====
 // Based on 6-deck, dealer stands on soft 17 (S17) rules
 // These values represent the EV of the optimal action for each hand
+const HARD_EV = {
     5:  { 2: -0.12, 3: -0.09, 4: -0.06, 5: -0.02, 6: 0.01, 7: -0.11, 8: -0.15, 9: -0.18, 10: -0.23, A: -0.35 },
     6:  { 2: -0.14, 3: -0.11, 4: -0.08, 5: -0.04, 6: -0.01, 7: -0.13, 8: -0.17, 9: -0.20, 10: -0.24, A: -0.36 },
     7:  { 2: -0.11, 3: -0.08, 4: -0.05, 5: -0.01, 6: 0.02, 7: -0.08, 8: -0.12, 9: -0.17, 10: -0.21, A: -0.34 },

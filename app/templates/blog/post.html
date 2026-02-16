@@ -1,18 +1,62 @@
-{% extends "base.html" %}
+{% extends "win98_window.html" %}
 
-{% block title %}{{ post.title }} - {{ site.name }}{% endblock %}
+{% block title %}{{ post.title }} - Notepad{% endblock %}
+{% block window_title %}{{ post.title }} - Notepad{% endblock %}
+{% block taskbar_title %}Notepad{% endblock %}
 
-{% block content %}
-<article class="blog-post section">
-    <header class="post-header">
-        <a href="{{ url_for('blog.index') }}" class="back-link">&larr; Back to Blog</a>
-        <h1>{{ post.title }}</h1>
-        <time class="post-date">{{ post.date }}</time>
-    </header>
+{% set window_icon = 'notepad.svg' %}
 
-    <div class="post-content">
-        {{ post.content | safe }}
-    </div>
-</article>
+{% block menu_bar %}
+<div class="win98-menu-bar">
+    <span class="win98-menu-item">File</span>
+    <span class="win98-menu-item">Edit</span>
+    <span class="win98-menu-item">Search</span>
+    <span class="win98-menu-item">Help</span>
+</div>
 {% endblock %}
 
+{% block window_content %}
+<div class="win98-content-inset" style="background: white; padding: 8px; font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.6; min-height: 400px;">
+    <div style="margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid #c0c0c0;">
+        <strong>{{ post.title }}</strong><br>
+        <span style="color: #808080;">Date: {{ post.date }}</span>
+    </div>
+    <div class="notepad-content">
+        {{ post.content | safe }}
+    </div>
+</div>
+
+<div style="margin-top: 16px; text-align: left;">
+    <a href="{{ url_for('blog.index') }}">
+        <button class="win98-btn">
+            &larr; Back to My Documents
+        </button>
+    </a>
+</div>
+{% endblock %}
+
+{% block head %}
+<style>
+    .notepad-content p {
+        margin-bottom: 12px;
+    }
+    .notepad-content h1, .notepad-content h2, .notepad-content h3 {
+        margin: 16px 0 8px 0;
+    }
+    .notepad-content ul, .notepad-content ol {
+        margin-left: 20px;
+        margin-bottom: 12px;
+    }
+    .notepad-content code {
+        background: #f0f0f0;
+        padding: 2px 4px;
+        font-family: 'Courier New', monospace;
+    }
+    .notepad-content pre {
+        background: #f0f0f0;
+        padding: 8px;
+        overflow-x: auto;
+        margin-bottom: 12px;
+    }
+</style>
+{% endblock %}

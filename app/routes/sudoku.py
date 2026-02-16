@@ -1,9 +1,10 @@
-from flask import Blueprint, render_template
+from fastapi import APIRouter, Request
+from app.templating import templates
 
-bp = Blueprint('sudoku', __name__, url_prefix='/projects/sudoku')
+router = APIRouter(prefix='/projects/sudoku')
 
 
-@bp.route('/')
-def index():
+@router.get('/', name='sudoku.index')
+async def index(request: Request):
     """Sudoku puzzle game with difficulty levels."""
-    return render_template('sudoku/index.html')
+    return templates.TemplateResponse(request, 'sudoku/index.html')

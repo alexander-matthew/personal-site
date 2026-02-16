@@ -1,6 +1,7 @@
-from flask import Blueprint, render_template
+from fastapi import APIRouter, Request
+from app.templating import templates
 
-bp = Blueprint('news', __name__, url_prefix='/news')
+router = APIRouter(prefix='/news')
 
 
 # External articles/press mentions - ordered newest first
@@ -29,7 +30,7 @@ ARTICLES = [
 ]
 
 
-@bp.route('/')
-def index():
+@router.get('/', name='news.index')
+async def index(request: Request):
     """In the News listing page."""
-    return render_template('news/index.html', articles=ARTICLES)
+    return templates.TemplateResponse(request, 'news/index.html', {'articles': ARTICLES})

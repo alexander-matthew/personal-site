@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges">
+  <!-- Magnifying glass -->
+  <circle cx="13" cy="13" r="9" fill="#C0FFFF" stroke="#000000" stroke-width="2"/>
+  <line x1="19" y1="19" x2="28" y2="28" stroke="#808080" stroke-width="4"/>
+  <line x1="19" y1="19" x2="28" y2="28" stroke="#000000" stroke-width="2"/>
+  <!-- Code lines in lens -->
+  <rect x="7" y="9" width="8" height="1" fill="#008000"/>
+  <rect x="8" y="11" width="10" height="1" fill="#000080"/>
+  <rect x="7" y="13" width="6" height="1" fill="#800000"/>
+  <rect x="9" y="15" width="8" height="1" fill="#008000"/>
+  <!-- Check mark -->
+  <polygon points="22,6 24,8 28,2 29,3 24,10 21,7" fill="#008000"/>
+</svg>

@@ -1,15 +1,156 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-{% block title %}Page Not Found | {{ site.name }}{% endblock %}
+        body {
+            background-color: #0000AA;
+            color: #FFFFFF;
+            font-family: 'Lucida Console', 'Courier New', monospace;
+            font-size: 16px;
+            line-height: 1.4;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+            cursor: default;
+            user-select: none;
+        }
 
-{% block content %}
-<section class="error-page">
-    <h1>404</h1>
-    <p class="error-message">Page not found</p>
-    <p class="error-description">The page you're looking for doesn't exist or has been moved.</p>
-    <div class="error-actions">
-        <a href="{{ url_for('main.home') }}" class="btn btn-primary">Go Home</a>
-        <a href="{{ url_for('main.projects') }}" class="btn btn-secondary">View Projects</a>
+        .bsod-container {
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .bsod-header {
+            background-color: #AAAAAA;
+            color: #0000AA;
+            padding: 2px 8px;
+            display: inline-block;
+            margin-bottom: 24px;
+        }
+
+        .bsod-content {
+            margin-bottom: 24px;
+        }
+
+        .bsod-content p {
+            margin-bottom: 16px;
+        }
+
+        .bsod-error {
+            margin: 24px 0;
+        }
+
+        .bsod-error-code {
+            font-weight: bold;
+        }
+
+        .bsod-list {
+            margin: 16px 0 16px 24px;
+        }
+
+        .bsod-list li {
+            margin-bottom: 8px;
+        }
+
+        .bsod-footer {
+            margin-top: 24px;
+        }
+
+        .bsod-prompt {
+            margin-top: 32px;
+        }
+
+        .bsod-links {
+            margin-top: 16px;
+        }
+
+        .bsod-links a {
+            color: #FFFF00;
+            text-decoration: underline;
+            margin-right: 24px;
+        }
+
+        .bsod-links a:hover {
+            color: #FFFFFF;
+        }
+
+        .blink {
+            animation: blink 1s step-start infinite;
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 640px) {
+            body {
+                font-size: 12px;
+                padding: 20px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bsod-container">
+        <div class="bsod-header">Windows</div>
+
+        <div class="bsod-content">
+            <p>A fatal exception 0E has occurred at 0028:C0011E36 in VXD VMM(01) +
+            00010E36. The current application will be terminated.</p>
+
+            <div class="bsod-error">
+                <p><span class="bsod-error-code">PAGE_NOT_FOUND</span></p>
+                <p>Error code: 0x00000404</p>
+            </div>
+
+            <p>The page you requested does not exist or has been moved to another
+            location on this server.</p>
+
+            <ul class="bsod-list">
+                <li>*  Check the URL for typing errors</li>
+                <li>*  The page may have been moved or deleted</li>
+                <li>*  Try navigating from the home page</li>
+            </ul>
+
+            <p>If this problem persists, contact the system administrator.</p>
+        </div>
+
+        <div class="bsod-footer">
+            <p>Press any key to continue <span class="blink">_</span></p>
+        </div>
+
+        <div class="bsod-prompt">
+            <p class="bsod-links">
+                <a href="/">Return to Desktop</a>
+                <a href="/projects">View Projects</a>
+            </p>
+        </div>
     </div>
-</section>
-{% endblock %}
+
+    <script>
+        document.addEventListener('keydown', function() {
+            window.location.href = '/';
+        });
+
+        document.body.addEventListener('click', function(e) {
+            // Don't redirect if clicking a link
+            if (e.target.closest('a')) return;
+            window.location.href = '/';
+        });
+    </script>
+</body>
+</html>

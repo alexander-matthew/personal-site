@@ -1,9 +1,10 @@
-from flask import Blueprint, render_template
+from fastapi import APIRouter, Request
+from app.templating import templates
 
-bp = Blueprint('blackjack', __name__, url_prefix='/projects/blackjack')
+router = APIRouter(prefix='/projects/blackjack')
 
 
-@bp.route('/')
-def index():
+@router.get('/', name='blackjack.index')
+async def index(request: Request):
     """Blackjack training game with optimal play tracking."""
-    return render_template('blackjack/index.html')
+    return templates.TemplateResponse(request, 'blackjack/index.html')

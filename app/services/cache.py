@@ -5,8 +5,11 @@ For production with persistence, consider Redis.
 import os
 import json
 import hashlib
+import logging
 from datetime import datetime, timedelta
 from functools import wraps
+
+logger = logging.getLogger(__name__)
 
 
 class SimpleCache:
@@ -38,6 +41,11 @@ class SimpleCache:
 
             return data['value']
         except (json.JSONDecodeError, KeyError):
+            logger.warning("Corrupted cache file, deleting: %s", path)
+            try:
+                os.remove(path)
+            except OSError:
+                pass
             return None
 
     def set(self, key, value, ttl_seconds=3600):
@@ -45,11 +53,14 @@ class SimpleCache:
         path = self._get_cache_path(key)
         expires_at = datetime.now() + timedelta(seconds=ttl_seconds)
 
-        with open(path, 'w') as f:
-            json.dump({
-                'value': value,
-                'expires_at': expires_at.isoformat()
-            }, f)
+        try:
+            with open(path, 'w') as f:
+                json.dump({
+                    'value': value,
+                    'expires_at': expires_at.isoformat()
+                }, f)
+        except (OSError, TypeError) as exc:
+            logger.warning("Failed to write cache key %r: %s", key, exc)
 
 
 # Global cache instance

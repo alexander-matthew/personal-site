@@ -1,11 +1,13 @@
 """
-Tools Blueprint - Framework for mini-apps.
+Tools Router - Framework for mini-apps.
 
 Each tool self-registers with metadata for the index page.
 """
-from flask import Blueprint, render_template
+from fastapi import APIRouter, Request
 
-bp = Blueprint('tools', __name__, url_prefix='/tools')
+from app.templating import templates
+
+router = APIRouter(prefix='/tools')
 
 # Tool registry - tools self-register here
 TOOLS_REGISTRY = []
@@ -27,11 +29,11 @@ def register_tool(tool_config):
     TOOLS_REGISTRY.append(tool_config)
 
 
-@bp.route('/')
-def index():
+@router.get('/', name='tools.index')
+async def index(request: Request):
     """Tools listing page."""
-    return render_template('tools/index.html', tools=TOOLS_REGISTRY)
+    return templates.TemplateResponse(request, 'tools/index.html', {'tools': TOOLS_REGISTRY})
 
 
 # Import tool modules to trigger registration
-from app.routes.tools import spotify  # noqa: E402, F401
+from app.routes.tools import spotify as _spotify  # noqa: E402, F401

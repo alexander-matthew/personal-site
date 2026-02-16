@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges">
+  <!-- Windows 98 Logo - 4 colored squares -->
+  <rect x="2" y="2" width="13" height="13" fill="#FF0000"/>
+  <rect x="17" y="2" width="13" height="13" fill="#00FF00"/>
+  <rect x="2" y="17" width="13" height="13" fill="#0000FF"/>
+  <rect x="17" y="17" width="13" height="13" fill="#FFFF00"/>
+  <!-- Wave effect lines -->
+  <path d="M2 8 Q8 6, 15 8" stroke="#800000" stroke-width="1" fill="none"/>
+  <path d="M17 8 Q24 6, 30 8" stroke="#008000" stroke-width="1" fill="none"/>
+  <path d="M2 23 Q8 21, 15 23" stroke="#000080" stroke-width="1" fill="none"/>
+  <path d="M17 23 Q24 21, 30 23" stroke="#808000" stroke-width="1" fill="none"/>
+</svg>

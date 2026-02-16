@@ -1,29 +1,80 @@
-{% extends "base.html" %}
+{% extends "win98_window.html" %}
 
-{% block title %}In the News - {{ site.name }}{% endblock %}
+{% block title %}Internet Explorer{% endblock %}
+{% block window_title %}In the News - Internet Explorer{% endblock %}
+{% block taskbar_title %}Internet Explorer{% endblock %}
 
-{% block content %}
-<div class="section">
-    <h1>In the News</h1>
-    <p class="section-intro">Articles, interviews, and press mentions.</p>
+{% set window_icon = 'internet.svg' %}
+
+{% block menu_bar %}
+<div class="win98-menu-bar">
+    <span class="win98-menu-item">File</span>
+    <span class="win98-menu-item">Edit</span>
+    <span class="win98-menu-item">View</span>
+    <span class="win98-menu-item">Favorites</span>
+    <span class="win98-menu-item">Help</span>
 </div>
-
-<div class="news-list">
-    {% for article in articles %}
-    <article class="news-card">
-        <div class="news-meta">
-            <span class="news-source">{{ article.source }}</span>
-            <time class="news-date">{{ article.date }}</time>
-        </div>
-        <h2><a href="{{ article.url }}" target="_blank" rel="noopener">{{ article.title }}</a></h2>
-        <p>{{ article.description }}</p>
-        <a href="{{ article.url }}" target="_blank" rel="noopener" class="external-link">
-            Read article <span class="external-icon">&nearr;</span>
-        </a>
-    </article>
-    {% else %}
-    <p>No news articles yet. Check back soon!</p>
-    {% endfor %}
+<div class="win98-toolbar">
+    <button class="win98-toolbar-btn" title="Back" onclick="history.back()">
+        <span style="font-size: 14px;">&larr;</span>
+    </button>
+    <button class="win98-toolbar-btn" title="Forward">
+        <span style="font-size: 14px;">&rarr;</span>
+    </button>
+    <button class="win98-toolbar-btn" title="Stop">
+        <span style="font-size: 14px;">×</span>
+    </button>
+    <button class="win98-toolbar-btn" title="Refresh" onclick="location.reload()">
+        <span style="font-size: 14px;">↻</span>
+    </button>
+    <button class="win98-toolbar-btn" title="Home" onclick="location.href='/'">
+        <span style="font-size: 14px;">⌂</span>
+    </button>
+    <div class="win98-toolbar-divider"></div>
+</div>
+<div class="win98-address-bar">
+    <span class="win98-address-label">Address:</span>
+    <input type="text" class="win98-address-input" value="http://www.alexander.com/news" readonly>
+    <button class="win98-btn" style="min-width: 50px; padding: 2px 8px;">Go</button>
 </div>
 {% endblock %}
 
+{% block window_content %}
+<div class="win98-content-inset" style="background: white; min-height: 350px; padding: 16px;">
+    <h1 style="color: navy; font-size: 18px; border-bottom: 2px solid navy; padding-bottom: 8px; margin-bottom: 16px;">
+        In the News
+    </h1>
+    <p style="color: #666; margin-bottom: 16px;">Articles, interviews, and press mentions.</p>
+
+    {% if articles %}
+    {% for article in articles %}
+    <div style="margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #ccc;">
+        <div style="font-size: 10px; color: #666; margin-bottom: 4px;">
+            <strong style="color: navy;">{{ article.source }}</strong> | {{ article.date }}
+        </div>
+        <h2 style="font-size: 14px; margin: 4px 0;">
+            <a href="{{ article.url }}" target="_blank" rel="noopener noreferrer" class="win98-link">{{ article.title }}</a>
+        </h2>
+        <p style="margin: 8px 0; color: #333; font-size: 11px; line-height: 1.5;">
+            {{ article.description }}
+        </p>
+        <a href="{{ article.url }}" target="_blank" rel="noopener noreferrer" class="win98-link" style="font-size: 10px;">
+            Read full article &rarr;
+        </a>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div style="text-align: center; padding: 40px; color: #808080;">
+        <p>No news articles found.</p>
+        <p style="font-size: 10px;">Check back soon for updates!</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block status_bar %}
+<div class="win98-status-bar">
+    <span class="win98-status-section" style="flex: 1;">Done</span>
+    <span class="win98-status-section">Internet</span>
+</div>
+{% endblock %}
