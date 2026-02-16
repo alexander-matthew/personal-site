@@ -13,7 +13,7 @@ TIMELINE = [
         'location': 'San Francisco, CA',
         'date': '2023 - Present',
         'description': 'Building products that matter. Replace this with what you actually do.',
-        'skills': ['Python', 'Flask', 'AWS', 'React'],
+        'skills': ['Python', 'FastAPI', 'AWS', 'React'],
         'highlights': [
             'Led development of key feature X',
             'Improved system performance by Y%',
