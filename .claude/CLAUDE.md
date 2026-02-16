@@ -59,7 +59,6 @@ Personal-Site/
 │       ├── icons/                  # Win98 SVG icons (13 files)
 │       └── js/
 │           ├── win98.js                 # Win98 interactivity (clock, start menu, dialogs)
-│           ├── ascii-background.js      # Three.js ASCII particle animation
 │           ├── spotify-ascii.js         # Spotify ASCII rendering (bars, charts)
 │           ├── spotify-player.js        # Spotify Web Playback SDK integration
 │           ├── blackjack-engine.js      # Blackjack game logic + strategy
@@ -97,10 +96,12 @@ SITE_CONFIG = {
 Access in templates via `{{ site.name }}`, `{{ site.linkedin_url }}`, etc.
 
 ### Environment Variables
-- `SECRET_KEY` - Session cookie signing secret (required in production)
+- `SECRET_KEY` - Session cookie signing secret (required in production; app will not start without it. Generate with `python -c "import secrets; print(secrets.token_urlsafe(64))"`)
 - `FLASK_DEBUG` - Set to `false` in production (defaults to `true` locally, controls uvicorn reload)
 - `SPOTIFY_CLIENT_ID` - Spotify API client ID (for Spotify dashboard)
 - `SPOTIFY_CLIENT_SECRET` - Spotify API client secret (for Spotify dashboard)
+
+**Security:** App uses lifespan context manager with shared `httpx.AsyncClient` on `request.app.state.http_client`. Session max_age is 1 week. Content-Security-Policy header is added to all responses.
 
 ### Adding New Mini-Apps (Routers)
 1. Create router in `app/routes/myapp.py`:
@@ -139,7 +140,7 @@ The site uses a **Windows 98 desktop** theme as the primary UI. Two template cha
 
 **Chain 2: Legacy** — `base.html` → `500.html`, `tools/` templates
 - Retained for error pages and inactive tools framework
-- Has dark/light toggle with CSS variables, Three.js ASCII background
+- Has dark/light toggle with CSS variables
 
 **Win98 Template Blocks:**
 - `{% block title %}` - Page title (win98_base)
@@ -365,28 +366,20 @@ Documentation showcase for automated code review:
 - Before/after refactoring examples
 
 ### Weather Dashboard (`/projects/weather`)
-Real-time weather with dynamic ASCII background animations:
+Real-time weather dashboard:
 - Current conditions with temperature, humidity, wind, precipitation
 - 7-day forecast with high/low temps and precipitation probability
 - City search with autocomplete (Open-Meteo geocoding)
 - Geolocation support for automatic location detection
-- Weather-reactive ASCII background with distinct motion patterns:
-  - **Sunny**: Gentle upward heat shimmer
-  - **Partly Cloudy**: Moderate billowing with drift
-  - **Cloudy**: Large slow horizontal waves
-  - **Rainy**: Fast downward streaks angled by wind
-  - **Stormy**: Heavy rain with chaotic bursts
-  - **Snowy**: Gentle swaying descent with wind drift
-  - **Foggy**: Very slow, large particle drift
 
 **API Endpoints:** `/api/current`, `/api/forecast`, `/api/geocode`, `/api/extremes/<horizon>`, `/api/industry/<region>`
 
-**Integration:** Dispatches `weatherchange` custom events that the ASCII background (`ascii-background.js`) listens for to update particle animation patterns in real-time.
+**Validation:** Uses FastAPI `Query()` with Pydantic validation (ge, le, min_length, max_length, Literal). Returns 422 for validation errors.
 
 ## Services
 
 ### Cache (`app/services/cache.py`)
-File-based caching with TTL support. The `@cached` decorator only works with sync functions. Async endpoints should use the cache instance directly (`cache.get(key)`, `cache.set(key, value, ttl_seconds=N)`):
+File-based caching with TTL support. The `@cached` decorator works with both sync and async functions:
 ```python
 from app.services.cache import cache, cached
 
@@ -395,13 +388,18 @@ from app.services.cache import cache, cached
 def get_spotify_data():
     ...
 
-# Async — use instance directly
+# Async decorator
+@cached(ttl_seconds=600, key_prefix='weather')
+async def fetch_weather():
+    ...
+
+# Or use instance directly
 cached_val = cache.get(cache_key)
 cache.set(cache_key, result, ttl_seconds=600)
 ```
 
 ### Rate Limiting (`app/services/rate_limit.py`)
-In-memory rate limiting as FastAPI dependency:
+In-memory rate limiting as FastAPI dependency. Store is bounded at 10,000 keys with periodic cleanup and LRU eviction:
 ```python
 from fastapi import Depends
 from app.services.rate_limit import rate_limit
@@ -412,7 +410,7 @@ async def api_endpoint():
 ```
 
 ### OAuth (`app/services/oauth.py`)
-Async OAuth2 client for external services (currently Spotify). Uses httpx for async HTTP requests.
+Async OAuth2 client for external services (currently Spotify). Uses shared `httpx.AsyncClient` from `request.app.state.http_client`. Methods `exchange_code()` and `refresh_token()` require `http_client` keyword argument.
 
 ## Testing
 
@@ -433,9 +431,9 @@ npm run test:coverage     # Coverage report
 
 - **Win98 Desktop UI**: Primary theme with desktop icons, Start Menu, taskbar, and window chrome
 - **Dark/Light Mode**: Toggle in legacy base template only (used by 500 error page)
-- **ASCII Background**: Three.js particle cloud with weather-reactive animation patterns (legacy template)
 - **Typing animation**: Home page cycles "Alex" ↔ "Alexander"
 - **Interests carousel**: About page fades through interests list
 - **Responsive**: Mobile-friendly with breakpoint at 640px
 - **ASCII theme**: Spotify dashboard with ASCII-rendered visualizations and Web Playback SDK
 - **Game engines**: Pure JavaScript with Jest test coverage
+- **Security**: CSP headers, secure session cookies, required SECRET_KEY in production

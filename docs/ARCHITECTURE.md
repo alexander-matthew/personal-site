@@ -27,26 +27,28 @@
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │  Browser                                                        │
-│  ┌───────────────────┐  ┌────────────────┐  ┌───────────────┐  │
-│  │ Win98 UI (CSS/JS) │  │ Spotify Player │  │ ASCII Background│ │
-│  │ Desktop, Taskbar, │  │ (Web Playback  │  │ (Three.js)     │ │
-│  │ Start Menu, Icons │  │  SDK)          │  │                │ │
-│  └────────┬──────────┘  └───────┬────────┘  └───────┬────────┘ │
-│           │ fetch                │ fetch              │ events   │
-└───────────┼──────────────────────┼───────────────────┼──────────┘
-            │                      │                    │
-┌───────────┼──────────────────────┼────────────────────┼─────────┐
-│  FastAPI  │                      │                    │         │
-│  ┌────────▼──────────────────────▼────────────────────┘         │
-│  │  Routers (10 registered)                                      │
-│  │  main │ blog │ news │ spotify │ blackjack │ sudoku │ ...     │
-│  ├───────────────────────────────────────────────────────────── │
-│  │  Services                                                    │
-│  │  ┌──────────┐  ┌───────────┐  ┌──────────────┐              │
-│  │  │ Cache    │  │ OAuth     │  │ Rate Limiter │              │
-│  │  │ (file)   │  │ (Spotify) │  │ (in-memory)  │              │
-│  │  └────┬─────┘  └─────┬─────┘  └──────────────┘              │
-│  └───────┼───────────────┼──────────────────────────────────────┘
+│  ┌───────────────────┐  ┌────────────────┐                     │
+│  │ Win98 UI (CSS/JS) │  │ Spotify Player │                     │
+│  │ Desktop, Taskbar, │  │ (Web Playback  │                     │
+│  │ Start Menu, Icons │  │  SDK)          │                     │
+│  └────────┬──────────┘  └───────┬────────┘                     │
+│           │ fetch                │ fetch                        │
+└───────────┼──────────────────────┼──────────────────────────────┘
+            │                      │
+┌───────────┼──────────────────────┼──────────────────────────────┐
+│  FastAPI  │                      │                              │
+│  ┌────────▼──────────────────────▼────────────────────────────┐ │
+│  │  Routers (10 registered)                                    │ │
+│  │  main │ blog │ news │ spotify │ blackjack │ sudoku │ ...   │ │
+│  ├─────────────────────────────────────────────────────────────┤ │
+│  │  Services                                                   │ │
+│  │  ┌──────────┐  ┌───────────┐  ┌──────────────┐            │ │
+│  │  │ Cache    │  │ OAuth     │  │ Rate Limiter │            │ │
+│  │  │ (file)   │  │ (Spotify) │  │ (in-memory)  │            │ │
+│  │  └────┬─────┘  └─────┬─────┘  └──────────────┘            │ │
+│  ├───────┼───────────────┼─────────────────────────────────────┤ │
+│  │  Shared HTTP Client (httpx.AsyncClient)                    │ │
+│  └───────┼───────────────┼─────────────────────────────────────┘ │
 │          │               │                                       │
 └──────────┼───────────────┼───────────────────────────────────────┘
            │               │
@@ -58,7 +60,7 @@
 ```
 
 **Stack:** Python 3.11 / FastAPI / Uvicorn / Heroku
-**Frontend:** Vanilla JS, Three.js (ASCII background), Spotify Web Playback SDK
+**Frontend:** Vanilla JS, Spotify Web Playback SDK
 **External APIs:** Spotify Web API (OAuth 2.0), Open-Meteo (public, no auth)
 
 ---
@@ -71,21 +73,28 @@
 
 ```
 main.py  →  create_app()  →  FastAPI instance
-                ├── SECRET_KEY from env (fallback: 'dev-key-for-local-only')
+                ├── Lifespan: create/close shared httpx.AsyncClient
+                ├── SECRET_KEY from env (required in production, raises RuntimeError if missing)
+                ├── Security headers middleware (CSP, X-Frame-Options, HSTS in production)
+                ├── Session middleware (1 week max_age, lax same_site, https_only in production)
                 ├── Context processor: injects SITE_CONFIG as {{ site }}
                 ├── Error handlers: 404, 500
-                └── Blueprint registration (9 blueprints, in order)
+                └── Blueprint registration (10 routers, in order)
 ```
 
 ### App Factory: `app/__init__.py`
 
 The factory (`create_app()`) performs these steps:
 
-1. Creates FastAPI instance
-2. Sets `SECRET_KEY` from environment
-3. Registers a context processor that injects `SITE_CONFIG` into all templates
-4. Registers error handlers for 404 and 500
-5. Registers all 9 blueprints with their URL prefixes
+1. Creates FastAPI instance with lifespan context manager
+2. Lifespan startup: creates shared `httpx.AsyncClient` on `app.state.http_client`
+3. Lifespan shutdown: closes HTTP client to release connections
+4. Adds security headers middleware (CSP, X-Frame-Options, Referrer-Policy, HSTS)
+5. Adds session middleware (1 week max_age)
+6. Validates `SECRET_KEY` (required in production, raises RuntimeError if missing)
+7. Registers context processor that injects `SITE_CONFIG` into all templates
+8. Registers error handlers for 404 and 500
+9. Registers all 10 routers with their URL prefixes
 
 ### SITE_CONFIG
 
@@ -282,7 +291,7 @@ base.html
     └── tools/spotify/index.html
 ```
 
-Retained for the 500 error page and the inactive tools framework. Uses `style.css`, Three.js ASCII background, and dark/light theme toggle.
+Retained for the 500 error page and the inactive tools framework. Uses `style.css` and dark/light theme toggle.
 
 ### Standalone: 404 Page
 
@@ -312,7 +321,6 @@ Retained for the 500 error page and the inactive tools framework. Uses `style.cs
 | File | Type | Purpose |
 |------|------|---------|
 | `js/win98.js` | IIFE | Win98 interactivity: clock, start menu, desktop icons, tabs, window controls, dialog system |
-| `js/ascii-background.js` | ES Module | Three.js ASCII particle animation with weather-reactive patterns and mouse ripple effect |
 | `js/spotify-ascii.js` | IIFE → `SpotifyASCII` | ASCII rendering utilities (bars, heatmaps, charts using Unicode block characters) |
 | `js/spotify-player.js` | IIFE → `SpotifyPlayer` | Spotify Web Playback SDK integration (player init, state, UI, device management) |
 | `js/blackjack-engine.js` | Classic | Blackjack game logic, strategy charts, card shuffling |
@@ -327,7 +335,6 @@ Retained for the 500 error page and the inactive tools framework. Uses `style.cs
 
 | Library | Version | Used In |
 |---------|---------|---------|
-| Three.js | 0.160.0 | `base.html` via import map (unpkg) |
 | Chart.js | latest | `tools/spotify/index.html` (jsdelivr) |
 | Font Awesome | 6.4.0 | `weather/index.html` (cdnjs) |
 | Spotify Web Playback SDK | latest | `spotify-player.js` (dynamically loaded from sdk.scdn.co) |
@@ -494,11 +501,6 @@ Page Load
   │
   ▼
 Frontend renders data
-  │  Dispatches 'weatherchange' CustomEvent
-  │
-  ▼
-ascii-background.js
-    Transitions particle animation to match weather theme
 ```
 
 **City Search:**
@@ -561,31 +563,6 @@ A 996-line CSS framework implementing the full Win98 visual language:
 | Window Controls | 122-144 | Close/Minimize → navigate to `/`, Maximize is decorative |
 | Dialog System | 146-229 | `win98Alert(msg, title)` and `win98Confirm(msg, title)` (Promise-based) |
 
-### ASCII Background (`ascii-background.js`)
-
-Only active on pages using `base.html` (currently just 500 error page and inactive tools framework). Uses Three.js to render 250 sphere particles as ASCII characters.
-
-**Weather-Reactive Animations:**
-
-| Theme | Motion Pattern |
-|-------|---------------|
-| Sunny | Gentle upward heat shimmer |
-| Partly Cloudy | Moderate billowing with drift |
-| Cloudy | Large slow horizontal waves |
-| Rainy | Fast downward streaks angled by wind |
-| Stormy | Heavy rain with chaotic bursts |
-| Snowy | Gentle swaying descent with wind drift |
-| Foggy | Very slow, large particle drift |
-
-**Exports:** `initAsciiBackground(containerId, isDark)`, `updateAsciiTheme(isDark)`, `updateAsciiWeather(weatherTheme)`
-
-### Custom Events
-
-| Event | Source | Consumer | Payload |
-|-------|--------|----------|---------|
-| `weatherchange` | Weather page JS | `ascii-background.js` | `{ theme: string }` |
-| `audioProfileChange` | `spotify-ascii.js` | `ascii-background.js` | `{ energy, danceability, valence, acousticness, tempo }` |
-
 ### Client-Side State (localStorage)
 
 | Key | Type | Purpose |
@@ -646,9 +623,9 @@ Routes would mount at `/tools/{tool_id}`. Uses the `base.html` chain, cyberpunk 
 
 ### Modern Dark Theme (Partially Active)
 
-**Files:** `base.html`, `css/style.css`, `js/ascii-background.js`
+**Files:** `base.html`, `css/style.css`
 
-The original theme with CSS custom properties, dark/light toggle, and Three.js ASCII background. Still used by `500.html`. The ASCII background JS is also referenced by the Spotify and Weather pages for audio/weather-reactive animations, though those pages now use the Win98 template chain.
+The original theme with CSS custom properties and dark/light toggle. Still used by `500.html` and the inactive tools framework.
 
 ### Shared Spotify Helpers
 
