@@ -1,39 +1,13 @@
-from flask import Blueprint, render_template, jsonify, request
-from functools import wraps
-import requests
-import hashlib
-import json
-import os
-from datetime import datetime, timedelta
+import asyncio
 
-bp = Blueprint('weather', __name__, url_prefix='/projects/weather')
+import httpx
+from fastapi import APIRouter, Request, HTTPException, Depends
 
-# Simple file-based cache
-CACHE_DIR = '/tmp/weather_cache'
+from app.templating import templates
+from app.services.cache import cache
+from app.services.rate_limit import rate_limit
 
-def get_cache(key, ttl_seconds):
-    """Get cached value if not expired."""
-    cache_path = os.path.join(CACHE_DIR, f"{hashlib.md5(key.encode()).hexdigest()}.json")
-    try:
-        if os.path.exists(cache_path):
-            with open(cache_path, 'r') as f:
-                data = json.load(f)
-                if datetime.fromisoformat(data['expires']) > datetime.now():
-                    return data['value']
-    except (json.JSONDecodeError, KeyError, ValueError):
-        pass
-    return None
-
-def set_cache(key, value, ttl_seconds):
-    """Cache value with TTL."""
-    os.makedirs(CACHE_DIR, exist_ok=True)
-    cache_path = os.path.join(CACHE_DIR, f"{hashlib.md5(key.encode()).hexdigest()}.json")
-    data = {
-        'value': value,
-        'expires': (datetime.now() + timedelta(seconds=ttl_seconds)).isoformat()
-    }
-    with open(cache_path, 'w') as f:
-        json.dump(data, f)
+router = APIRouter(prefix='/projects/weather')
 
 # WMO Weather Code mappings
 WMO_CODES = {
@@ -318,88 +292,95 @@ INDUSTRY_MAPPINGS = {
 }
 
 
-@bp.route('/')
-def index():
+@router.get('/', name='weather.index')
+async def index(request: Request):
     """Main weather dashboard page."""
-    return render_template('weather/index.html')
+    return templates.TemplateResponse(request, 'weather/index.html')
 
 
-@bp.route('/api/geocode')
-def api_geocode():
+@router.get('/api/geocode', name='weather.api_geocode',
+            dependencies=[Depends(rate_limit(max_requests=30, window_seconds=60))])
+async def api_geocode(request: Request):
     """Convert city name to coordinates using Open-Meteo geocoding API."""
-    city = request.args.get('city', '').strip()
+    city = request.query_params.get('city', '').strip()
     if not city:
-        return jsonify({'error': 'City parameter required'}), 400
+        raise HTTPException(status_code=400, detail='City parameter required')
 
     cache_key = f"geocode:{city.lower()}"
-    cached = get_cache(cache_key, 86400)
-    if cached:
-        return jsonify(cached)
+    cached_val = cache.get(cache_key)
+    if cached_val is not None:
+        return cached_val
 
     try:
-        response = requests.get(
-            'https://geocoding-api.open-meteo.com/v1/search',
-            params={'name': city, 'count': 5, 'language': 'en', 'format': 'json'},
-            timeout=10
-        )
-        response.raise_for_status()
-        data = response.json()
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                'https://geocoding-api.open-meteo.com/v1/search',
+                params={'name': city, 'count': 5, 'language': 'en', 'format': 'json'},
+                timeout=10
+            )
+            response.raise_for_status()
+            data = response.json()
 
         if not data.get('results'):
-            return jsonify({'error': 'City not found'}), 404
+            raise HTTPException(status_code=404, detail='City not found')
 
         results = []
         for r in data['results']:
             results.append({
                 'name': r.get('name'),
                 'country': r.get('country'),
-                'admin1': r.get('admin1'),  # State/province
+                'admin1': r.get('admin1'),
                 'lat': r.get('latitude'),
                 'lon': r.get('longitude'),
                 'timezone': r.get('timezone'),
             })
 
         result = {'results': results}
-        set_cache(cache_key, result, 86400)
-        return jsonify(result)
+        cache.set(cache_key, result, ttl_seconds=86400)
+        return result
 
-    except requests.RequestException as e:
-        return jsonify({'error': f'Geocoding failed: {str(e)}'}), 500
+    except httpx.HTTPError:
+        raise HTTPException(status_code=502, detail='Geocoding service unavailable')
 
 
-@bp.route('/api/current')
-def api_current():
+@router.get('/api/current', name='weather.api_current',
+            dependencies=[Depends(rate_limit(max_requests=60, window_seconds=60))])
+async def api_current(request: Request):
     """Get current weather for coordinates."""
-    lat = request.args.get('lat')
-    lon = request.args.get('lon')
+    lat = request.query_params.get('lat')
+    lon = request.query_params.get('lon')
 
     if not lat or not lon:
-        return jsonify({'error': 'lat and lon parameters required'}), 400
+        raise HTTPException(status_code=400, detail='lat and lon parameters required')
 
     try:
-        lat = round(float(lat), 2)
-        lon = round(float(lon), 2)
+        lat = round(float(lat), 4)
+        lon = round(float(lon), 4)
     except ValueError:
-        return jsonify({'error': 'Invalid coordinates'}), 400
+        raise HTTPException(status_code=400, detail='Invalid coordinates')
+
+    if not (-90 <= lat <= 90) or not (-180 <= lon <= 180):
+        raise HTTPException(status_code=400, detail='Coordinates out of range')
 
     cache_key = f"current:{lat}:{lon}"
-    cached = get_cache(cache_key, 600)  # 10 minute cache
-    if cached:
-        return jsonify(cached)
+    cached_val = cache.get(cache_key)
+    if cached_val is not None:
+        return cached_val
 
     try:
-        response = requests.get(
-            'https://api.open-meteo.com/v1/forecast',
-            params={
-                'latitude': lat,
-                'longitude': lon,
-                'current': 'temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,precipitation',
-                'timezone': 'auto',
-            },
-            timeout=10
-        )
-        response.raise_for_status()
-        data = response.json()
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                'https://api.open-meteo.com/v1/forecast',
+                params={
+                    'latitude': lat,
+                    'longitude': lon,
+                    'current': 'temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,precipitation',
+                    'timezone': 'auto',
+                },
+                timeout=10
+            )
+            response.raise_for_status()
+            data = response.json()
 
         current = data.get('current', {})
         weather_code = current.get('weather_code', 0)
@@ -420,46 +401,51 @@ def api_current():
             'time': current.get('time'),
         }
 
-        set_cache(cache_key, result, 600)
-        return jsonify(result)
+        cache.set(cache_key, result, ttl_seconds=600)
+        return result
 
-    except requests.RequestException as e:
-        return jsonify({'error': f'Weather fetch failed: {str(e)}'}), 500
+    except httpx.HTTPError:
+        raise HTTPException(status_code=502, detail='Weather service unavailable')
 
 
-@bp.route('/api/forecast')
-def api_forecast():
+@router.get('/api/forecast', name='weather.api_forecast',
+            dependencies=[Depends(rate_limit(max_requests=30, window_seconds=60))])
+async def api_forecast(request: Request):
     """Get 7-day forecast for coordinates."""
-    lat = request.args.get('lat')
-    lon = request.args.get('lon')
+    lat = request.query_params.get('lat')
+    lon = request.query_params.get('lon')
 
     if not lat or not lon:
-        return jsonify({'error': 'lat and lon parameters required'}), 400
+        raise HTTPException(status_code=400, detail='lat and lon parameters required')
 
     try:
-        lat = round(float(lat), 2)
-        lon = round(float(lon), 2)
+        lat = round(float(lat), 4)
+        lon = round(float(lon), 4)
     except ValueError:
-        return jsonify({'error': 'Invalid coordinates'}), 400
+        raise HTTPException(status_code=400, detail='Invalid coordinates')
+
+    if not (-90 <= lat <= 90) or not (-180 <= lon <= 180):
+        raise HTTPException(status_code=400, detail='Coordinates out of range')
 
     cache_key = f"forecast:{lat}:{lon}"
-    cached = get_cache(cache_key, 1800)  # 30 minute cache
-    if cached:
-        return jsonify(cached)
+    cached_val = cache.get(cache_key)
+    if cached_val is not None:
+        return cached_val
 
     try:
-        response = requests.get(
-            'https://api.open-meteo.com/v1/forecast',
-            params={
-                'latitude': lat,
-                'longitude': lon,
-                'daily': 'temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,precipitation_sum,wind_speed_10m_max',
-                'timezone': 'auto',
-            },
-            timeout=10
-        )
-        response.raise_for_status()
-        data = response.json()
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                'https://api.open-meteo.com/v1/forecast',
+                params={
+                    'latitude': lat,
+                    'longitude': lon,
+                    'daily': 'temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,precipitation_sum,wind_speed_10m_max',
+                    'timezone': 'auto',
+                },
+                timeout=10
+            )
+            response.raise_for_status()
+            data = response.json()
 
         daily = data.get('daily', {})
         days = []
@@ -481,214 +467,148 @@ def api_forecast():
             })
 
         result = {'days': days, 'timezone': data.get('timezone')}
-        set_cache(cache_key, result, 1800)
-        return jsonify(result)
+        cache.set(cache_key, result, ttl_seconds=1800)
+        return result
 
-    except requests.RequestException as e:
-        return jsonify({'error': f'Forecast fetch failed: {str(e)}'}), 500
+    except httpx.HTTPError:
+        raise HTTPException(status_code=502, detail='Weather service unavailable')
 
 
-@bp.route('/api/extremes/<horizon>')
-def api_extremes(horizon):
+async def _fetch_location_weather(client: httpx.AsyncClient, loc: dict, horizon: str):
+    """Fetch weather for a single location. Returns loc_data dict or None."""
+    try:
+        if horizon in ['today', 'tomorrow']:
+            response = await client.get(
+                'https://api.open-meteo.com/v1/forecast',
+                params={
+                    'latitude': loc['lat'],
+                    'longitude': loc['lon'],
+                    'daily': 'temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,weather_code',
+                    'timezone': 'auto',
+                    'forecast_days': 2
+                },
+                timeout=10
+            )
+            if response.is_success:
+                data = response.json()
+                daily = data.get('daily', {})
+                day_idx = 0 if horizon == 'today' else 1
+
+                if daily.get('temperature_2m_max') and len(daily['temperature_2m_max']) > day_idx:
+                    weather_code = daily['weather_code'][day_idx] if daily.get('weather_code') else 0
+                    weather_info = WMO_CODES.get(weather_code, WMO_CODES[0])
+
+                    return {
+                        'name': loc['name'],
+                        'lat': loc['lat'],
+                        'lon': loc['lon'],
+                        'region': loc['region'],
+                        'temp_max': daily['temperature_2m_max'][day_idx],
+                        'temp_min': daily['temperature_2m_min'][day_idx],
+                        'precipitation': daily['precipitation_sum'][day_idx] if daily.get('precipitation_sum') else 0,
+                        'wind_speed': daily['wind_speed_10m_max'][day_idx] if daily.get('wind_speed_10m_max') else 0,
+                        'weather_code': weather_code,
+                        'weather_text': weather_info['text'],
+                        'weather_icon': weather_info['icon'],
+                    }
+
+        else:
+            days = 3 if horizon == '3day' else (7 if horizon == '7day' else 14)
+            response = await client.get(
+                'https://api.open-meteo.com/v1/forecast',
+                params={
+                    'latitude': loc['lat'],
+                    'longitude': loc['lon'],
+                    'daily': 'temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max',
+                    'timezone': 'auto',
+                    'forecast_days': days
+                },
+                timeout=10
+            )
+            if response.is_success:
+                data = response.json()
+                daily = data.get('daily', {})
+
+                if daily.get('temperature_2m_max'):
+                    return {
+                        'name': loc['name'],
+                        'lat': loc['lat'],
+                        'lon': loc['lon'],
+                        'region': loc['region'],
+                        'temp_max': max(daily['temperature_2m_max']),
+                        'temp_min': min(daily['temperature_2m_min']),
+                        'precipitation': sum(daily.get('precipitation_sum', [0])),
+                        'wind_speed': max(daily.get('wind_speed_10m_max', [0])),
+                    }
+
+    except httpx.HTTPError:
+        pass
+    return None
+
+
+@router.get('/api/extremes/{horizon}', name='weather.api_extremes',
+            dependencies=[Depends(rate_limit(max_requests=10, window_seconds=60))])
+async def api_extremes(request: Request, horizon: str):
     """Get extreme weather data for specified time horizon."""
     valid_horizons = ['today', 'tomorrow', '3day', '7day', 'season', 'year']
     if horizon not in valid_horizons:
-        return jsonify({'error': f'Invalid horizon. Valid options: {valid_horizons}'}), 400
+        raise HTTPException(status_code=400, detail=f'Invalid horizon. Valid options: {valid_horizons}')
 
-    # Cache TTL varies by horizon
     ttl_map = {
-        'today': 1800,      # 30 min
-        'tomorrow': 1800,   # 30 min
-        '3day': 3600,       # 1 hour
-        '7day': 7200,       # 2 hours
-        'season': 21600,    # 6 hours
-        'year': 21600,      # 6 hours
+        'today': 1800, 'tomorrow': 1800, '3day': 3600,
+        '7day': 7200, 'season': 21600, 'year': 21600,
     }
 
     cache_key = f"extremes:{horizon}"
-    cached = get_cache(cache_key, ttl_map[horizon])
-    if cached:
-        return jsonify(cached)
+    cached_val = cache.get(cache_key)
+    if cached_val is not None:
+        return cached_val
 
-    # Fetch weather for all extreme monitoring locations
+    # Fetch all locations in parallel with asyncio.gather
+    async with httpx.AsyncClient() as client:
+        tasks = [_fetch_location_weather(client, loc, horizon) for loc in EXTREME_LOCATIONS]
+        results = await asyncio.gather(*tasks)
+
+    locations = [r for r in results if r is not None]
+
     extremes = {
         'hottest': None,
         'coldest': None,
         'wettest': None,
         'windiest': None,
         'horizon': horizon,
-        'locations': []
+        'locations': locations
     }
 
-    for loc in EXTREME_LOCATIONS:
-        try:
-            if horizon in ['today', 'tomorrow']:
-                # Use forecast API for near-term
-                response = requests.get(
-                    'https://api.open-meteo.com/v1/forecast',
-                    params={
-                        'latitude': loc['lat'],
-                        'longitude': loc['lon'],
-                        'daily': 'temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,weather_code',
-                        'timezone': 'auto',
-                        'forecast_days': 2
-                    },
-                    timeout=5
-                )
-                if response.ok:
-                    data = response.json()
-                    daily = data.get('daily', {})
-                    day_idx = 0 if horizon == 'today' else 1
+    if locations:
+        hottest = max(locations, key=lambda x: x.get('temp_max', -999))
+        extremes['hottest'] = {**hottest, 'value': hottest.get('temp_max'), 'unit': 'C', 'label': 'Hottest'}
 
-                    if daily.get('temperature_2m_max') and len(daily['temperature_2m_max']) > day_idx:
-                        weather_code = daily['weather_code'][day_idx] if daily.get('weather_code') else 0
-                        weather_info = WMO_CODES.get(weather_code, WMO_CODES[0])
+        coldest = min(locations, key=lambda x: x.get('temp_min', 999))
+        extremes['coldest'] = {**coldest, 'value': coldest.get('temp_min'), 'unit': 'C', 'label': 'Coldest'}
 
-                        loc_data = {
-                            'name': loc['name'],
-                            'lat': loc['lat'],
-                            'lon': loc['lon'],
-                            'region': loc['region'],
-                            'temp_max': daily['temperature_2m_max'][day_idx],
-                            'temp_min': daily['temperature_2m_min'][day_idx],
-                            'precipitation': daily['precipitation_sum'][day_idx] if daily.get('precipitation_sum') else 0,
-                            'wind_speed': daily['wind_speed_10m_max'][day_idx] if daily.get('wind_speed_10m_max') else 0,
-                            'weather_code': weather_code,
-                            'weather_text': weather_info['text'],
-                            'weather_icon': weather_info['icon'],
-                        }
-                        extremes['locations'].append(loc_data)
+        wettest = max(locations, key=lambda x: x.get('precipitation', 0))
+        extremes['wettest'] = {**wettest, 'value': wettest.get('precipitation'), 'unit': 'mm', 'label': 'Wettest'}
 
-            elif horizon in ['3day', '7day']:
-                # Use forecast API with more days
-                days = 3 if horizon == '3day' else 7
-                response = requests.get(
-                    'https://api.open-meteo.com/v1/forecast',
-                    params={
-                        'latitude': loc['lat'],
-                        'longitude': loc['lon'],
-                        'daily': 'temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,weather_code',
-                        'timezone': 'auto',
-                        'forecast_days': days
-                    },
-                    timeout=5
-                )
-                if response.ok:
-                    data = response.json()
-                    daily = data.get('daily', {})
+        windiest = max(locations, key=lambda x: x.get('wind_speed', 0))
+        extremes['windiest'] = {**windiest, 'value': windiest.get('wind_speed'), 'unit': 'km/h', 'label': 'Windiest'}
 
-                    if daily.get('temperature_2m_max'):
-                        # Get max of the period
-                        max_temp = max(daily['temperature_2m_max'])
-                        min_temp = min(daily['temperature_2m_min'])
-                        total_precip = sum(daily.get('precipitation_sum', [0]))
-                        max_wind = max(daily.get('wind_speed_10m_max', [0]))
-
-                        loc_data = {
-                            'name': loc['name'],
-                            'lat': loc['lat'],
-                            'lon': loc['lon'],
-                            'region': loc['region'],
-                            'temp_max': max_temp,
-                            'temp_min': min_temp,
-                            'precipitation': total_precip,
-                            'wind_speed': max_wind,
-                        }
-                        extremes['locations'].append(loc_data)
-
-            else:  # season or year - use current/forecast as proxy
-                response = requests.get(
-                    'https://api.open-meteo.com/v1/forecast',
-                    params={
-                        'latitude': loc['lat'],
-                        'longitude': loc['lon'],
-                        'daily': 'temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max',
-                        'timezone': 'auto',
-                        'forecast_days': 14
-                    },
-                    timeout=5
-                )
-                if response.ok:
-                    data = response.json()
-                    daily = data.get('daily', {})
-
-                    if daily.get('temperature_2m_max'):
-                        max_temp = max(daily['temperature_2m_max'])
-                        min_temp = min(daily['temperature_2m_min'])
-                        total_precip = sum(daily.get('precipitation_sum', [0]))
-                        max_wind = max(daily.get('wind_speed_10m_max', [0]))
-
-                        loc_data = {
-                            'name': loc['name'],
-                            'lat': loc['lat'],
-                            'lon': loc['lon'],
-                            'region': loc['region'],
-                            'temp_max': max_temp,
-                            'temp_min': min_temp,
-                            'precipitation': total_precip,
-                            'wind_speed': max_wind,
-                        }
-                        extremes['locations'].append(loc_data)
-
-        except requests.RequestException:
-            continue  # Skip failed locations
-
-    # Find extremes from collected data
-    if extremes['locations']:
-        locs = extremes['locations']
-
-        # Hottest
-        hottest = max(locs, key=lambda x: x.get('temp_max', -999))
-        extremes['hottest'] = {
-            **hottest,
-            'value': hottest.get('temp_max'),
-            'unit': 'C',
-            'label': 'Hottest'
-        }
-
-        # Coldest
-        coldest = min(locs, key=lambda x: x.get('temp_min', 999))
-        extremes['coldest'] = {
-            **coldest,
-            'value': coldest.get('temp_min'),
-            'unit': 'C',
-            'label': 'Coldest'
-        }
-
-        # Wettest
-        wettest = max(locs, key=lambda x: x.get('precipitation', 0))
-        extremes['wettest'] = {
-            **wettest,
-            'value': wettest.get('precipitation'),
-            'unit': 'mm',
-            'label': 'Wettest'
-        }
-
-        # Windiest
-        windiest = max(locs, key=lambda x: x.get('wind_speed', 0))
-        extremes['windiest'] = {
-            **windiest,
-            'value': windiest.get('wind_speed'),
-            'unit': 'km/h',
-            'label': 'Windiest'
-        }
-
-    set_cache(cache_key, extremes, ttl_map[horizon])
-    return jsonify(extremes)
+    cache.set(cache_key, extremes, ttl_seconds=ttl_map[horizon])
+    return extremes
 
 
-@bp.route('/api/industry/<region>')
-def api_industry(region):
+@router.get('/api/industry/{region}', name='weather.api_industry',
+            dependencies=[Depends(rate_limit(max_requests=60, window_seconds=60))])
+async def api_industry(request: Request, region: str):
     """Get industry impact data for a region."""
     region = region.lower().replace('-', '_').replace(' ', '_')
 
     if region not in INDUSTRY_MAPPINGS:
-        # Try to find partial match
         for key in INDUSTRY_MAPPINGS:
             if region in key or key in region:
                 region = key
                 break
         else:
-            return jsonify({'error': 'Region not found', 'available': list(INDUSTRY_MAPPINGS.keys())}), 404
+            raise HTTPException(status_code=404, detail={'error': 'Region not found', 'available': list(INDUSTRY_MAPPINGS.keys())})
 
-    return jsonify(INDUSTRY_MAPPINGS[region])
+    return INDUSTRY_MAPPINGS[region]

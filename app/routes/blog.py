@@ -1,6 +1,7 @@
-from flask import Blueprint, render_template, abort
+from fastapi import APIRouter, Request, HTTPException
+from app.templating import templates
 
-bp = Blueprint('blog', __name__, url_prefix='/blog')
+router = APIRouter(prefix='/blog')
 
 
 # Blog posts data - replace with database later
@@ -29,16 +30,16 @@ def get_post_by_slug(slug):
     return None
 
 
-@bp.route('/')
-def index():
+@router.get('/', name='blog.index')
+async def index(request: Request):
     """Blog listing page."""
-    return render_template('blog/index.html', posts=POSTS)
+    return templates.TemplateResponse(request, 'blog/index.html', {'posts': POSTS})
 
 
-@bp.route('/<slug>')
-def post(slug):
+@router.get('/{slug}', name='blog.post')
+async def post(request: Request, slug: str):
     """Individual blog post page."""
     post = get_post_by_slug(slug)
     if post is None:
-        abort(404)
-    return render_template('blog/post.html', post=post)
+        raise HTTPException(status_code=404)
+    return templates.TemplateResponse(request, 'blog/post.html', {'post': post})

@@ -1,6 +1,7 @@
-from flask import Blueprint, render_template
+from fastapi import APIRouter, Request
+from app.templating import templates
 
-bp = Blueprint('resume', __name__, url_prefix='/resume')
+router = APIRouter(prefix='/resume')
 
 # Timeline entries - fill in your actual experience!
 # Each entry has: type, title, org, location (optional), date, description, skills (optional), highlights (optional)
@@ -55,6 +56,6 @@ TIMELINE = [
 ]
 
 
-@bp.route('/')
-def index():
-    return render_template('resume/index.html', timeline=TIMELINE)
+@router.get('/', name='resume.index')
+async def index(request: Request):
+    return templates.TemplateResponse(request, 'resume/index.html', {'timeline': TIMELINE})

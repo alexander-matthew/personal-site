@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ site.name }}{% endblock %}</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/win98.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    {% block body %}
+    <div class="win98-desktop">
+        {% block main %}{% endblock %}
+    </div>
+    {% endblock %}
+
+    <!-- Start Menu -->
+    <div class="win98-start-menu">
+        <div class="win98-start-menu-sidebar">Windows98</div>
+        <div class="win98-start-menu-items">
+            <a href="{{ url_for('main.about') }}" class="win98-start-menu-item">
+                <img src="{{ url_for('static', filename='icons/computer.svg') }}" alt="">
+                <span>About Me</span>
+            </a>
+            <a href="{{ url_for('main.projects') }}" class="win98-start-menu-item">
+                <img src="{{ url_for('static', filename='icons/folder.svg') }}" alt="">
+                <span>Projects</span>
+            </a>
+            <a href="{{ url_for('blog.index') }}" class="win98-start-menu-item">
+                <img src="{{ url_for('static', filename='icons/notepad.svg') }}" alt="">
+                <span>Blog</span>
+            </a>
+            <a href="{{ url_for('resume.index') }}" class="win98-start-menu-item">
+                <img src="{{ url_for('static', filename='icons/document.svg') }}" alt="">
+                <span>Resume</span>
+            </a>
+            <div class="win98-start-menu-separator"></div>
+            <a href="{{ url_for('spotify.index') }}" class="win98-start-menu-item">
+                <img src="{{ url_for('static', filename='icons/cd.svg') }}" alt="">
+                <span>Spotify</span>
+            </a>
+            <a href="{{ url_for('blackjack.index') }}" class="win98-start-menu-item">
+                <img src="{{ url_for('static', filename='icons/cards.svg') }}" alt="">
+                <span>Blackjack</span>
+            </a>
+            <a href="{{ url_for('sudoku.index') }}" class="win98-start-menu-item">
+                <img src="{{ url_for('static', filename='icons/game.svg') }}" alt="">
+                <span>Sudoku</span>
+            </a>
+            <a href="{{ url_for('weather.index') }}" class="win98-start-menu-item">
+                <img src="{{ url_for('static', filename='icons/weather.svg') }}" alt="">
+                <span>Weather</span>
+            </a>
+            <div class="win98-start-menu-separator"></div>
+            <a href="{{ url_for('news.index') }}" class="win98-start-menu-item">
+                <img src="{{ url_for('static', filename='icons/newspaper.svg') }}" alt="">
+                <span>In the News</span>
+            </a>
+            <a href="{{ site.github_url }}" target="_blank" rel="noopener noreferrer" class="win98-start-menu-item">
+                <img src="{{ url_for('static', filename='icons/internet.svg') }}" alt="">
+                <span>GitHub</span>
+            </a>
+            <a href="{{ site.linkedin_url }}" target="_blank" rel="noopener noreferrer" class="win98-start-menu-item">
+                <img src="{{ url_for('static', filename='icons/internet.svg') }}" alt="">
+                <span>LinkedIn</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Taskbar -->
+    <div class="win98-taskbar">
+        <button class="win98-start-btn">
+            <img src="{{ url_for('static', filename='icons/windows.svg') }}" alt="">
+            <span>Start</span>
+        </button>
+        <div class="win98-taskbar-divider"></div>
+        <div class="win98-task-buttons">
+            {% block taskbar_buttons %}{% endblock %}
+        </div>
+        <div class="win98-systray">
+            <span class="win98-clock"></span>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/win98.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

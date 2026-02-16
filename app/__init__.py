@@ -1,5 +1,8 @@
 import os
-from flask import Flask
+from fastapi import FastAPI, Request
+from fastapi.staticfiles import StaticFiles
+from starlette.middleware.sessions import SessionMiddleware
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from dotenv import load_dotenv
 
 # Load .env file for local development (no-op if file doesn't exist)
@@ -15,60 +18,79 @@ SITE_CONFIG = {
 }
 
 
-def create_app():
-    app = Flask(__name__)
-    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-for-local-only')
+def create_app() -> FastAPI:
+    app = FastAPI(docs_url=None, redoc_url=None)
 
-    # Inject site config into all templates
-    @app.context_processor
-    def inject_site_config():
-        return {'site': SITE_CONFIG}
+    # Session middleware (replaces Flask's signed cookie sessions)
+    is_production = os.environ.get('FLASK_DEBUG', 'true').lower() == 'false'
+    app.add_middleware(
+        SessionMiddleware,
+        secret_key=os.environ.get('SECRET_KEY', 'dev-key-for-local-only'),
+        same_site='lax',
+        https_only=is_production,
+        max_age=14 * 24 * 3600,  # 2 weeks
+    )
 
-    # Custom error handlers
-    @app.errorhandler(404)
-    def page_not_found(e):
-        from flask import render_template
-        return render_template('404.html'), 404
+    # Mount static files
+    static_dir = os.path.join(os.path.dirname(__file__), 'static')
+    app.mount('/static', StaticFiles(directory=static_dir), name='static')
 
-    @app.errorhandler(500)
-    def internal_server_error(e):
-        from flask import render_template
-        return render_template('500.html'), 500
+    # Set up Jinja2 templates with custom url_for
+    from app.templating import setup_templates
+    setup_templates(app)
 
-    # Register main routes
+    # Register routers
     from app.routes import main
-    app.register_blueprint(main.bp)
+    app.include_router(main.router)
 
-    # Register blog routes
     from app.routes import blog
-    app.register_blueprint(blog.bp)
+    app.include_router(blog.router)
 
-    # Register news routes
     from app.routes import news
-    app.register_blueprint(news.bp)
+    app.include_router(news.router)
 
-    # Register Spotify dashboard
     from app.routes import spotify
-    app.register_blueprint(spotify.bp)
+    app.include_router(spotify.router)
 
-    # Register Blackjack trainer
     from app.routes import blackjack
-    app.register_blueprint(blackjack.bp)
+    app.include_router(blackjack.router)
 
-    # Register PR Review Tool showcase
     from app.routes import pr_review
-    app.register_blueprint(pr_review.bp)
+    app.include_router(pr_review.router)
 
-    # Register Sudoku game
     from app.routes import sudoku
-    app.register_blueprint(sudoku.bp)
+    app.include_router(sudoku.router)
 
-    # Register Weather dashboard
     from app.routes import weather
-    app.register_blueprint(weather.bp)
+    app.include_router(weather.router)
 
-    # Register Resume timeline
     from app.routes import resume
-    app.register_blueprint(resume.bp)
+    app.include_router(resume.router)
+
+    from app.routes.tools import router as tools_router
+    app.include_router(tools_router)
+
+    # Error handlers
+    @app.exception_handler(StarletteHTTPException)
+    async def http_exception_handler(request: Request, exc):
+        from fastapi.responses import JSONResponse
+        status = exc.status_code if hasattr(exc, 'status_code') else 500
+
+        # API endpoints return JSON errors
+        if '/api/' in request.url.path:
+            detail = exc.detail if hasattr(exc, 'detail') else 'Error'
+            return JSONResponse({'error': detail}, status_code=status)
+
+        # Page requests get HTML error pages
+        if status == 404:
+            from app.templating import templates
+            return templates.TemplateResponse(request, '404.html', status_code=404)
+        if status == 500:
+            from app.templating import templates
+            return templates.TemplateResponse(request, '500.html', status_code=500)
+
+        # Other HTTP errors for pages (401, 403, etc.)
+        from fastapi.responses import PlainTextResponse
+        return PlainTextResponse(str(exc.detail), status_code=status)
 
     return app

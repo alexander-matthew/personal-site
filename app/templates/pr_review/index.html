@@ -1,425 +1,389 @@
-{% extends "base.html" %}
+{% extends "win98_window.html" %}
 
-{% block title %}PR Review Tool - {{ site.name }}{% endblock %}
+{% block title %}PR Review Tool{% endblock %}
+{% block window_title %}PR Review Tool - Help{% endblock %}
+{% block taskbar_title %}Help{% endblock %}
+
+{% set window_icon = 'pr-review.svg' %}
 
 {% block head %}
-{{ super() }}
 <style>
-    .tool-header {
-        margin-bottom: 2rem;
+/* Win98 Help File Overrides */
+.help-container {
+    display: flex;
+    height: 100%;
+    min-height: 500px;
+}
+
+.help-sidebar {
+    width: 200px;
+    background: white;
+    border-right: 2px solid;
+    border-color: var(--win98-btn-shadow);
+    overflow-y: auto;
+}
+
+.help-sidebar-header {
+    background: var(--win98-gray);
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: bold;
+    border-bottom: 1px solid #999;
+}
+
+.help-topic {
+    padding: 4px 8px;
+    font-size: 11px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.help-topic:hover {
+    background: var(--win98-title-blue);
+    color: white;
+}
+
+.help-topic.active {
+    background: var(--win98-title-blue);
+    color: white;
+}
+
+.help-topic::before {
+    content: "📄";
+    font-size: 12px;
+}
+
+.help-content {
+    flex: 1;
+    background: white;
+    padding: 16px;
+    overflow-y: auto;
+}
+
+.help-content h1 {
+    font-size: 16px;
+    color: var(--win98-title-blue);
+    margin: 0 0 12px 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--win98-title-blue);
+}
+
+.help-content h2 {
+    font-size: 14px;
+    color: #333;
+    margin: 16px 0 8px 0;
+}
+
+.help-content h3 {
+    font-size: 12px;
+    color: #333;
+    margin: 12px 0 6px 0;
+}
+
+.help-content p {
+    font-size: 11px;
+    line-height: 1.6;
+    margin: 0 0 12px 0;
+}
+
+.help-content code {
+    background: #f0f0f0;
+    padding: 1px 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+}
+
+.code-block {
+    background: #1f2937;
+    border: 2px solid;
+    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
+    padding: 8px;
+    margin: 8px 0;
+    overflow-x: auto;
+}
+
+.code-block pre {
+    margin: 0;
+    color: #e5e7eb;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+}
+
+.code-block .comment { color: #6b7280; }
+.code-block .keyword { color: #f472b6; }
+.code-block .string { color: #a5f3fc; }
+.code-block .function { color: #fcd34d; }
+
+.code-header {
+    background: #374151;
+    padding: 4px 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    color: #9ca3af;
+    border: 2px solid;
+    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
+    border-bottom: none;
+    margin-top: 8px;
+}
+
+.value-props {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin: 12px 0;
+}
+
+.value-card {
+    background: var(--win98-gray);
+    border: 2px solid;
+    border-color: var(--win98-btn-highlight) var(--win98-btn-shadow) var(--win98-btn-shadow) var(--win98-btn-highlight);
+    padding: 8px;
+    text-align: center;
+}
+
+.value-card .metric {
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--win98-title-blue);
+}
+
+.value-card .label {
+    font-size: 10px;
+    color: #666;
+}
+
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin: 12px 0;
+}
+
+.feature-card {
+    background: white;
+    border: 2px solid;
+    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
+    padding: 8px;
+}
+
+.feature-card h3 {
+    font-size: 11px;
+    margin: 0 0 6px 0;
+    color: var(--win98-title-blue);
+}
+
+.feature-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.feature-card li {
+    padding: 2px 0;
+    font-size: 10px;
+}
+
+.feature-card li::before {
+    content: "► ";
+    color: var(--win98-title-blue);
+}
+
+.sample-output {
+    border: 2px solid;
+    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
+    margin: 12px 0;
+}
+
+.output-header {
+    background: var(--win98-gray);
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: bold;
+    border-bottom: 1px solid #999;
+}
+
+.output-content {
+    padding: 8px;
+    background: white;
+}
+
+.issue-item {
+    padding: 6px 0;
+    border-bottom: 1px solid #eee;
+    font-size: 11px;
+}
+
+.issue-item:last-child {
+    border-bottom: none;
+}
+
+.issue-badge {
+    display: inline-block;
+    padding: 1px 6px;
+    font-size: 9px;
+    font-weight: bold;
+    margin-right: 4px;
+}
+
+.badge-style { background: #fef3c7; color: #b45309; }
+.badge-convention { background: #ede9fe; color: #6d28d9; }
+.badge-pattern { background: #dbeafe; color: #1d4ed8; }
+
+.issue-file {
+    display: block;
+    font-size: 10px;
+    color: #666;
+    font-family: 'Courier New', monospace;
+    margin-top: 2px;
+}
+
+.issue-suggestion {
+    margin-top: 6px;
+    padding: 6px;
+    background: #f5f5f5;
+    font-size: 10px;
+}
+
+.before-after {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin: 8px 0;
+}
+
+.before-after > div {
+    position: relative;
+}
+
+.before-after .label {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    padding: 1px 6px;
+    font-size: 9px;
+    font-weight: bold;
+}
+
+.before-after .label.before { background: #fecaca; color: #b91c1c; }
+.before-after .label.after { background: #bbf7d0; color: #15803d; }
+
+.github-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    background: #1f2937;
+    color: white;
+    text-decoration: none;
+    font-size: 11px;
+    border: 2px solid;
+    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
+    margin-top: 8px;
+}
+
+.github-btn:hover {
+    background: #374151;
+}
+
+.github-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+@media (max-width: 768px) {
+    .help-container {
+        flex-direction: column;
     }
-
-    .tool-header h1 {
-        margin-bottom: 0.5rem;
+    .help-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 2px solid var(--win98-btn-shadow);
+        max-height: 150px;
     }
-
-    .tool-header .subtitle {
-        color: var(--text-light);
-        font-size: 1.1rem;
+    .value-props, .feature-grid, .before-after {
+        grid-template-columns: 1fr;
     }
-
-    .value-props {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1.5rem;
-        margin: 1.5rem 0;
-    }
-
-    .value-card {
-        padding: 1.25rem;
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        text-align: center;
-    }
-
-    .value-card .metric {
-        font-size: 2rem;
-        font-weight: 700;
-        color: var(--primary-color);
-        margin-bottom: 0.5rem;
-    }
-
-    .value-card .label {
-        color: var(--text-light);
-        font-size: 0.9rem;
-    }
-
-    .feature-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1.5rem;
-        margin: 1.5rem 0;
-    }
-
-    .feature-card {
-        padding: 1.25rem;
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-    }
-
-    .feature-card h3 {
-        font-size: 1rem;
-        margin-bottom: 0.75rem;
-        color: var(--text-color);
-    }
-
-    .feature-card ul {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    .feature-card li {
-        padding: 0.25rem 0;
-        color: var(--text-light);
-        font-size: 0.9rem;
-    }
-
-    .feature-card li::before {
-        content: "→ ";
-        color: var(--primary-color);
-    }
-
-    .code-block {
-        background: #1f2937;
-        border-radius: 8px;
-        padding: 1.25rem;
-        margin: 1rem 0;
-        overflow-x: auto;
-    }
-
-    .code-block pre {
-        margin: 0;
-        color: #e5e7eb;
-        font-family: 'SF Mono', Monaco, 'Courier New', monospace;
-        font-size: 0.85rem;
-        line-height: 1.6;
-    }
-
-    .code-block .comment {
-        color: #6b7280;
-    }
-
-    .code-block .keyword {
-        color: #f472b6;
-    }
-
-    .code-block .string {
-        color: #a5f3fc;
-    }
-
-    .code-block .function {
-        color: #fcd34d;
-    }
-
-    .code-block .decorator {
-        color: #c4b5fd;
-    }
-
-    .code-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: #374151;
-        padding: 0.5rem 1rem;
-        border-radius: 8px 8px 0 0;
-        margin-bottom: -0.5rem;
-    }
-
-    .code-header .filename {
-        color: #9ca3af;
-        font-family: 'SF Mono', Monaco, 'Courier New', monospace;
-        font-size: 0.8rem;
-    }
-
-    .code-header .lang {
-        color: #6b7280;
-        font-size: 0.75rem;
-        text-transform: uppercase;
-    }
-
-    .command-block {
-        background: var(--bg-secondary);
-        border-radius: 6px;
-        padding: 1rem 1.25rem;
-        margin: 1rem 0;
-        font-family: 'SF Mono', Monaco, 'Courier New', monospace;
-        font-size: 0.9rem;
-        overflow-x: auto;
-    }
-
-    .command-block code {
-        color: var(--text-color);
-    }
-
-    .command-block .comment {
-        color: var(--text-light);
-    }
-
-    .sample-output {
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        margin: 1.5rem 0;
-        overflow: hidden;
-    }
-
-    .output-header {
-        background: var(--bg-secondary);
-        padding: 0.75rem 1rem;
-        border-bottom: 1px solid var(--border-color);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .output-title {
-        font-weight: 600;
-    }
-
-    .output-content {
-        padding: 1rem;
-    }
-
-    .issue-item {
-        padding: 0.75rem 0;
-        border-bottom: 1px solid var(--border-color);
-    }
-
-    .issue-item:last-child {
-        border-bottom: none;
-    }
-
-    .issue-badge {
-        display: inline-block;
-        padding: 0.15rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        margin-right: 0.5rem;
-    }
-
-    .badge-style {
-        background: #fef3c7;
-        color: #b45309;
-    }
-
-    .badge-convention {
-        background: #ede9fe;
-        color: #6d28d9;
-    }
-
-    .badge-pattern {
-        background: #dbeafe;
-        color: #1d4ed8;
-    }
-
-    .issue-description {
-        display: inline;
-    }
-
-    .issue-file {
-        display: block;
-        font-size: 0.85rem;
-        color: var(--text-light);
-        margin-top: 0.25rem;
-        font-family: 'SF Mono', Monaco, 'Courier New', monospace;
-    }
-
-    .issue-suggestion {
-        margin-top: 0.75rem;
-        padding: 0.75rem;
-        background: var(--bg-secondary);
-        border-radius: 6px;
-        font-size: 0.85rem;
-    }
-
-    .issue-suggestion strong {
-        color: var(--text-color);
-    }
-
-    .workflow-steps {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin: 2rem 0;
-        flex-wrap: wrap;
-        gap: 1rem;
-    }
-
-    .workflow-step {
-        text-align: center;
-        flex: 1;
-        min-width: 100px;
-    }
-
-    .step-number {
-        width: 40px;
-        height: 40px;
-        border: 2px solid var(--primary-color);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 0.5rem;
-        font-weight: 600;
-        color: var(--primary-color);
-    }
-
-    .step-label {
-        font-size: 0.9rem;
-        color: var(--text-light);
-    }
-
-    .workflow-arrow {
-        color: var(--text-light);
-        font-size: 1.25rem;
-    }
-
-    .highlight-box {
-        background: #eff6ff;
-        border: 1px solid #bfdbfe;
-        border-radius: 8px;
-        padding: 1rem 1.25rem;
-        margin: 1.5rem 0;
-    }
-
-    .highlight-box p {
-        margin: 0;
-        color: var(--text-color);
-    }
-
-    .github-link {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        background: var(--text-color);
-        color: white;
-        padding: 0.75rem 1.25rem;
-        border-radius: 6px;
-        text-decoration: none;
-        font-weight: 500;
-        margin-top: 1rem;
-        transition: background 0.2s;
-    }
-
-    .github-link:hover {
-        background: #374151;
-    }
-
-    .github-link svg {
-        width: 20px;
-        height: 20px;
-    }
-
-    .example-section {
-        margin: 2rem 0;
-    }
-
-    .example-section h3 {
-        font-size: 1.1rem;
-        margin-bottom: 1rem;
-        color: var(--text-color);
-    }
-
-    .before-after {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-        margin: 1rem 0;
-    }
-
-    .before-after > div {
-        position: relative;
-    }
-
-    .before-after .label {
-        position: absolute;
-        top: 0.75rem;
-        right: 0.75rem;
-        padding: 0.2rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.7rem;
-        font-weight: 600;
-        text-transform: uppercase;
-    }
-
-    .before-after .label.before {
-        background: #fecaca;
-        color: #b91c1c;
-    }
-
-    .before-after .label.after {
-        background: #bbf7d0;
-        color: #15803d;
-    }
-
-    @media (max-width: 768px) {
-        .value-props {
-            grid-template-columns: 1fr;
-        }
-
-        .feature-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .before-after {
-            grid-template-columns: 1fr;
-        }
-
-        .workflow-steps {
-            flex-direction: column;
-        }
-
-        .workflow-arrow {
-            transform: rotate(90deg);
-        }
-    }
+}
 </style>
 {% endblock %}
 
-{% block content %}
-<a href="{{ url_for('main.projects') }}" class="back-link">&larr; Back to Projects</a>
+{% block menu_bar %}
+<div class="win98-menu-bar">
+    <span class="win98-menu-item">File</span>
+    <span class="win98-menu-item">Edit</span>
+    <span class="win98-menu-item">Bookmark</span>
+    <span class="win98-menu-item">Options</span>
+    <span class="win98-menu-item">Help</span>
+</div>
+<div class="win98-toolbar">
+    <button class="win98-toolbar-btn" title="Back" onclick="history.back()">
+        <span style="font-size: 12px;">◄</span>
+    </button>
+    <button class="win98-toolbar-btn" title="Forward">
+        <span style="font-size: 12px;">►</span>
+    </button>
+    <button class="win98-toolbar-btn" title="Contents">
+        <span style="font-size: 12px;">📚</span>
+    </button>
+    <button class="win98-toolbar-btn" title="Index">
+        <span style="font-size: 12px;">📇</span>
+    </button>
+</div>
+{% endblock %}
 
-<header class="tool-header">
-    <h1>PR Review Tool</h1>
-    <p class="subtitle">Automate code review for firm-specific standards and style guidelines</p>
-    <a href="https://github.com/alexander-matthew/personal-site/tree/feature/pr-review-tool"
-       class="github-link"
-       target="_blank"
-       rel="noopener noreferrer">
-        <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-        </svg>
-        View on GitHub
-    </a>
-</header>
-
-<section class="section">
-    <h2>Why I Built This</h2>
-    <p>
-        I spent a few hours each week reviewing junior developers' pull requests. While it's important to have
-        an experienced team member review business logic, I found nitpicking code style and variable naming
-        to be tedious.
-    </p>
-    <p>
-        This tool helped in two ways. First, it forced me to clearly define our standards—no more tribal knowledge.
-        Second, it provides a quick first pass for basic conventions, reducing the context switching and mental
-        load required to review large amounts of code. I can focus on what matters: architecture and logic.
-    </p>
-</section>
-
-<section class="section">
-    <h2>The Standards File</h2>
-    <p>
-        Define your team's conventions in a <code>code_style.md</code> file. The code-review skill reads this
-        and checks PRs against your rules.
-    </p>
-
-    <div class="code-header">
-        <span class="filename">code_style.md</span>
-        <span class="lang">markdown</span>
+{% block window_content %}
+<div class="help-container">
+    <div class="help-sidebar">
+        <div class="help-sidebar-header">Contents</div>
+        <div class="help-topic active" data-section="overview">Overview</div>
+        <div class="help-topic" data-section="standards">Standards File</div>
+        <div class="help-topic" data-section="output">Sample Output</div>
+        <div class="help-topic" data-section="examples">Examples</div>
+        <div class="help-topic" data-section="features">Features</div>
+        <div class="help-topic" data-section="skill">Claude Skill</div>
+        <div class="help-topic" data-section="github">GitHub CLI</div>
+        <div class="help-topic" data-section="commands">Commands</div>
     </div>
-    <div class="code-block">
+
+    <div class="help-content">
+        <section id="overview-section">
+            <h1>PR Review Tool</h1>
+            <p><strong>Automate code review for firm-specific standards and style guidelines</strong></p>
+
+            <a href="https://github.com/alexander-matthew/personal-site/tree/feature/pr-review-tool"
+               class="github-btn" target="_blank" rel="noopener noreferrer">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                </svg>
+                View on GitHub
+            </a>
+
+            <h2>Why I Built This</h2>
+            <p>
+                I spent a few hours each week reviewing junior developers' pull requests. While it's important to have
+                an experienced team member review business logic, I found nitpicking code style and variable naming
+                to be tedious.
+            </p>
+            <p>
+                This tool helped in two ways. First, it forced me to clearly define our standards—no more tribal knowledge.
+                Second, it provides a quick first pass for basic conventions, reducing the context switching and mental
+                load required to review large amounts of code. I can focus on what matters: architecture and logic.
+            </p>
+        </section>
+
+        <section id="standards-section" style="display: none;">
+            <h1>The Standards File</h1>
+            <p>
+                Define your team's conventions in a <code>code_style.md</code> file. The code-review skill reads this
+                and checks PRs against your rules.
+            </p>
+
+            <div class="code-header">code_style.md</div>
+            <div class="code-block">
 <pre><span class="comment"># Code Standards</span>
 
 <span class="comment">## Naming Conventions</span>
@@ -442,93 +406,88 @@
 - All endpoints must have request validation
 - Return consistent error response format
 - Include request_id in all responses</pre>
-    </div>
-</section>
+            </div>
+        </section>
 
-<section class="section">
-    <h2>Sample Review Output</h2>
+        <section id="output-section" style="display: none;">
+            <h1>Sample Review Output</h1>
 
-    <div class="sample-output">
-        <div class="output-header">
-            <span class="output-title">Review for PR #142: Add user authentication</span>
-        </div>
-        <div class="output-content">
-            <div class="issue-item">
-                <span class="issue-badge badge-style">STYLE</span>
-                <span class="issue-description">Variable naming violates snake_case convention</span>
-                <span class="issue-file">src/auth/handlers.py:23</span>
-                <div class="issue-suggestion">
-                    <strong>Found:</strong> <code>userName</code> → <strong>Expected:</strong> <code>user_name</code>
+            <div class="sample-output">
+                <div class="output-header">Review for PR #142: Add user authentication</div>
+                <div class="output-content">
+                    <div class="issue-item">
+                        <span class="issue-badge badge-style">STYLE</span>
+                        <span>Variable naming violates snake_case convention</span>
+                        <span class="issue-file">src/auth/handlers.py:23</span>
+                        <div class="issue-suggestion">
+                            <strong>Found:</strong> <code>userName</code> → <strong>Expected:</strong> <code>user_name</code>
+                        </div>
+                    </div>
+                    <div class="issue-item">
+                        <span class="issue-badge badge-convention">CONVENTION</span>
+                        <span>Bare except clause violates error handling standards</span>
+                        <span class="issue-file">src/auth/handlers.py:45</span>
+                        <div class="issue-suggestion">
+                            <strong>code_style.md:</strong> "Never use bare except clauses. Always log exceptions before re-raising."
+                        </div>
+                    </div>
+                    <div class="issue-item">
+                        <span class="issue-badge badge-pattern">PATTERN</span>
+                        <span>API response missing required request_id field</span>
+                        <span class="issue-file">src/auth/handlers.py:67</span>
+                        <div class="issue-suggestion">
+                            <strong>code_style.md:</strong> "Include request_id in all responses"
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="issue-item">
-                <span class="issue-badge badge-convention">CONVENTION</span>
-                <span class="issue-description">Bare except clause violates error handling standards</span>
-                <span class="issue-file">src/auth/handlers.py:45</span>
-                <div class="issue-suggestion">
-                    <strong>code_style.md:</strong> "Never use bare except clauses. Always log exceptions before re-raising."
-                </div>
-            </div>
-            <div class="issue-item">
-                <span class="issue-badge badge-pattern">PATTERN</span>
-                <span class="issue-description">API response missing required request_id field</span>
-                <span class="issue-file">src/auth/handlers.py:67</span>
-                <div class="issue-suggestion">
-                    <strong>code_style.md:</strong> "Include request_id in all responses"
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+        </section>
 
-<section class="section">
-    <h2>Before & After Examples</h2>
+        <section id="examples-section" style="display: none;">
+            <h1>Before & After Examples</h1>
 
-    <div class="example-section">
-        <h3>Error Handling Pattern</h3>
-        <div class="before-after">
-            <div>
-                <span class="label before">Before</span>
-                <div class="code-block">
+            <h3>Error Handling Pattern</h3>
+            <div class="before-after">
+                <div>
+                    <span class="label before">Before</span>
+                    <div class="code-block">
 <pre><span class="keyword">def</span> <span class="function">fetch_user</span>(user_id):
     <span class="keyword">try</span>:
         <span class="keyword">return</span> db.query(User, user_id)
     <span class="keyword">except</span>:  <span class="comment"># Bare except!</span>
         <span class="keyword">return</span> <span class="keyword">None</span></pre>
+                    </div>
                 </div>
-            </div>
-            <div>
-                <span class="label after">After</span>
-                <div class="code-block">
+                <div>
+                    <span class="label after">After</span>
+                    <div class="code-block">
 <pre><span class="keyword">def</span> <span class="function">fetch_user</span>(user_id):
     <span class="keyword">try</span>:
         <span class="keyword">return</span> db.query(User, user_id)
     <span class="keyword">except</span> DatabaseError <span class="keyword">as</span> e:
         logger.error(<span class="string">f"Query failed: {e}"</span>)
         <span class="keyword">raise</span> UserFetchError(user_id)</pre>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <div class="example-section">
-        <h3>API Response Pattern</h3>
-        <div class="before-after">
-            <div>
-                <span class="label before">Before</span>
-                <div class="code-block">
-<pre><span class="decorator">@app.route</span>(<span class="string">"/users"</span>)
+            <h3>API Response Pattern</h3>
+            <div class="before-after">
+                <div>
+                    <span class="label before">Before</span>
+                    <div class="code-block">
+<pre>@app.route(<span class="string">"/users"</span>)
 <span class="keyword">def</span> <span class="function">get_users</span>():
     users = User.query.all()
     <span class="keyword">return</span> jsonify({
         <span class="string">"users"</span>: users
     })</pre>
+                    </div>
                 </div>
-            </div>
-            <div>
-                <span class="label after">After</span>
-                <div class="code-block">
-<pre><span class="decorator">@app.route</span>(<span class="string">"/users"</span>)
+                <div>
+                    <span class="label after">After</span>
+                    <div class="code-block">
+<pre>@app.route(<span class="string">"/users"</span>)
 <span class="keyword">def</span> <span class="function">get_users</span>():
     users = User.query.all()
     <span class="keyword">return</span> jsonify({
@@ -536,67 +495,63 @@
         <span class="string">"data"</span>: {<span class="string">"users"</span>: users},
         <span class="string">"error"</span>: <span class="keyword">None</span>
     })</pre>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
-</section>
+        </section>
 
-<section class="section">
-    <h2>What Gets Enforced</h2>
+        <section id="features-section" style="display: none;">
+            <h1>What Gets Enforced</h1>
 
-    <div class="feature-grid">
-        <div class="feature-card">
-            <h3>Style & Naming</h3>
-            <ul>
-                <li>Variable and function naming conventions</li>
-                <li>Class and module naming patterns</li>
-                <li>Consistent casing across codebase</li>
-                <li>Boolean naming prefixes</li>
-            </ul>
-        </div>
-        <div class="feature-card">
-            <h3>Code Patterns</h3>
-            <ul>
-                <li>Error handling conventions</li>
-                <li>Logging requirements</li>
-                <li>Import organization</li>
-                <li>Function structure patterns</li>
-            </ul>
-        </div>
-        <div class="feature-card">
-            <h3>API Standards</h3>
-            <ul>
-                <li>Response format consistency</li>
-                <li>Required fields enforcement</li>
-                <li>Validation patterns</li>
-                <li>Authentication checks</li>
-            </ul>
-        </div>
-        <div class="feature-card">
-            <h3>Documentation</h3>
-            <ul>
-                <li>Required docstrings</li>
-                <li>Comment conventions</li>
-                <li>Type hint requirements</li>
-                <li>README standards</li>
-            </ul>
-        </div>
-    </div>
-</section>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>Style & Naming</h3>
+                    <ul>
+                        <li>Variable and function naming conventions</li>
+                        <li>Class and module naming patterns</li>
+                        <li>Consistent casing across codebase</li>
+                        <li>Boolean naming prefixes</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h3>Code Patterns</h3>
+                    <ul>
+                        <li>Error handling conventions</li>
+                        <li>Logging requirements</li>
+                        <li>Import organization</li>
+                        <li>Function structure patterns</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h3>API Standards</h3>
+                    <ul>
+                        <li>Response format consistency</li>
+                        <li>Required fields enforcement</li>
+                        <li>Validation patterns</li>
+                        <li>Authentication checks</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h3>Documentation</h3>
+                    <ul>
+                        <li>Required docstrings</li>
+                        <li>Comment conventions</li>
+                        <li>Type hint requirements</li>
+                        <li>README standards</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
 
-<section class="section">
-    <h2>The Claude Skill</h2>
-    <p>
-        The <code>code-review</code> skill is a Claude Code plugin that reads your <code>code_style.md</code>
-        and reviews PRs against those standards. It integrates directly with the GitHub CLI.
-    </p>
+        <section id="skill-section" style="display: none;">
+            <h1>The Claude Skill</h1>
+            <p>
+                The <code>code-review</code> skill is a Claude Code plugin that reads your <code>code_style.md</code>
+                and reviews PRs against those standards. It integrates directly with the GitHub CLI.
+            </p>
 
-    <div class="code-header">
-        <span class="filename">Example: Invoking the skill</span>
-        <span class="lang">terminal</span>
-    </div>
-    <div class="code-block">
+            <div class="code-header">Example: Invoking the skill</div>
+            <div class="code-block">
 <pre><span class="comment"># Review PR #42 against code_style.md</span>
 > Review PR 42 for our code standards
 
@@ -610,21 +565,18 @@
 <span class="keyword">PATTERN</span> `src/api.py:45` - Missing error logging before re-raise
 
 <span class="string">Found 2 violations. Would you like me to comment on the PR?</span></pre>
-    </div>
-</section>
+            </div>
+        </section>
 
-<section class="section">
-    <h2>GitHub CLI Integration</h2>
-    <p>
-        The skill uses the GitHub CLI (<code>gh</code>) to interact with PRs programmatically—viewing diffs,
-        adding comments, and submitting reviews.
-    </p>
+        <section id="github-section" style="display: none;">
+            <h1>GitHub CLI Integration</h1>
+            <p>
+                The skill uses the GitHub CLI (<code>gh</code>) to interact with PRs programmatically—viewing diffs,
+                adding comments, and submitting reviews.
+            </p>
 
-    <div class="code-header">
-        <span class="filename">GitHub CLI commands used</span>
-        <span class="lang">bash</span>
-    </div>
-    <div class="code-block">
+            <div class="code-header">GitHub CLI commands used</div>
+            <div class="code-block">
 <pre><span class="comment"># View PR details</span>
 gh pr view 42 --json title,state,additions,deletions
 
@@ -646,23 +598,50 @@ gh pr review 42 --request-changes --body <span class="string">"Please fix style 
 
 <span class="comment"># Approve after fixes</span>
 gh pr review 42 --approve</pre>
+            </div>
+        </section>
+
+        <section id="commands-section" style="display: none;">
+            <h1>Commands</h1>
+            <p>The plugin provides these slash commands:</p>
+
+            <div class="code-block">
+<pre><span class="comment"># Review and request changes</span>
+/pr-review-enhanced:request-changes 42
+
+<span class="comment"># Add inline comment on specific line</span>
+/pr-review-enhanced:line-comment 42 src/auth.py 23 "Use snake_case"
+
+<span class="comment"># Auto-fix issues and push (with preview first)</span>
+/pr-review-enhanced:fix-pr 42 --dry-run</pre>
+            </div>
+        </section>
     </div>
-</section>
+</div>
 
-<section class="section">
-    <h2>Commands</h2>
-    <p>The plugin provides these slash commands:</p>
+<script>
+(function() {
+    const topics = document.querySelectorAll('.help-topic');
+    const sections = document.querySelectorAll('.help-content > section');
 
-    <div class="command-block">
-        <code>
-<span class="comment"># Review and request changes</span><br>
-/pr-review-enhanced:request-changes 42<br><br>
-<span class="comment"># Add inline comment on specific line</span><br>
-/pr-review-enhanced:line-comment 42 src/auth.py 23 "Use snake_case"<br><br>
-<span class="comment"># Auto-fix issues and push (with preview first)</span><br>
-/pr-review-enhanced:fix-pr 42 --dry-run
-        </code>
-    </div>
-</section>
+    topics.forEach(topic => {
+        topic.addEventListener('click', () => {
+            const sectionId = topic.dataset.section + '-section';
 
+            topics.forEach(t => t.classList.remove('active'));
+            topic.classList.add('active');
+
+            sections.forEach(s => s.style.display = 'none');
+            document.getElementById(sectionId).style.display = 'block';
+        });
+    });
+})();
+</script>
+{% endblock %}
+
+{% block status_bar %}
+<div class="win98-status-bar">
+    <span class="win98-status-section" style="flex: 1;">PR Review Tool Help</span>
+    <span class="win98-status-section">Windows Help</span>
+</div>
 {% endblock %}

@@ -1,307 +1,178 @@
-{% extends "base.html" %}
+{% extends "win98_window.html" %}
 
-{% block title %}Resume | {{ site.name }}{% endblock %}
+{% block title %}Resume - WordPad{% endblock %}
+{% block window_title %}Resume.doc - WordPad{% endblock %}
+{% block taskbar_title %}WordPad{% endblock %}
 
-{% block body_class %}resume-body{% endblock %}
+{% set window_icon = 'document.svg' %}
 
 {% block head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/resume.css') }}">
+<style>
+    .resume-document {
+        background: white;
+        padding: 40px;
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 12px;
+        line-height: 1.6;
+        max-width: 800px;
+        margin: 0 auto;
+        box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+    }
+    .resume-header {
+        text-align: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid black;
+    }
+    .resume-header h1 {
+        font-size: 24px;
+        margin: 0;
+    }
+    .resume-header p {
+        margin: 5px 0;
+        color: #666;
+    }
+    .resume-section {
+        margin-bottom: 20px;
+    }
+    .resume-section h2 {
+        font-size: 14px;
+        text-transform: uppercase;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 5px;
+        margin-bottom: 10px;
+    }
+    .timeline-entry {
+        margin-bottom: 15px;
+        padding-left: 10px;
+        border-left: 2px solid #000080;
+    }
+    .timeline-entry .date {
+        font-size: 10px;
+        color: #666;
+    }
+    .timeline-entry .title {
+        font-weight: bold;
+        font-size: 12px;
+    }
+    .timeline-entry .org {
+        font-style: italic;
+        color: #333;
+    }
+    .timeline-entry .description {
+        margin-top: 5px;
+    }
+    .timeline-entry ul {
+        margin: 5px 0 0 20px;
+        padding: 0;
+    }
+    .timeline-entry li {
+        margin-bottom: 3px;
+    }
+    .skill-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-top: 5px;
+    }
+    .skill-tag {
+        background: #e0e0e0;
+        padding: 2px 6px;
+        font-size: 10px;
+        border: 1px solid #999;
+    }
+</style>
 {% endblock %}
 
-{% block content %}
-<div class="resume-page">
-    <!-- Progress indicator -->
-    <div class="timeline-progress">
-        <div class="progress-bar"></div>
-        <div class="progress-dots">
+{% block menu_bar %}
+<div class="win98-menu-bar">
+    <span class="win98-menu-item">File</span>
+    <span class="win98-menu-item">Edit</span>
+    <span class="win98-menu-item">View</span>
+    <span class="win98-menu-item">Insert</span>
+    <span class="win98-menu-item">Format</span>
+    <span class="win98-menu-item">Help</span>
+</div>
+<div class="win98-toolbar">
+    <button class="win98-toolbar-btn" title="New">
+        <span style="font-size: 12px;">📄</span>
+    </button>
+    <button class="win98-toolbar-btn" title="Open">
+        <span style="font-size: 12px;">📂</span>
+    </button>
+    <button class="win98-toolbar-btn" title="Save">
+        <span style="font-size: 12px;">💾</span>
+    </button>
+    <div class="win98-toolbar-divider"></div>
+    <button class="win98-toolbar-btn" title="Print" onclick="window.print()">
+        <span style="font-size: 12px;">🖨️</span>
+    </button>
+    <div class="win98-toolbar-divider"></div>
+    <button class="win98-toolbar-btn" title="Bold">
+        <span style="font-weight: bold;">B</span>
+    </button>
+    <button class="win98-toolbar-btn" title="Italic">
+        <span style="font-style: italic;">I</span>
+    </button>
+    <button class="win98-toolbar-btn" title="Underline">
+        <span style="text-decoration: underline;">U</span>
+    </button>
+</div>
+{% endblock %}
+
+{% block window_content %}
+<div class="win98-content-inset" style="background: #808080; padding: 20px; min-height: 500px;">
+    <div class="resume-document">
+        <div class="resume-header">
+            <h1>Alexander</h1>
+            <p>Quant & Curious Generalist</p>
+            <p style="font-size: 10px;">
+                <a href="{{ site.linkedin_url }}" target="_blank" rel="noopener noreferrer" class="win98-link">LinkedIn</a> |
+                <a href="{{ site.github_url }}" target="_blank" rel="noopener noreferrer" class="win98-link">GitHub</a>
+            </p>
+        </div>
+
+        <div class="resume-section">
+            <h2>Experience & Education</h2>
             {% for item in timeline %}
-            <button class="progress-dot {% if loop.first %}active{% endif %}" data-index="{{ loop.index0 }}" aria-label="{{ item.title }} at {{ item.org }}">
-                <span class="dot-tooltip">{{ item.title }}</span>
-            </button>
+            <div class="timeline-entry">
+                <div class="date">{{ item.date }}</div>
+                <div class="title">{{ item.title }}</div>
+                <div class="org">{{ item.org }}{% if item.location %} - {{ item.location }}{% endif %}</div>
+                {% if item.description %}
+                <div class="description">{{ item.description }}</div>
+                {% endif %}
+                {% if item.highlights %}
+                <ul>
+                    {% for highlight in item.highlights %}
+                    <li>{{ highlight }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                {% if item.skills %}
+                <div class="skill-tags">
+                    {% for skill in item.skills %}
+                    <span class="skill-tag">{{ skill }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
             {% endfor %}
         </div>
-    </div>
 
-    <!-- 3D Cube Scene -->
-    <div class="cube-scene">
-        <div class="cube-container">
-            <div class="cube">
-                <div class="cube-face front"></div>
-                <div class="cube-face right"></div>
-                <div class="cube-face back"></div>
-                <div class="cube-face left"></div>
-            </div>
-        </div>
-
-        <!-- Entry counter -->
-        <div class="entry-counter">
-            <span class="current-num">1</span>
-            <span class="divider">/</span>
-            <span class="total-num">{{ timeline|length }}</span>
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ccc;">
+            <p style="color: #666; font-size: 10px;">
+                For full details, please visit my
+                <a href="{{ site.linkedin_url }}" target="_blank" rel="noopener noreferrer" class="win98-link">LinkedIn profile</a>.
+            </p>
         </div>
     </div>
-
-    <!-- Scroll hint -->
-    <div class="scroll-hint">
-        <span>Scroll to explore</span>
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 5v14M5 12l7 7 7-7"/>
-        </svg>
-    </div>
-
-    <!-- LinkedIn CTA -->
-    <div class="resume-cta">
-        <a href="{{ site.linkedin_url }}" target="_blank" rel="noopener noreferrer">Full details on LinkedIn</a>
-    </div>
-
-    <!-- Scroll spacer - this is what actually scrolls -->
-    <div class="scroll-spacer"></div>
 </div>
-
-<!-- Timeline data for JavaScript -->
-<script type="application/json" id="timeline-data">
-{{ timeline | tojson }}
-</script>
 {% endblock %}
 
-{% block scripts %}
-<script>
-(function() {
-    const timelineData = JSON.parse(document.getElementById('timeline-data').textContent);
-    const cube = document.querySelector('.cube');
-    const faceElements = {
-        front: document.querySelector('.cube-face.front'),
-        right: document.querySelector('.cube-face.right'),
-        back: document.querySelector('.cube-face.back'),
-        left: document.querySelector('.cube-face.left')
-    };
-    const progressBar = document.querySelector('.progress-bar');
-    const progressDots = document.querySelectorAll('.progress-dot');
-    const currentNum = document.querySelector('.current-num');
-    const scrollHint = document.querySelector('.scroll-hint');
-    const scrollSpacer = document.querySelector('.scroll-spacer');
-
-    const entriesCount = timelineData.length;
-
-    // Set scroll spacer height - each entry gets 100vh of scroll
-    scrollSpacer.style.height = `${entriesCount * 100}vh`;
-
-    let currentIndex = 0;
-    let currentRotation = 0;
-    let targetRotation = 0;
-
-    // Track which entry each physical face is showing
-    // Order: front, right, back, left (matching rotation order)
-    const faceOrder = ['front', 'right', 'back', 'left'];
-    const faceContent = [0, 1, 2, 3]; // Which entry index each face shows
-
-    // Helper to create text element safely
-    function createTextElement(tag, className, text) {
-        const el = document.createElement(tag);
-        if (className) el.className = className;
-        el.textContent = text;
-        return el;
-    }
-
-    // Render a timeline entry to a face
-    function renderFace(face, index) {
-        face.textContent = '';
-
-        if (index < 0 || index >= entriesCount) {
-            face.classList.remove('work', 'education');
-            return;
-        }
-
-        const item = timelineData[index];
-        const isEducation = item.type === 'education';
-
-        face.classList.toggle('education', isEducation);
-        face.classList.toggle('work', !isEducation);
-
-        // Icon
-        const iconDiv = document.createElement('div');
-        iconDiv.className = 'face-icon';
-        const iconSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        iconSvg.setAttribute('width', '24');
-        iconSvg.setAttribute('height', '24');
-        iconSvg.setAttribute('viewBox', '0 0 24 24');
-        iconSvg.setAttribute('fill', 'none');
-        iconSvg.setAttribute('stroke', 'currentColor');
-        iconSvg.setAttribute('stroke-width', '2');
-
-        if (isEducation) {
-            const path1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-            path1.setAttribute('d', 'M22 10v6M2 10l10-5 10 5-10 5z');
-            const path2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-            path2.setAttribute('d', 'M6 12v5c3 3 9 3 12 0v-5');
-            iconSvg.appendChild(path1);
-            iconSvg.appendChild(path2);
-        } else {
-            const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-            rect.setAttribute('width', '20');
-            rect.setAttribute('height', '14');
-            rect.setAttribute('x', '2');
-            rect.setAttribute('y', '7');
-            rect.setAttribute('rx', '2');
-            rect.setAttribute('ry', '2');
-            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-            path.setAttribute('d', 'M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16');
-            iconSvg.appendChild(rect);
-            iconSvg.appendChild(path);
-        }
-        iconDiv.appendChild(iconSvg);
-        face.appendChild(iconDiv);
-
-        face.appendChild(createTextElement('div', 'face-date', item.date));
-        face.appendChild(createTextElement('h2', 'face-title', item.title));
-
-        const orgDiv = document.createElement('div');
-        orgDiv.className = 'face-org';
-        orgDiv.textContent = item.org;
-        if (item.location) {
-            const locSpan = document.createElement('span');
-            locSpan.className = 'face-location';
-            locSpan.textContent = item.location;
-            orgDiv.appendChild(document.createTextNode(' '));
-            orgDiv.appendChild(locSpan);
-        }
-        face.appendChild(orgDiv);
-
-        face.appendChild(createTextElement('p', 'face-description', item.description));
-
-        if (item.highlights && item.highlights.length > 0) {
-            const ul = document.createElement('ul');
-            ul.className = 'face-highlights';
-            item.highlights.forEach(h => {
-                const li = document.createElement('li');
-                li.textContent = h;
-                ul.appendChild(li);
-            });
-            face.appendChild(ul);
-        }
-
-        if (item.skills && item.skills.length > 0) {
-            const skillsDiv = document.createElement('div');
-            skillsDiv.className = 'face-skills';
-            item.skills.forEach(s => {
-                const span = document.createElement('span');
-                span.className = 'skill-tag';
-                span.textContent = s;
-                skillsDiv.appendChild(span);
-            });
-            face.appendChild(skillsDiv);
-        }
-    }
-
-    // Initialize all 4 faces with first 4 entries
-    function initFaces() {
-        for (let i = 0; i < 4; i++) {
-            const faceName = faceOrder[i];
-            const entryIndex = i < entriesCount ? i : -1;
-            faceContent[i] = entryIndex;
-            renderFace(faceElements[faceName], entryIndex);
-        }
-    }
-
-    // For >4 entries: update the back face when we rotate past a 90° boundary
-    // This loads the next entry onto the face that's currently hidden
-    let lastQuadrant = 0;
-    function updateBackFace(rotationDegrees) {
-        // Which 90° segment are we in? (0 = 0-90°, 1 = 90-180°, etc.)
-        const quadrant = Math.floor(rotationDegrees / 90);
-
-        if (quadrant === lastQuadrant) return;
-
-        // We crossed a boundary
-        const direction = quadrant > lastQuadrant ? 1 : -1;
-        lastQuadrant = quadrant;
-
-        if (entriesCount <= 4) return; // No need to swap if we have ≤4 entries
-
-        // The face that's now at the "back" (180° from viewer) should load next content
-        // At quadrant 0: back face is at index 2 in faceOrder
-        // At quadrant 1: back face is at index 3 (left)
-        // At quadrant 2: back face is at index 0 (front)
-        // At quadrant 3: back face is at index 1 (right)
-        const backFaceIndex = (quadrant + 2) % 4;
-        const backFaceName = faceOrder[backFaceIndex];
-
-        // Calculate which entry should be on this face
-        // The entry index = quadrant + 2 (since back is 2 positions ahead)
-        const nextEntryIndex = quadrant + 2;
-
-        if (nextEntryIndex < entriesCount && faceContent[backFaceIndex] !== nextEntryIndex) {
-            faceContent[backFaceIndex] = nextEntryIndex;
-            renderFace(faceElements[backFaceName], nextEntryIndex);
-        }
-    }
-
-    // Smooth rotation animation
-    function animate() {
-        const diff = targetRotation - currentRotation;
-        if (Math.abs(diff) > 0.5) {
-            currentRotation += diff * 0.12;
-            cube.style.transform = `rotateY(${-currentRotation}deg)`;
-        } else if (Math.abs(diff) > 0.01) {
-            currentRotation = targetRotation;
-            cube.style.transform = `rotateY(${-currentRotation}deg)`;
-        }
-        requestAnimationFrame(animate);
-    }
-
-    // Handle scroll
-    function handleScroll() {
-        const scrollTop = window.scrollY;
-        const docHeight = scrollSpacer.offsetHeight;
-
-        // Calculate progress through the timeline (0 to entriesCount-1)
-        const scrollProgress = Math.max(0, Math.min(scrollTop / (docHeight - window.innerHeight), 1));
-        const floatIndex = scrollProgress * (entriesCount - 1);
-        const newIndex = Math.round(floatIndex);
-
-        // Set target rotation - each entry is 90 degrees
-        targetRotation = floatIndex * 90;
-
-        // For >4 entries, update back face when crossing quadrant boundaries
-        updateBackFace(targetRotation);
-
-        // Update UI
-        if (newIndex !== currentIndex) {
-            currentIndex = newIndex;
-
-            progressDots.forEach((dot, i) => {
-                dot.classList.toggle('active', i === currentIndex);
-            });
-
-            currentNum.textContent = currentIndex + 1;
-        }
-
-        // Update progress bar
-        progressBar.style.height = `${scrollProgress * 100}%`;
-
-        // Hide scroll hint after scrolling
-        if (scrollTop > 50) {
-            scrollHint.classList.add('hidden');
-        } else {
-            scrollHint.classList.remove('hidden');
-        }
-    }
-
-    // Dot click navigation
-    progressDots.forEach(dot => {
-        dot.addEventListener('click', () => {
-            const index = parseInt(dot.dataset.index, 10);
-            const docHeight = scrollSpacer.offsetHeight - window.innerHeight;
-            const targetScroll = (index / (entriesCount - 1)) * docHeight;
-            window.scrollTo({ top: targetScroll, behavior: 'smooth' });
-        });
-    });
-
-    // Initialize
-    initFaces();
-    animate();
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-})();
-</script>
+{% block status_bar %}
+<div class="win98-status-bar">
+    <span class="win98-status-section" style="flex: 1;">Page 1</span>
+    <span class="win98-status-section">{{ timeline|length }} entries</span>
+</div>
 {% endblock %}

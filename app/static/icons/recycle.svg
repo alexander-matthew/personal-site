@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges">
+  <!-- Bin body -->
+  <rect x="6" y="8" width="20" height="20" fill="#C0C0C0" stroke="#000000" stroke-width="1"/>
+  <!-- Bin top rim -->
+  <rect x="4" y="6" width="24" height="3" fill="#808080" stroke="#000000" stroke-width="1"/>
+  <!-- Bin handle -->
+  <rect x="12" y="3" width="8" height="4" fill="#808080" stroke="#000000" stroke-width="1"/>
+  <!-- Recycle symbol -->
+  <polygon points="16,12 13,18 19,18" fill="#008000"/>
+  <polygon points="11,17 14,23 8,23" fill="#008000"/>
+  <polygon points="21,17 24,23 18,23" fill="#008000"/>
+  <!-- Arrows on symbol -->
+  <polygon points="16,11 14,14 18,14" fill="#00FF00"/>
+  <polygon points="10,18 8,21 12,21" fill="#00FF00"/>
+  <polygon points="22,18 24,21 20,21" fill="#00FF00"/>
+</svg>

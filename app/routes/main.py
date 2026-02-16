@@ -1,20 +1,21 @@
-from flask import Blueprint, render_template
+from fastapi import APIRouter, Request
+from app.templating import templates
 
-bp = Blueprint('main', __name__)
-
-
-@bp.route('/')
-def home():
-    return render_template('home.html')
+router = APIRouter()
 
 
-@bp.route('/about')
-def about():
-    return render_template('about.html')
+@router.get('/', name='main.home')
+async def home(request: Request):
+    return templates.TemplateResponse(request, 'home.html')
 
 
-@bp.route('/projects')
-def projects():
+@router.get('/about', name='main.about')
+async def about(request: Request):
+    return templates.TemplateResponse(request, 'about.html')
+
+
+@router.get('/projects', name='main.projects')
+async def projects(request: Request):
     sample_projects = [
         {
             'title': 'Spotify Dashboard',
@@ -47,4 +48,4 @@ def projects():
             'tags': ['Weather', 'Data Viz', 'API']
         },
     ]
-    return render_template('projects.html', projects=sample_projects)
+    return templates.TemplateResponse(request, 'projects.html', {'projects': sample_projects})

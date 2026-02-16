@@ -1,74 +1,86 @@
-{% extends "base.html" %}
+{% extends "win98_base.html" %}
 
-{% block title %}{{ site.name }}{% endblock %}
+{% block title %}{{ site.name }} - Desktop{% endblock %}
 
-{% block content %}
-<section class="hero">
-    <h1>Hi, I'm <span id="typed-name">Alex</span><span class="cursor">|</span></h1>
-    <p class="subtitle">Quant & Curious Generalist</p>
-    <p>Welcome to my corner of the internet — a project and learning experience in its own right, as well as a place to showcase my skills and interests.</p>
-</section>
+{% block main %}
+<div class="win98-desktop-area">
+    <div class="win98-icons-grid">
+        <!-- My Computer (About) -->
+        <a href="{{ url_for('main.about') }}" class="win98-icon">
+            <img src="{{ url_for('static', filename='icons/computer.svg') }}" alt="" class="win98-icon-img">
+            <span class="win98-icon-label">My Computer</span>
+        </a>
 
-<section class="section">
-    <h2>What's Here</h2>
-    <p>This site is built from scratch as a hands-on project. Beyond being a learning experience, it hosts demos, experiments, and a window into what I'm working on.</p>
-</section>
-{% endblock %}
+        <!-- My Documents (Blog) -->
+        <a href="{{ url_for('blog.index') }}" class="win98-icon">
+            <img src="{{ url_for('static', filename='icons/notepad.svg') }}" alt="" class="win98-icon-img">
+            <span class="win98-icon-label">My Documents</span>
+        </a>
 
-{% block head %}
-<style>
-    .cursor {
-        font-weight: 100;
-        animation: blink 1s step-end infinite;
-    }
+        <!-- Projects Folder -->
+        <a href="{{ url_for('main.projects') }}" class="win98-icon">
+            <img src="{{ url_for('static', filename='icons/folder.svg') }}" alt="" class="win98-icon-img">
+            <span class="win98-icon-label">Projects</span>
+        </a>
 
-    @keyframes blink {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0; }
-    }
-</style>
-{% endblock %}
+        <!-- Resume -->
+        <a href="{{ url_for('resume.index') }}" class="win98-icon">
+            <img src="{{ url_for('static', filename='icons/document.svg') }}" alt="" class="win98-icon-img">
+            <span class="win98-icon-label">Resume</span>
+        </a>
 
-{% block scripts %}
-<!-- Typing animation for name -->
-<script>
-(function() {
-    const nameEl = document.getElementById('typed-name');
-    const fullName = 'Alexander';
-    const shortName = 'Alex';
-    const typingSpeed = 150;
-    const pauseDuration = 1500;
+        <!-- Spotify -->
+        <a href="{{ url_for('spotify.index') }}" class="win98-icon">
+            <img src="{{ url_for('static', filename='icons/cd.svg') }}" alt="" class="win98-icon-img">
+            <span class="win98-icon-label">Spotify</span>
+        </a>
 
-    let currentText = shortName;
-    let isDeleting = false;
-    let charIndex = shortName.length;
+        <!-- Blackjack -->
+        <a href="{{ url_for('blackjack.index') }}" class="win98-icon">
+            <img src="{{ url_for('static', filename='icons/cards.svg') }}" alt="" class="win98-icon-img">
+            <span class="win98-icon-label">Blackjack</span>
+        </a>
 
-    function type() {
-        if (!isDeleting && charIndex < fullName.length) {
-            // Typing forward to "Alexander"
-            charIndex++;
-            currentText = fullName.substring(0, charIndex);
-            nameEl.textContent = currentText;
-            setTimeout(type, typingSpeed);
-        } else if (!isDeleting && charIndex === fullName.length) {
-            // Pause at "Alexander", then start deleting
-            isDeleting = true;
-            setTimeout(type, pauseDuration);
-        } else if (isDeleting && charIndex > shortName.length) {
-            // Deleting back to "Alex"
-            charIndex--;
-            currentText = fullName.substring(0, charIndex);
-            nameEl.textContent = currentText;
-            setTimeout(type, typingSpeed / 2);
-        } else if (isDeleting && charIndex === shortName.length) {
-            // Pause at "Alex", then start typing again
-            isDeleting = false;
-            setTimeout(type, pauseDuration);
-        }
-    }
+        <!-- Sudoku -->
+        <a href="{{ url_for('sudoku.index') }}" class="win98-icon">
+            <img src="{{ url_for('static', filename='icons/game.svg') }}" alt="" class="win98-icon-img">
+            <span class="win98-icon-label">Sudoku</span>
+        </a>
 
-    // Start animation after a short delay
-    setTimeout(type, pauseDuration);
-})();
-</script>
+        <!-- Weather -->
+        <a href="{{ url_for('weather.index') }}" class="win98-icon">
+            <img src="{{ url_for('static', filename='icons/weather.svg') }}" alt="" class="win98-icon-img">
+            <span class="win98-icon-label">Weather</span>
+        </a>
+
+        <!-- PR Review -->
+        <a href="{{ url_for('pr_review.index') }}" class="win98-icon">
+            <img src="{{ url_for('static', filename='icons/pr-review.svg') }}" alt="" class="win98-icon-img">
+            <span class="win98-icon-label">PR Review</span>
+        </a>
+
+        <!-- News -->
+        <a href="{{ url_for('news.index') }}" class="win98-icon">
+            <img src="{{ url_for('static', filename='icons/newspaper.svg') }}" alt="" class="win98-icon-img">
+            <span class="win98-icon-label">News</span>
+        </a>
+
+        <!-- Internet Explorer (External Links) -->
+        <a href="{{ site.github_url }}" target="_blank" rel="noopener noreferrer" class="win98-icon">
+            <img src="{{ url_for('static', filename='icons/internet.svg') }}" alt="" class="win98-icon-img">
+            <span class="win98-icon-label">GitHub</span>
+        </a>
+
+        <a href="{{ site.linkedin_url }}" target="_blank" rel="noopener noreferrer" class="win98-icon">
+            <img src="{{ url_for('static', filename='icons/internet.svg') }}" alt="" class="win98-icon-img">
+            <span class="win98-icon-label">LinkedIn</span>
+        </a>
+
+        <!-- Recycle Bin (decorative) -->
+        <a href="#" class="win98-icon" onclick="win98Alert('The Recycle Bin is empty.', 'Recycle Bin'); return false;">
+            <img src="{{ url_for('static', filename='icons/recycle.svg') }}" alt="" class="win98-icon-img">
+            <span class="win98-icon-label">Recycle Bin</span>
+        </a>
+    </div>
+</div>
 {% endblock %}

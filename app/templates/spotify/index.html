@@ -1,21 +1,387 @@
-{% extends "base.html" %}
+{% extends "win98_window.html" %}
 
-{% block title %}Spotify Dashboard - {{ site.name }}{% endblock %}
+{% block title %}Spotify Dashboard{% endblock %}
+{% block window_title %}Spotify Dashboard - Windows Media Player{% endblock %}
+{% block taskbar_title %}Media Player{% endblock %}
+
+{% set window_icon = 'cd.svg' %}
 
 {% block head %}
-{{ super() }}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/spotify.css') }}">
+<style>
+/* Win98 Media Player Overrides */
+.spotify-page {
+    background: var(--win98-gray);
+    padding: 0;
+    min-height: 100%;
+}
+
+.spotify-page .container {
+    max-width: none;
+    padding: 8px;
+}
+
+.tool-header {
+    display: none;
+}
+
+.auth-box {
+    background: var(--win98-gray);
+    border: 2px solid;
+    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
+    padding: 20px;
+    text-align: center;
+    max-width: 400px;
+    margin: 40px auto;
+}
+
+.auth-box__title {
+    font-family: var(--win98-font);
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 12px;
+    color: var(--win98-title-blue);
+}
+
+.auth-box__message {
+    font-family: var(--win98-font);
+    font-size: 11px;
+    margin-bottom: 16px;
+    line-height: 1.5;
+}
+
+.auth-btn {
+    display: inline-block;
+    padding: 4px 16px;
+    background: var(--win98-gray);
+    border: 2px solid;
+    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
+    box-shadow: inset -1px -1px 0 var(--win98-btn-shadow), inset 1px 1px 0 var(--win98-btn-light);
+    font-family: var(--win98-font);
+    font-size: 11px;
+    text-decoration: none;
+    color: black;
+    cursor: pointer;
+}
+
+.auth-btn:hover {
+    background: #d4d4d4;
+}
+
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.stat-card {
+    background: white;
+    border: 2px solid;
+    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
+    padding: 8px;
+    text-align: center;
+}
+
+.stat-card__label {
+    font-size: 10px;
+    color: #666;
+    margin-bottom: 4px;
+}
+
+.stat-card__value {
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--win98-title-blue);
+}
+
+.stat-card__value--text {
+    font-size: 11px;
+    word-break: break-word;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.dashboard-full {
+    margin-bottom: 8px;
+}
+
+.section-card {
+    background: white;
+    border: 2px solid;
+    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
+    padding: 8px;
+}
+
+.section-card__title {
+    font-size: 12px;
+    font-weight: bold;
+    margin: 0 0 8px 0;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #ccc;
+    color: var(--win98-title-blue);
+}
+
+.time-selector {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+.time-btn {
+    padding: 2px 8px;
+    background: var(--win98-gray);
+    border: 2px solid;
+    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
+    font-family: var(--win98-font);
+    font-size: 10px;
+    cursor: pointer;
+}
+
+.time-btn.active {
+    border-color: var(--win98-btn-dark-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-dark-shadow);
+    box-shadow: inset 1px 1px 0 var(--win98-btn-shadow);
+}
+
+.loading {
+    text-align: center;
+    padding: 20px;
+    font-size: 11px;
+    color: #666;
+}
+
+.disconnect-link {
+    display: block;
+    text-align: center;
+    font-size: 10px;
+    color: #666;
+    text-decoration: none;
+    padding: 8px;
+}
+
+.disconnect-link:hover {
+    color: red;
+}
+
+/* Player Bar Win98 Style */
+.player-bar {
+    position: fixed;
+    bottom: 28px;
+    left: 0;
+    right: 0;
+    background: var(--win98-gray);
+    border-top: 2px solid;
+    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
+    padding: 8px;
+    z-index: 999;
+}
+
+.player-expand-toggle {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--win98-gray);
+    border: 2px solid;
+    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
+    border-bottom: none;
+    padding: 2px 16px;
+    font-size: 10px;
+    cursor: pointer;
+}
+
+.player-connect-message {
+    text-align: center;
+    font-size: 11px;
+    color: #666;
+}
+
+.player-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.player-album-art {
+    width: 48px;
+    height: 48px;
+    border: 2px solid;
+    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
+}
+
+.player-track-info {
+    flex: 1;
+    min-width: 150px;
+}
+
+.player-track-name {
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.player-artist-name, .player-album-name {
+    font-size: 10px;
+    color: #666;
+}
+
+.player-controls {
+    display: flex;
+    gap: 4px;
+}
+
+.player-btn {
+    width: 28px;
+    height: 28px;
+    background: var(--win98-gray);
+    border: 2px solid;
+    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.player-btn:active {
+    border-color: var(--win98-btn-dark-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-dark-shadow);
+}
+
+.player-btn--play {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+}
+
+.player-btn--small {
+    width: 24px;
+    height: 24px;
+    font-size: 10px;
+}
+
+.player-extra-controls {
+    display: flex;
+    gap: 4px;
+}
+
+.player-progress {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 200px;
+}
+
+.player-time {
+    font-size: 10px;
+    font-family: monospace;
+    min-width: 35px;
+}
+
+.player-progress-bar {
+    flex: 1;
+    height: 12px;
+    background: white;
+    border: 2px solid;
+    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
+    cursor: pointer;
+}
+
+.player-progress-fill {
+    height: 100%;
+    background: var(--win98-title-blue);
+    width: 0%;
+}
+
+.player-volume {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.player-volume-slider {
+    width: 80px;
+}
+
+.player-volume-value {
+    font-size: 10px;
+    min-width: 30px;
+}
+
+.player-devices {
+    position: relative;
+}
+
+.player-devices-dropdown {
+    display: none;
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    background: var(--win98-gray);
+    border: 2px solid;
+    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
+    min-width: 200px;
+    margin-bottom: 4px;
+}
+
+.player-devices-header {
+    background: var(--win98-title-blue);
+    color: white;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.player-devices-list {
+    padding: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* ASCII visualizations */
+.ascii-bar, .genre-bars, .heatmap-grid, .track-list, .evolution-chart, .audio-profile, .activity-chart, .patterns-display {
+    font-family: monospace;
+    font-size: 10px;
+    line-height: 1.4;
+    white-space: pre;
+    overflow-x: auto;
+}
+
+@media (max-width: 768px) {
+    .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    .player-content {
+        justify-content: center;
+    }
+    .player-progress {
+        width: 100%;
+        order: 10;
+    }
+}
+</style>
 {% endblock %}
 
-{% block content %}
+{% block menu_bar %}
+<div class="win98-menu-bar">
+    <span class="win98-menu-item">File</span>
+    <span class="win98-menu-item">View</span>
+    <span class="win98-menu-item">Play</span>
+    <span class="win98-menu-item">Help</span>
+</div>
+{% endblock %}
+
+{% block window_content %}
 <div class="spotify-page">
     <div class="container">
-        <header class="tool-header">
-            <a href="{{ url_for('main.projects') }}" class="back-link">&larr; Projects</a>
-            <h1>Spotify Dashboard</h1>
-            <p class="tool-description">Visualize your listening habits with ASCII-rendered analytics.</p>
-        </header>
-
         {% if not is_configured %}
         <div class="auth-box">
             <div class="auth-box__title">SPOTIFY API NOT CONFIGURED</div>
@@ -36,7 +402,6 @@
         </div>
 
         {% else %}
-        <!-- Stats Overview -->
         <div class="stats-row">
             <div class="stat-card">
                 <div class="stat-card__label">Recent Tracks</div>
@@ -56,52 +421,48 @@
             </div>
         </div>
 
-        <!-- Row 1: Taste Evolution + Audio Profile -->
         <div class="dashboard-grid">
             <div class="section-card">
                 <h3 class="section-card__title">Taste Evolution</h3>
                 <div id="evolution-container">
-                    <div class="loading">Loading</div>
+                    <div class="loading">Loading...</div>
                 </div>
             </div>
             <div class="section-card">
                 <h3 class="section-card__title">Audio Profile</h3>
                 <div id="audio-profile-container">
-                    <div class="loading">Loading</div>
+                    <div class="loading">Loading...</div>
                 </div>
             </div>
         </div>
 
-        <!-- Row 2: Listening Patterns + Genre Breakdown -->
         <div class="dashboard-grid">
             <div class="section-card">
                 <h3 class="section-card__title">Listening Patterns</h3>
                 <div id="patterns-container">
-                    <div class="loading">Loading</div>
+                    <div class="loading">Loading...</div>
                 </div>
             </div>
             <div class="section-card">
                 <h3 class="section-card__title">Genre Analysis</h3>
                 <div id="genre-container">
-                    <div class="loading">Loading</div>
+                    <div class="loading">Loading...</div>
                 </div>
             </div>
         </div>
 
-        <!-- Row 3: Timeline Heatmap (full width) -->
         <div class="section-card dashboard-full">
             <h3 class="section-card__title">Weekly Timeline</h3>
             <div id="heatmap-container">
-                <div class="loading">Loading</div>
+                <div class="loading">Loading...</div>
             </div>
         </div>
 
-        <!-- Row 4: Activity Chart + Top Tracks -->
         <div class="dashboard-grid">
             <div class="section-card">
                 <h3 class="section-card__title">Hourly Activity</h3>
                 <div id="activity-container">
-                    <div class="loading">Loading</div>
+                    <div class="loading">Loading...</div>
                 </div>
             </div>
             <div class="section-card">
@@ -112,14 +473,13 @@
                 </div>
                 <h3 class="section-card__title">Top Tracks</h3>
                 <div id="tracks-container">
-                    <div class="loading">Loading</div>
+                    <div class="loading">Loading...</div>
                 </div>
             </div>
         </div>
 
         <a href="{{ url_for('spotify.logout') }}" class="disconnect-link">&gt; disconnect</a>
 
-        <!-- Player Bar -->
         <div id="player-bar" class="player-bar">
             <button id="player-expand-toggle" class="player-expand-toggle" aria-label="Expand player">&#9650;</button>
 
@@ -176,14 +536,19 @@
 </div>
 {% endblock %}
 
+{% block status_bar %}
+<div class="win98-status-bar">
+    <span class="win98-status-section" style="flex: 1;">{% if is_authenticated %}Connected to Spotify{% else %}Not connected{% endif %}</span>
+    <span class="win98-status-section">Windows Media Player</span>
+</div>
+{% endblock %}
+
 {% block scripts %}
-{{ super() }}
 {% if is_authenticated %}
 <script src="{{ url_for('static', filename='js/spotify-ascii.js') }}"></script>
 <script src="{{ url_for('static', filename='js/spotify-player.js') }}"></script>
 <script>
 (function() {
-    // Data Loading Functions
     async function loadRecentData() {
         try {
             const response = await fetch('/projects/spotify/api/recent');
@@ -199,7 +564,8 @@
         }
     }
 
-    async function loadTopData(timeRange = 'short_term') {
+    async function loadTopData(timeRange) {
+        timeRange = timeRange || 'short_term';
         try {
             const response = await fetch('/projects/spotify/api/top/' + timeRange);
             const data = await response.json();
@@ -267,9 +633,8 @@
         }
     }
 
-    // Rendering Functions
     function updateStats(items) {
-        const uniqueArtists = new Set(items.map(function(i) { return i.track.artists[0].name; }));
+        var uniqueArtists = new Set(items.map(function(i) { return i.track.artists[0].name; }));
         document.getElementById('stat-tracks').textContent = items.length;
         document.getElementById('stat-artists').textContent = uniqueArtists.size;
     }
@@ -287,70 +652,69 @@
     }
 
     function renderPatterns(items) {
-        const container = document.getElementById('patterns-container');
-        const dayData = [0, 0, 0, 0, 0, 0, 0];
-        const hourData = [];
+        var container = document.getElementById('patterns-container');
+        var dayData = [0, 0, 0, 0, 0, 0, 0];
+        var hourData = [];
         for (var h = 0; h < 24; h++) hourData.push(0);
 
         items.forEach(function(item) {
-            const date = new Date(item.played_at);
+            var date = new Date(item.played_at);
             dayData[date.getDay()]++;
             hourData[date.getHours()]++;
         });
 
-        const peakHours = hourData
+        var peakHours = hourData
             .map(function(count, hour) { return { hour: hour, count: count }; })
             .sort(function(a, b) { return b.count - a.count; });
 
         container.textContent = '';
-        const content = SpotifyASCII.renderListeningPatterns(dayData, peakHours);
-        const wrapper = document.createElement('div');
+        var content = SpotifyASCII.renderListeningPatterns(dayData, peakHours);
+        var wrapper = document.createElement('div');
         wrapper.innerHTML = content;
         container.appendChild(wrapper.firstElementChild || wrapper);
     }
 
     function renderHeatmap(items) {
-        const container = document.getElementById('heatmap-container');
-        const heatmapData = {};
+        var container = document.getElementById('heatmap-container');
+        var heatmapData = {};
         items.forEach(function(item) {
-            const date = new Date(item.played_at);
-            const key = date.getDay() + '-' + date.getHours();
+            var date = new Date(item.played_at);
+            var key = date.getDay() + '-' + date.getHours();
             heatmapData[key] = (heatmapData[key] || 0) + 1;
         });
 
         container.textContent = '';
-        const content = SpotifyASCII.renderHeatmap(heatmapData);
-        const wrapper = document.createElement('div');
+        var content = SpotifyASCII.renderHeatmap(heatmapData);
+        var wrapper = document.createElement('div');
         wrapper.innerHTML = content;
         container.appendChild(wrapper.firstElementChild || wrapper);
     }
 
     function renderActivity(items) {
-        const container = document.getElementById('activity-container');
-        const hourData = [];
+        var container = document.getElementById('activity-container');
+        var hourData = [];
         for (var h = 0; h < 24; h++) hourData.push(0);
         items.forEach(function(item) {
-            const hour = new Date(item.played_at).getHours();
+            var hour = new Date(item.played_at).getHours();
             hourData[hour]++;
         });
 
         container.textContent = '';
-        const content = SpotifyASCII.renderActivityChart(hourData);
-        const wrapper = document.createElement('div');
+        var content = SpotifyASCII.renderActivityChart(hourData);
+        var wrapper = document.createElement('div');
         wrapper.innerHTML = content;
         container.appendChild(wrapper.firstElementChild || wrapper);
     }
 
     function renderTracks(tracks) {
-        const container = document.getElementById('tracks-container');
+        var container = document.getElementById('tracks-container');
         container.textContent = '';
-        const content = SpotifyASCII.renderTrackList(tracks, 8);
-        const wrapper = document.createElement('div');
+        var content = SpotifyASCII.renderTrackList(tracks, 8);
+        var wrapper = document.createElement('div');
         wrapper.innerHTML = content;
         container.appendChild(wrapper.firstElementChild || wrapper);
     }
 
-    // Event Listeners
     document.querySelectorAll('.time-btn').forEach(function(btn) {
         btn.addEventListener('click', function(e) {
             document.querySelectorAll('.time-btn').forEach(function(b) { b.classList.remove('active'); });
@@ -359,9 +723,8 @@
         });
     });
 
-    // Track click handler for playback
     document.addEventListener('click', function(e) {
-        const trackItem = e.target.closest('.track-item--playable');
+        var trackItem = e.target.closest('.track-item--playable');
         if (trackItem && trackItem.dataset.trackUri) {
             e.preventDefault();
             if (typeof SpotifyPlayer !== 'undefined' && SpotifyPlayer.playTrack) {
@@ -370,7 +733,6 @@
         }
     });
 
-    // Initial Load
     loadRecentData();
     loadTopData();
     loadTasteEvolution();

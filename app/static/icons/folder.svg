@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges">
+  <!-- Folder back -->
+  <rect x="2" y="8" width="28" height="20" fill="#C0A000" stroke="#000000" stroke-width="1"/>
+  <!-- Folder tab -->
+  <polygon points="2,8 2,5 12,5 14,8" fill="#C0A000" stroke="#000000" stroke-width="1"/>
+  <!-- Folder front highlight -->
+  <rect x="3" y="9" width="26" height="1" fill="#FFFF80"/>
+  <rect x="3" y="9" width="1" height="18" fill="#FFFF80"/>
+  <!-- Folder shadow -->
+  <rect x="4" y="26" width="25" height="1" fill="#806000"/>
+  <rect x="28" y="10" width="1" height="17" fill="#806000"/>
+</svg>

@@ -2,12 +2,13 @@
 PR Review Tool Showcase
 Interactive demonstration of the Claude Code PR Review skill.
 """
-from flask import Blueprint, render_template
+from fastapi import APIRouter, Request
+from app.templating import templates
 
-bp = Blueprint('pr_review', __name__, url_prefix='/projects/pr-review')
+router = APIRouter(prefix='/projects/pr-review')
 
 
-@bp.route('/')
-def index():
+@router.get('/', name='pr_review.index')
+async def index(request: Request):
     """PR Review Tool showcase main page."""
-    return render_template('pr_review/index.html')
+    return templates.TemplateResponse(request, 'pr_review/index.html')
