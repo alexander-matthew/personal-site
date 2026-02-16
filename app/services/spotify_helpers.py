@@ -43,28 +43,32 @@ async def spotify_request(request: Request, endpoint, params=None,
     if not token:
         return None, 401
 
-    async with httpx.AsyncClient(timeout=10) as client:
-        response = await client.request(
-            method,
-            f'https://api.spotify.com/v1{endpoint}',
-            params=params,
-            json=json_body,
-            headers={'Authorization': f'Bearer {token}'}
-        )
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            response = await client.request(
+                method,
+                f'https://api.spotify.com/v1{endpoint}',
+                params=params,
+                json=json_body,
+                headers={'Authorization': f'Bearer {token}'}
+            )
 
-        if response.status_code == 401:
-            new_token = await refresh_spotify_token(request)
-            if new_token:
-                response = await client.request(
-                    method,
-                    f'https://api.spotify.com/v1{endpoint}',
-                    params=params,
-                    json=json_body,
-                    headers={'Authorization': f'Bearer {new_token}'}
-                )
+            if response.status_code == 401:
+                new_token = await refresh_spotify_token(request)
+                if new_token:
+                    response = await client.request(
+                        method,
+                        f'https://api.spotify.com/v1{endpoint}',
+                        params=params,
+                        json=json_body,
+                        headers={'Authorization': f'Bearer {new_token}'}
+                    )
 
-        if response.status_code == 204:
-            return {}, 204
+            if response.status_code == 204:
+                return {}, 204
 
-        data = response.json() if response.is_success else None
-        return (data, response.status_code)
+            data = response.json() if response.is_success else None
+            return (data, response.status_code)
+    except httpx.HTTPError as exc:
+        logger.error("Spotify API request failed: %s %s - %s", method, endpoint, exc)
+        return None, 503
