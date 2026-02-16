@@ -51,6 +51,7 @@ Personal-Site/
 │       │   ├── win98.css           # Win98 design system (primary)
 │       │   ├── style.css           # Legacy styles with CSS variables
 │       │   ├── spotify.css         # Spotify ASCII dashboard theme
+│       │   ├── resume.css          # Resume timeline styles
 │       │   ├── blackjack.css       # Blackjack game styles
 │       │   ├── sudoku.css          # Sudoku grid styles
 │       │   ├── weather.css         # Weather dashboard styles
@@ -59,14 +60,16 @@ Personal-Site/
 │       └── js/
 │           ├── win98.js                 # Win98 interactivity (clock, start menu, dialogs)
 │           ├── ascii-background.js      # Three.js ASCII particle animation
+│           ├── spotify-ascii.js         # Spotify ASCII rendering (bars, charts)
+│           ├── spotify-player.js        # Spotify Web Playback SDK integration
 │           ├── blackjack-engine.js      # Blackjack game logic + strategy
 │           ├── blackjack-engine.test.js # Jest tests
 │           ├── sudoku-engine.js         # Sudoku generation + validation
 │           ├── sudoku-engine.test.js    # Jest tests
-│           └── weather-engine.js        # Weather utilities (WMO codes, formatting)
+│           ├── weather-engine.js        # Weather utilities (WMO codes, formatting)
+│           └── weather-engine.test.js   # Jest tests
 ├── .claude/
-│   ├── agents/
-│   │   └── ui-designer.md       # UI styling agent documentation
+│   ├── agents/                  # Subagent definitions (5 agents)
 │   └── CLAUDE.md                # This file
 ├── tests/                   # Python tests (pytest)
 ├── docs/
@@ -120,7 +123,7 @@ Access in templates via `{{ site.name }}`, `{{ site.linkedin_url }}`, etc.
 
 3. Add templates in `app/templates/myapp/`
 
-4. Add nav link in `app/templates/base.html`
+4. Add nav link in `app/templates/win98_base.html` (Start Menu)
 
 **Important:** Route names must follow `blueprint.endpoint` convention (e.g., `name='myapp.index'`) to match the custom `url_for()` in templates.
 
@@ -139,14 +142,17 @@ The site uses a **Windows 98 desktop** theme as the primary UI. Two template cha
 - Has dark/light toggle with CSS variables, Three.js ASCII background
 
 **Win98 Template Blocks:**
-- `{% block title %}` - Page title
-- `{% block head %}` - Extra CSS/meta in `<head>`
+- `{% block title %}` - Page title (win98_base)
+- `{% block head %}` - Extra CSS/meta in `<head>` (win98_base)
+- `{% block body %}` - Entire body content (win98_base)
 - `{% block main %}` - Desktop area (win98_base)
+- `{% block taskbar_buttons %}` - Taskbar button area (win98_base)
+- `{% block scripts %}` - Page-specific JavaScript (win98_base)
 - `{% block window_title %}` - Title bar text (win98_window)
 - `{% block window_content %}` - Main content area (win98_window)
 - `{% block menu_bar %}` - Menu bar row (win98_window)
 - `{% block status_bar %}` - Status bar row (win98_window)
-- `{% block scripts %}` - Page-specific JavaScript
+- `{% block taskbar_title %}` - Taskbar button text (win98_window)
 
 **Window Icon Convention:** Set `{% set window_icon = 'filename.svg' %}` at the top of child templates.
 
@@ -281,7 +287,7 @@ git push heroku main
 ### Local Testing
 Always test locally before committing:
 ```bash
-uv run python main.py
+uv run python main.py  # Start dev server with uvicorn
 # Visit http://localhost:5005
 ```
 
@@ -315,6 +321,7 @@ heroku logs --tail
 | `/about` | about.html | Bio with cycling interests |
 | `/projects` | projects.html | Project showcase |
 | `/blog` | blog/index.html | Blog posts |
+| `/blog/{slug}` | blog/post.html | Individual blog post |
 | `/news` | news/index.html | Press/news mentions |
 | `/projects/spotify` | spotify/index.html | Spotify dashboard with OAuth |
 | `/projects/blackjack` | blackjack/index.html | Blackjack trainer game |
@@ -327,14 +334,15 @@ heroku logs --tail
 ## Mini-Apps
 
 ### Spotify Dashboard (`/projects/spotify`)
-OAuth-authenticated data visualization with cyberpunk theme:
+OAuth-authenticated data visualization with ASCII theme and Web Playback SDK:
 - Recently played tracks (last 50)
 - Top artists/tracks by time range (4 weeks, 6 months, all time)
 - Genre breakdown with percentages
 - Audio feature analysis (danceability, energy, valence, etc.)
 - Taste evolution comparison
+- In-browser playback with Spotify Web Playback SDK
 
-**API Endpoints:** `/api/recent`, `/api/top/<time_range>`, `/api/genres`, `/api/audio-features`, `/api/taste-evolution`
+**API Endpoints:** `/api/recent`, `/api/top/<time_range>`, `/api/genres`, `/api/audio-features`, `/api/taste-evolution`, `/api/token`, `/api/playback-state`, `/api/devices`, and playback control endpoints (`/api/play`, `/api/pause`, `/api/next`, etc.)
 
 ### Blackjack Trainer (`/projects/blackjack`)
 Interactive game with basic strategy guidance:
@@ -371,20 +379,25 @@ Real-time weather with dynamic ASCII background animations:
   - **Snowy**: Gentle swaying descent with wind drift
   - **Foggy**: Very slow, large particle drift
 
-**API Endpoints:** `/api/current`, `/api/forecast`, `/api/geocode`
+**API Endpoints:** `/api/current`, `/api/forecast`, `/api/geocode`, `/api/extremes/<horizon>`, `/api/industry/<region>`
 
 **Integration:** Dispatches `weatherchange` custom events that the ASCII background (`ascii-background.js`) listens for to update particle animation patterns in real-time.
 
 ## Services
 
 ### Cache (`app/services/cache.py`)
-File-based caching with TTL support:
+File-based caching with TTL support. The `@cached` decorator only works with sync functions. Async endpoints should use the cache instance directly (`cache.get(key)`, `cache.set(key, value, ttl_seconds=N)`):
 ```python
-from app.services.cache import cached
+from app.services.cache import cache, cached
 
+# Sync decorator
 @cached(ttl_seconds=300, key_prefix='spotify')
 def get_spotify_data():
     ...
+
+# Async — use instance directly
+cached_val = cache.get(cache_key)
+cache.set(cache_key, result, ttl_seconds=600)
 ```
 
 ### Rate Limiting (`app/services/rate_limit.py`)
@@ -418,11 +431,11 @@ npm run test:coverage     # Coverage report
 
 ## Features
 
-- **Dark/Light Mode**: Toggle in navbar, preference saved in localStorage
-- **ASCII Background**: Three.js particle cloud rendered as ASCII characters (dark mode only), with weather-reactive animation patterns
+- **Win98 Desktop UI**: Primary theme with desktop icons, Start Menu, taskbar, and window chrome
+- **Dark/Light Mode**: Toggle in legacy base template only (used by 500 error page)
+- **ASCII Background**: Three.js particle cloud with weather-reactive animation patterns (legacy template)
 - **Typing animation**: Home page cycles "Alex" ↔ "Alexander"
 - **Interests carousel**: About page fades through interests list
 - **Responsive**: Mobile-friendly with breakpoint at 640px
-- **Footer**: GitHub/LinkedIn icons with Claude/Heroku credit
-- **Cyberpunk theme**: Spotify dashboard with retro-futuristic styling
+- **ASCII theme**: Spotify dashboard with ASCII-rendered visualizations and Web Playback SDK
 - **Game engines**: Pure JavaScript with Jest test coverage

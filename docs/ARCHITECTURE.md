@@ -299,11 +299,11 @@ Retained for the 500 error page and the inactive tools framework. Uses `style.cs
 | `css/win98.css` | win98_base.html | Complete Win98 design system (996 lines) |
 | `css/style.css` | base.html (legacy) | Modern dark/light theme with CSS variables |
 | `css/spotify.css` | spotify/index.html | ASCII-themed Spotify dashboard |
+| `css/resume.css` | resume/index.html | Resume timeline styles |
 | `css/blackjack.css` | blackjack/index.html | Blackjack game (supplemented by inline styles) |
 | `css/sudoku.css` | sudoku/index.html | Sudoku grid (supplemented by inline styles) |
 | `css/weather.css` | weather/index.html | Weather dashboard (supplemented by inline styles) |
 | `css/tools.css` | tools/ templates | Tools framework grid/cards |
-| `css/spotify-cyberpunk.css` | tools/spotify | Cyberpunk Spotify theme (legacy) |
 
 `win98.css` and `style.css` are mutually exclusive — they serve different template chains. Several app-specific CSS files are loaded but heavily supplemented by inline `<style>` blocks that provide Win98-themed overrides.
 
@@ -320,6 +320,8 @@ Retained for the 500 error page and the inactive tools framework. Uses `style.cs
 | `js/weather-engine.js` | Classic | Weather utilities (WMO code mappings, formatting) |
 
 **Test Files:** `blackjack-engine.test.js`, `sudoku-engine.test.js`, `weather-engine.test.js` (Jest)
+
+**Template-Embedded JS:** `blackjack/game.js` (included in `blackjack/index.html`)
 
 ### Third-Party (CDN)
 
@@ -352,7 +354,7 @@ Decorator: @cached(ttl_seconds=3600, key_prefix='')
   Cache key: {prefix}:{func_name}:{args}:{kwargs}
 ```
 
-**Note:** The weather blueprint has its own independent cache implementation in `/tmp/weather_cache` (inline in `weather.py`, lines 12-36) rather than using the shared `SimpleCache`.
+**Note:** The weather blueprint uses the shared `SimpleCache` instance via `cache.get()`/`cache.set()` calls with varying TTLs (10min for current, 30min for forecast, 30min–6h for extremes). The `@cached` decorator is sync-only; async endpoints must use the cache instance directly.
 
 ### OAuth Client (`app/services/oauth.py`)
 
@@ -380,7 +382,7 @@ SpotifyOAuth(OAuthClient)
   On limit: Returns 429 JSON
 ```
 
-Used by all Spotify and Weather API endpoints.
+Used by Spotify auth/data endpoints and all Weather API endpoints. Note: Spotify playback control POST endpoints (`/api/play`, `/api/pause`, etc.) do not currently have rate limiting.
 
 ---
 
@@ -664,8 +666,7 @@ Heroku (`mighty-shelf-14141`) with automatic deployment via GitHub Actions on me
 
 | File | Purpose | Value |
 |------|---------|-------|
-| `Procfile` | Process definition | `web: uvicorn main:app --host 0.0.0.0 --port $PORT` |
-| `runtime.txt` | Python version | `python-3.11.9` |
+| `Procfile` | Process definition | `web: uvicorn main:app --host 0.0.0.0 --port $PORT --proxy-headers` |
 | `requirements.txt` | Dependencies | fastapi, uvicorn, httpx, jinja2, python-dotenv, itsdangerous |
 
 ### Deploy Pipeline
@@ -692,10 +693,17 @@ Manual: `git push heroku main`
 
 ### Testing
 
+**JavaScript Tests:**
 ```bash
 npm test              # Jest — blackjack, sudoku, weather engines
 npm run test:watch    # Watch mode
 npm run test:coverage # Coverage report
 ```
 
-No Python tests currently exist.
+**Python Tests:**
+```bash
+uv sync --dev         # Install test deps (pytest, pytest-asyncio, respx)
+uv run pytest -v      # Run all Python tests
+```
+
+Test coverage: `tests/test_cache.py`, `tests/test_oauth.py`, `tests/test_rate_limit.py`, `tests/test_routes.py`, `tests/test_templating.py`
