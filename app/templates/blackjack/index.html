@@ -8,347 +8,177 @@
 
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/blackjack.css') }}">
-<style>
-/* Win98 Blackjack Overrides */
-.blackjack-container {
-    background: #008000;
-    min-height: 100%;
-}
-
-.blackjack-game {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-}
-
-.game-header {
-    background: var(--win98-gray);
-    border-bottom: 2px solid;
-    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
-    padding: 4px 8px;
-    display: flex;
-    justify-content: space-between;
-    font-size: 11px;
-}
-
-.game-table {
-    flex: 1;
-    padding: 16px;
-}
-
-.action-btn, .deal-btn, .clear-bet-btn, .strategy-btn, .reset-stats-btn {
-    padding: 4px 12px;
-    background-color: var(--win98-gray);
-    border: 2px solid;
-    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
-    box-shadow: inset -1px -1px 0 var(--win98-btn-shadow), inset 1px 1px 0 var(--win98-btn-light);
-    font-family: var(--win98-font);
-    font-size: 11px;
-    cursor: pointer;
-    min-width: 60px;
-}
-
-.action-btn:active:not(:disabled), .deal-btn:active, .clear-bet-btn:active {
-    border-color: var(--win98-btn-dark-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-dark-shadow);
-    box-shadow: inset 1px 1px 0 var(--win98-btn-shadow);
-}
-
-.action-btn:disabled {
-    color: var(--win98-text-disabled);
-}
-
-.chip {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-    font-weight: bold;
-    cursor: pointer;
-    border: 3px dashed;
-    box-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-}
-
-.chip-5 { background: #c00; border-color: #800; color: white; }
-.chip-25 { background: #0a0; border-color: #050; color: white; }
-.chip-100 { background: #000; border-color: #333; color: white; }
-.chip-500 { background: #808; border-color: #404; color: white; }
-
-.stats-panel {
-    background: var(--win98-gray);
-    border: 2px solid;
-    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
-    padding: 8px;
-    font-size: 11px;
-}
-
-.stats-header h3 {
-    font-size: 12px;
-    margin: 0 0 8px 0;
-}
-
-.card {
-    width: 60px;
-    height: 84px;
-    background: white;
-    border: 1px solid #000;
-    border-radius: 4px;
-    position: relative;
-    box-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-}
-
-.card.face-down {
-    background: repeating-linear-gradient(
-        45deg,
-        #00a,
-        #00a 2px,
-        #008 2px,
-        #008 4px
-    );
-}
-
-.hand-label, .hand-total {
-    color: white;
-    text-shadow: 1px 1px 2px black;
-    font-weight: bold;
-}
-
-.bet-circle {
-    width: 60px;
-    height: 60px;
-    border: 3px solid #ffd700;
-    border-radius: 50%;
-    background: rgba(0,0,0,0.3);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 10px;
-}
-
-.modal-overlay {
-    background: rgba(0,0,0,0.5);
-}
-
-.modal {
-    background: var(--win98-gray);
-    border: 2px solid;
-    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
-    padding: 0;
-}
-
-.modal h3 {
-    background: linear-gradient(to right, var(--win98-title-blue), var(--win98-title-blue-light));
-    color: white;
-    padding: 4px 8px;
-    margin: 0;
-    font-size: 12px;
-}
-
-.modal-btn {
-    padding: 4px 16px;
-    background-color: var(--win98-gray);
-    border: 2px solid;
-    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
-}
-
-#result-message {
-    background: var(--win98-gray);
-    border: 2px solid;
-    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
-    color: black;
-    padding: 8px 16px;
-    font-weight: bold;
-}
-
-.hint-toggle, .stats-toggle {
-    font-size: 11px;
-}
-
-.accuracy-display, .stats-grid {
-    background: white;
-    border: 2px solid;
-    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
-    padding: 8px;
-    margin: 8px 0;
-}
-
-.accuracy-value, .stat-value {
-    font-size: 14px;
-    font-weight: bold;
-    color: var(--win98-title-blue);
-}
-
-.feedback-toast {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    padding: 8px 16px;
-    background: var(--win98-gray);
-    border: 2px solid;
-    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
-    font-family: var(--win98-font);
-    font-size: 12px;
-    z-index: 10000;
-}
-
-.feedback-toast.correct { color: green; }
-.feedback-toast.incorrect { color: red; }
-</style>
 {% endblock %}
 
 {% block menu_bar %}
 <div class="win98-menu-bar">
-    <span class="win98-menu-item">Game</span>
-    <span class="win98-menu-item">Options</span>
-    <span class="win98-menu-item">Help</span>
+    <div class="bj-menu-wrap">
+        <span class="win98-menu-item" data-menu="game">Game</span>
+        <div class="bj-dropdown" id="menu-game">
+            <div class="bj-dropdown-item" data-action="deal">Deal New Hand</div>
+            <div class="bj-dropdown-sep"></div>
+            <div class="bj-dropdown-item" data-action="stats">Statistics...</div>
+            <div class="bj-dropdown-item" data-action="strategy">Strategy Chart...</div>
+            <div class="bj-dropdown-sep"></div>
+            <div class="bj-dropdown-item" data-action="reset">Reset Stats</div>
+        </div>
+    </div>
+    <div class="bj-menu-wrap">
+        <span class="win98-menu-item" data-menu="help">Help</span>
+        <div class="bj-dropdown" id="menu-help">
+            <div class="bj-dropdown-item" data-action="about">About Blackjack Trainer</div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 {% block window_content %}
-<div class="blackjack-container">
-    <div class="blackjack-game">
-        <!-- Header with balance -->
-        <div class="game-header">
-            <div class="balance-display">
-                Balance: $<span id="balance">1000</span>
-            </div>
-            <div class="bet-display">
-                Current Bet: $<span id="current-bet">0</span>
-            </div>
+<!-- Toolbar -->
+<div class="bj-toolbar">
+    <div class="bj-toolbar-group">
+        <button class="bj-toolbar-btn" id="hit-btn" disabled>Hit</button>
+        <button class="bj-toolbar-btn" id="stand-btn" disabled>Stand</button>
+        <button class="bj-toolbar-btn" id="double-btn" disabled>Dbl</button>
+        <button class="bj-toolbar-btn" id="split-btn" disabled>Split</button>
+        <button class="bj-toolbar-btn" id="insurance-btn" disabled>Ins</button>
+    </div>
+    <div class="bj-toolbar-sep"></div>
+    <div class="bj-toolbar-group">
+        <button class="bj-chip-btn" data-value="5"><span class="bj-chip-dot" style="background:#c00"></span>$5</button>
+        <button class="bj-chip-btn" data-value="25"><span class="bj-chip-dot" style="background:#0a0"></span>$25</button>
+        <button class="bj-chip-btn" data-value="100"><span class="bj-chip-dot" style="background:#222"></span>$100</button>
+        <button class="bj-chip-btn" data-value="500"><span class="bj-chip-dot" style="background:#808"></span>$500</button>
+    </div>
+    <div class="bj-toolbar-sep"></div>
+    <div class="bj-toolbar-group">
+        <button class="bj-toolbar-btn" id="clear-bet">Clear</button>
+        <button class="bj-toolbar-btn" id="deal-btn" disabled>Deal</button>
+    </div>
+    <div class="bj-toolbar-spacer"></div>
+    <label class="bj-toolbar-check">
+        <input type="checkbox" id="hint-mode"> Hints
+    </label>
+</div>
+
+<!-- Green Felt -->
+<div class="bj-felt">
+    <!-- Dealer -->
+    <div class="bj-hand-area">
+        <div class="bj-hand-label">Dealer</div>
+        <div class="bj-cards" id="dealer-cards"></div>
+        <div class="bj-hand-total" id="dealer-total"></div>
+    </div>
+
+    <!-- Result Dialog (centered on felt) -->
+    <div class="bj-result" id="result-dialog" style="display:none">
+        <div class="bj-result-title">Blackjack Trainer</div>
+        <div class="bj-result-body">
+            <span id="result-text"></span>
         </div>
-
-        <!-- Game Table -->
-        <div class="game-table">
-            <!-- Dealer Area -->
-            <div class="dealer-area">
-                <div class="hand-label">Dealer</div>
-                <div class="cards" id="dealer-cards"></div>
-                <div class="hand-total" id="dealer-total"></div>
-            </div>
-
-            <!-- Result Message -->
-            <div id="result-message" style="display: none;"></div>
-
-            <!-- Player Area -->
-            <div class="player-area">
-                <div class="hand-label">Player</div>
-                <div class="player-hands" id="player-hands">
-                    <div class="player-hand" data-hand="0">
-                        <div class="cards" id="player-cards-0"></div>
-                        <div class="hand-total" id="player-total-0"></div>
-                    </div>
-                </div>
-                <!-- Bet circle under player -->
-                <div class="bet-circle" id="bet-circle">
-                    <span class="bet-label">Bet</span>
-                    <span class="bet-amount" id="bet-amount">$0</span>
-                </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="action-buttons" id="action-buttons">
-                <button class="action-btn hit" id="hit-btn" disabled>Hit</button>
-                <button class="action-btn stand" id="stand-btn" disabled>Stand</button>
-                <button class="action-btn double" id="double-btn" disabled>Double</button>
-                <button class="action-btn split" id="split-btn" disabled>Split</button>
-                <button class="action-btn insurance" id="insurance-btn" disabled>Insurance</button>
-            </div>
-
-            <!-- Betting Zone (chips and controls) -->
-            <div class="betting-zone" id="betting-zone">
-                <div class="chip-tray">
-                    <div class="chip chip-5" data-value="5" draggable="true">$5</div>
-                    <div class="chip chip-25" data-value="25" draggable="true">$25</div>
-                    <div class="chip chip-100" data-value="100" draggable="true">$100</div>
-                    <div class="chip chip-500" data-value="500" draggable="true">$500</div>
-                </div>
-                <div class="betting-actions">
-                    <button class="clear-bet-btn" id="clear-bet">Clear</button>
-                    <button class="deal-btn" id="deal-btn" disabled>Deal</button>
-                </div>
-            </div>
+        <div class="bj-result-buttons">
+            <button class="win98-btn" id="result-ok">OK</button>
         </div>
+    </div>
 
-        <!-- Stats Panel -->
-        <div class="stats-panel">
-            <div class="stats-header">
-                <h3>Training Stats</h3>
-                <div class="stats-toggle">
-                    <label class="hint-toggle">
-                        <input type="checkbox" id="hint-mode">
-                        Show Hints
-                    </label>
-                    <button class="strategy-btn" id="show-strategy">Strategy</button>
-                    <button class="reset-stats-btn" id="reset-stats">Reset</button>
-                </div>
+    <!-- Player -->
+    <div class="bj-hand-area">
+        <div class="bj-hand-label">Player</div>
+        <div id="player-hands">
+            <div class="bj-player-hand" data-hand="0">
+                <div class="bj-cards" id="player-cards-0"></div>
+                <div class="bj-hand-total" id="player-total-0"></div>
             </div>
-
-            <div class="accuracy-display">
-                <div class="accuracy-item">
-                    <div class="accuracy-value" id="accuracy-pct">--</div>
-                    <div class="accuracy-label">Optimal Play</div>
-                </div>
-                <div class="accuracy-item">
-                    <div class="accuracy-value" id="hands-played">0</div>
-                    <div class="accuracy-label">Hands</div>
-                </div>
-                <div class="accuracy-item">
-                    <div class="accuracy-value" id="session-result">$0</div>
-                    <div class="accuracy-label">P/L</div>
-                </div>
-            </div>
-
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <div class="stat-value" id="hard-accuracy">--</div>
-                    <div class="stat-label">Hard</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="soft-accuracy">--</div>
-                    <div class="stat-label">Soft</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="pair-accuracy">--</div>
-                    <div class="stat-label">Pairs</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="double-accuracy">--</div>
-                    <div class="stat-label">Doubles</div>
-                </div>
-            </div>
-
-            <!-- Recent Mistakes -->
-            <div class="mistakes-panel" id="mistakes-panel" style="display: none;">
-                <h4>Recent Mistakes</h4>
-                <div id="mistakes-list"></div>
-            </div>
-            <button class="strategy-btn" id="toggle-mistakes" style="margin-top: 4px;">Mistakes</button>
         </div>
     </div>
 </div>
 
-<!-- Strategy Chart Modal -->
-<div class="modal-overlay" id="strategy-modal" style="display: none;">
-    <div class="modal" style="max-width: 90vw; max-height: 90vh; overflow: auto;">
-        <h3>Basic Strategy Chart</h3>
-        <div style="padding: 8px;">
-            <p style="font-size: 10px; margin-bottom: 8px;">6-Deck, Dealer Stands on Soft 17</p>
-            <div id="strategy-chart"></div>
-            <button class="modal-btn" id="close-strategy" style="margin-top: 8px;">Close</button>
+<!-- Stats Dialog -->
+<div class="bj-dialog-overlay" id="stats-dialog" style="display:none">
+    <div class="bj-dialog" style="width:320px">
+        <div class="bj-dialog-titlebar">
+            <span>Statistics</span>
+            <button class="bj-dialog-close" data-close="stats-dialog">&#215;</button>
+        </div>
+        <div class="bj-dialog-content">
+            <div class="bj-groupbox">
+                <span class="bj-groupbox-label">Session</span>
+                <dl class="bj-stats-grid">
+                    <dt>Hands Played:</dt><dd id="stat-hands">0</dd>
+                    <dt>Optimal Play:</dt><dd id="stat-accuracy">--</dd>
+                    <dt>Session P/L:</dt><dd id="stat-pl">$0</dd>
+                </dl>
+            </div>
+            <div class="bj-groupbox">
+                <span class="bj-groupbox-label">Accuracy by Type</span>
+                <dl class="bj-stats-grid">
+                    <dt>Hard:</dt><dd id="stat-hard">--</dd>
+                    <dt>Soft:</dt><dd id="stat-soft">--</dd>
+                    <dt>Pairs:</dt><dd id="stat-pair">--</dd>
+                    <dt>Doubles:</dt><dd id="stat-double">--</dd>
+                </dl>
+            </div>
+            <div class="bj-groupbox">
+                <span class="bj-groupbox-label">Recent Mistakes</span>
+                <div class="bj-mistakes-list" id="mistakes-list">
+                    <div class="bj-no-mistakes">No mistakes yet!</div>
+                </div>
+            </div>
+        </div>
+        <div class="bj-dialog-buttons">
+            <button class="win98-btn" data-close="stats-dialog">Close</button>
         </div>
     </div>
+</div>
+
+<!-- Strategy Chart Dialog -->
+<div class="bj-dialog-overlay" id="strategy-dialog" style="display:none">
+    <div class="bj-dialog" style="max-width:90vw;max-height:90vh">
+        <div class="bj-dialog-titlebar">
+            <span>Basic Strategy Chart</span>
+            <button class="bj-dialog-close" data-close="strategy-dialog">&#215;</button>
+        </div>
+        <div class="bj-dialog-content bj-strategy-chart" style="overflow:auto">
+            <div style="font-size:10px;margin-bottom:8px">6-Deck, Dealer Stands on Soft 17</div>
+            <div id="strategy-chart"></div>
+        </div>
+        <div class="bj-dialog-buttons">
+            <button class="win98-btn" data-close="strategy-dialog">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- About Dialog -->
+<div class="bj-dialog-overlay" id="about-dialog" style="display:none">
+    <div class="bj-dialog" style="width:300px">
+        <div class="bj-dialog-titlebar">
+            <span>About Blackjack Trainer</span>
+            <button class="bj-dialog-close" data-close="about-dialog">&#215;</button>
+        </div>
+        <div class="bj-dialog-content" style="text-align:center;padding:16px">
+            <div style="font-weight:bold;font-size:12px;margin-bottom:8px">Blackjack Trainer</div>
+            <div style="font-size:11px;margin-bottom:8px">Practice basic strategy with real-time feedback.</div>
+            <div style="font-size:10px;color:var(--win98-text-disabled)">6-deck shoe &#8226; Dealer stands on soft 17</div>
+        </div>
+        <div class="bj-dialog-buttons">
+            <button class="win98-btn" data-close="about-dialog">OK</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block status_bar %}
+<div class="win98-status-bar bj-status-bar">
+    <span class="win98-status-section" id="status-balance">Balance: $1000</span>
+    <span class="win98-status-section" id="status-bet">Bet: $0</span>
+    <span class="win98-status-section bj-status-feedback" id="status-feedback"></span>
+    <span class="win98-status-section" id="status-accuracy">-- Optimal</span>
+    <span class="win98-status-section" id="status-hands">0 hands</span>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/blackjack-engine.js') }}"></script>
 <script>
-// Include the full blackjack game script - keeping all original functionality
 {% include 'blackjack/game.js' %}
 </script>
 {% endblock %}
