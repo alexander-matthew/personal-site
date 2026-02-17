@@ -1,7 +1,7 @@
 # Architecture Reference
 
 > Personal-Site — A FastAPI application styled as a Windows 98 desktop environment.
-> This document describes the system as it exists on the `feature/spotify-redesign` branch.
+> This document describes the system architecture and design decisions.
 
 ---
 
@@ -171,7 +171,6 @@ Global site metadata available in every template as `{{ site }}`:
 | `/projects/spotify/api/recent` | Last 50 played tracks |
 | `/projects/spotify/api/top/<time_range>` | Top artists/tracks (`short_term`, `medium_term`, `long_term`) |
 | `/projects/spotify/api/genres` | Genre breakdown from top artists |
-| `/projects/spotify/api/audio-features` | Average audio feature analysis |
 | `/projects/spotify/api/taste-evolution` | Artist comparison across time ranges |
 | `/projects/spotify/api/token` | Access token for Web Playback SDK |
 | `/projects/spotify/api/playback-state` | Current playback state |
@@ -181,6 +180,7 @@ Global site metadata available in every template as `{{ site }}`:
 
 | Route | Description |
 |-------|-------------|
+| `/projects/spotify/api/create-playlist` | Create private playlist from top tracks |
 | `/projects/spotify/api/transfer` | Transfer playback to device |
 | `/projects/spotify/api/play` | Start/resume playback |
 | `/projects/spotify/api/pause` | Pause playback |
@@ -307,7 +307,7 @@ Retained for the 500 error page and the inactive tools framework. Uses `style.cs
 |------|---------|---------|
 | `css/win98.css` | win98_base.html | Complete Win98 design system (996 lines) |
 | `css/style.css` | base.html (legacy) | Modern dark/light theme with CSS variables |
-| `css/spotify.css` | spotify/index.html | ASCII-themed Spotify dashboard |
+| `css/spotify.css` | (deprecated, unlinked) | Retained on disk but no longer loaded |
 | `css/resume.css` | resume/index.html | Resume timeline styles |
 | `css/blackjack.css` | blackjack/index.html | Blackjack game (supplemented by inline styles) |
 | `css/sudoku.css` | sudoku/index.html | Sudoku grid (supplemented by inline styles) |
@@ -321,7 +321,7 @@ Retained for the 500 error page and the inactive tools framework. Uses `style.cs
 | File | Type | Purpose |
 |------|------|---------|
 | `js/win98.js` | IIFE | Win98 interactivity: clock, start menu, desktop icons, tabs, window controls, dialog system |
-| `js/spotify-ascii.js` | IIFE → `SpotifyASCII` | ASCII rendering utilities (bars, heatmaps, charts using Unicode block characters) |
+| `js/spotify-ascii.js` | IIFE → `SpotifyASCII` | Win98 HTML component rendering (progress bars, tables, listviews) |
 | `js/spotify-player.js` | IIFE → `SpotifyPlayer` | Spotify Web Playback SDK integration (player init, state, UI, device management) |
 | `js/blackjack-engine.js` | Classic | Blackjack game logic, strategy charts, card shuffling |
 | `js/sudoku-engine.js` | Classic | Sudoku puzzle generation, validation, solver |
@@ -361,7 +361,7 @@ Decorator: @cached(ttl_seconds=3600, key_prefix='')
   Cache key: {prefix}:{func_name}:{args}:{kwargs}
 ```
 
-**Note:** The weather blueprint uses the shared `SimpleCache` instance via `cache.get()`/`cache.set()` calls with varying TTLs (10min for current, 30min for forecast, 30min–6h for extremes). The `@cached` decorator is sync-only; async endpoints must use the cache instance directly.
+**Note:** The weather blueprint uses the shared `SimpleCache` instance via `cache.get()`/`cache.set()` calls with varying TTLs (10min for current, 30min for forecast, 30min–6h for extremes). The `@cached` decorator works with both sync and async functions (detects via `inspect.iscoroutinefunction`).
 
 ### OAuth Client (`app/services/oauth.py`)
 
@@ -389,7 +389,7 @@ SpotifyOAuth(OAuthClient)
   On limit: Returns 429 JSON
 ```
 
-Used by Spotify auth/data endpoints and all Weather API endpoints. Note: Spotify playback control POST endpoints (`/api/play`, `/api/pause`, etc.) do not currently have rate limiting.
+Used by all Spotify endpoints (auth, data, and playback control) and all Weather API endpoints.
 
 ---
 
@@ -406,6 +406,7 @@ Used by Spotify auth/data endpoints and all Weather API endpoints. Note: Spotify
 - `user-read-playback-state`
 - `user-modify-playback-state`
 - `streaming`
+- `playlist-modify-private`
 
 **Flow:**
 
@@ -475,7 +476,7 @@ _spotify_request(endpoint)
 2. Fetches token from `/api/token`
 3. Creates Spotify player instance in browser
 4. Manages playback state, device transfer, volume
-5. Dispatches `audioProfileChange` events consumed by ASCII background
+5. Dispatches `audioProfileChange` events
 
 ### Weather
 
@@ -569,7 +570,6 @@ A 996-line CSS framework implementing the full Win98 visual language:
 |-----|------|---------|
 | `theme` | `'dark'` \| `'light'` | Dark/light mode preference (legacy, base.html only) |
 | `weather_last_city` | JSON `{ lat, lon, name }` | Last searched weather city |
-| `spotify_player_expanded` | boolean | Player bar expand/collapse state |
 | `spotify_player_volume` | float (0-1) | Playback volume level |
 
 ---
@@ -590,9 +590,8 @@ A 996-line CSS framework implementing the full Win98 visual language:
 - Token expiry → auto-refresh and retry (once)
 
 **Weather API endpoints:**
-- Missing parameters → 400 JSON
-- Invalid coordinates → 400 JSON (on `float()` ValueError)
-- External API failure → 500 JSON (catches `httpx.HTTPError`)
+- Missing/invalid parameters → 422 JSON (FastAPI Query validation)
+- External API failure → 502 JSON (catches `httpx.HTTPError`)
 - Individual location failures in extremes endpoint → silently skipped
 
 ### Client-Side
@@ -683,4 +682,4 @@ uv sync --dev         # Install test deps (pytest, pytest-asyncio, respx)
 uv run pytest -v      # Run all Python tests
 ```
 
-Test coverage: `tests/test_cache.py`, `tests/test_oauth.py`, `tests/test_rate_limit.py`, `tests/test_routes.py`, `tests/test_templating.py`
+Test coverage: `tests/test_cache.py`, `tests/test_oauth.py`, `tests/test_rate_limit.py`, `tests/test_routes.py`, `tests/test_spotify_helpers.py`, `tests/test_templating.py`

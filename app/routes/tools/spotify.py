@@ -12,7 +12,7 @@ from fastapi.responses import RedirectResponse
 
 from app.routes.tools import router, register_tool
 from app.routes.spotify import (
-    api_recent, api_top, api_genres, api_audio_features, api_taste_evolution,
+    api_recent, api_top, api_genres, api_taste_evolution,
 )
 from app.services.oauth import OAuthError
 from app.services.spotify_helpers import spotify_oauth, require_oauth, spotify_request
@@ -141,12 +141,6 @@ async def spotify_now_playing(request: Request):
             dependencies=[Depends(rate_limit(max_requests=30, window_seconds=60))])
 async def tools_spotify_genres(request: Request):
     return await api_genres(request)
-
-
-@router.get('/spotify/api/audio-features', name='tools.spotify_audio_features',
-            dependencies=[Depends(rate_limit(max_requests=30, window_seconds=60))])
-async def tools_spotify_audio_features(request: Request):
-    return await api_audio_features(request)
 
 
 @router.get('/spotify/api/taste-evolution', name='tools.spotify_taste_evolution',

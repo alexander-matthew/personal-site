@@ -8,15 +8,10 @@ const SpotifyPlayer = (function() {
     let player = null;
     let deviceId = null;
     let currentState = null;
-    let isExpanded = false;
     let pollInterval = null;
 
     // DOM Elements (cached after init)
     let elements = {};
-
-    // ASCII progress bar characters
-    const PROGRESS_FILLED = '\u2501';  // ━
-    const PROGRESS_EMPTY = '\u2500';   // ─
 
     /**
      * Initialize the player bar UI and SDK
@@ -43,7 +38,6 @@ const SpotifyPlayer = (function() {
     function cacheElements() {
         elements = {
             playerBar: document.getElementById('player-bar'),
-            expandToggle: document.getElementById('player-expand-toggle'),
             albumArt: document.getElementById('player-album-art'),
             trackName: document.getElementById('player-track-name'),
             artistName: document.getElementById('player-artist-name'),
@@ -71,11 +65,6 @@ const SpotifyPlayer = (function() {
      * Attach event listeners
      */
     function attachEventListeners() {
-        // Expand/collapse toggle
-        if (elements.expandToggle) {
-            elements.expandToggle.addEventListener('click', toggleExpanded);
-        }
-
         // Playback controls
         if (elements.prevBtn) elements.prevBtn.addEventListener('click', previous);
         if (elements.playPauseBtn) elements.playPauseBtn.addEventListener('click', togglePlayPause);
@@ -360,20 +349,6 @@ const SpotifyPlayer = (function() {
     }
 
     /**
-     * Toggle expanded/collapsed state
-     */
-    function toggleExpanded() {
-        isExpanded = !isExpanded;
-        if (elements.playerBar) {
-            elements.playerBar.classList.toggle('expanded', isExpanded);
-        }
-        if (elements.expandToggle) {
-            elements.expandToggle.textContent = isExpanded ? '\u25BC' : '\u25B2';
-        }
-        localStorage.setItem('spotify_player_expanded', isExpanded);
-    }
-
-    /**
      * Toggle play/pause
      */
     async function togglePlayPause() {
@@ -644,14 +619,6 @@ const SpotifyPlayer = (function() {
      * Load saved preferences
      */
     function loadSavedPreferences() {
-        // Expanded state
-        const savedExpanded = localStorage.getItem('spotify_player_expanded');
-        if (savedExpanded === 'true') {
-            isExpanded = true;
-            if (elements.playerBar) elements.playerBar.classList.add('expanded');
-            if (elements.expandToggle) elements.expandToggle.textContent = '\u25BC';
-        }
-
         // Volume
         const savedVolume = getSavedVolume();
         if (elements.volumeSlider) {

@@ -7,9 +7,8 @@
 {% set window_icon = 'cd.svg' %}
 
 {% block head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/spotify.css') }}">
 <style>
-/* Win98 Media Player Overrides */
+/* === Page Container === */
 .spotify-page {
     background: var(--win98-gray);
     padding: 0;
@@ -18,13 +17,14 @@
 
 .spotify-page .container {
     max-width: none;
-    padding: 8px;
+    padding: 0;
 }
 
 .tool-header {
     display: none;
 }
 
+/* === Auth Box === */
 .auth-box {
     background: var(--win98-gray);
     border: 2px solid;
@@ -64,15 +64,17 @@
     cursor: pointer;
 }
 
-.auth-btn:hover {
-    background: #d4d4d4;
+.auth-btn:active {
+    border-color: var(--win98-btn-dark-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-dark-shadow);
+    box-shadow: inset 1px 1px 0 var(--win98-btn-shadow);
 }
 
+/* === Stats Row === */
 .stats-row {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 8px;
-    margin-bottom: 8px;
+    margin-bottom: 16px;
 }
 
 .stat-card {
@@ -85,7 +87,7 @@
 
 .stat-card__label {
     font-size: 10px;
-    color: #666;
+    color: var(--win98-dark-gray);
     margin-bottom: 4px;
 }
 
@@ -100,33 +102,52 @@
     word-break: break-word;
 }
 
+/* === Dashboard Grid === */
 .dashboard-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
-    margin-bottom: 8px;
+    margin-bottom: 16px;
 }
 
-.dashboard-full {
-    margin-bottom: 8px;
-}
-
+/* === Section Cards (Groupboxes) === */
 .section-card {
-    background: white;
     border: 2px solid;
     border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
-    padding: 8px;
+    padding: 16px 8px 8px;
+    position: relative;
+    background: var(--win98-gray);
+    display: flex;
+    flex-direction: column;
 }
 
 .section-card__title {
-    font-size: 12px;
+    position: absolute;
+    top: -8px;
+    left: 8px;
+    background: var(--win98-gray);
+    padding: 0 4px;
+    font-size: 11px;
     font-weight: bold;
-    margin: 0 0 8px 0;
-    padding-bottom: 4px;
-    border-bottom: 1px solid #ccc;
     color: var(--win98-title-blue);
+    margin: 0;
+    border: none;
 }
 
+.section-card__content {
+    background: white;
+    border: 2px solid;
+    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
+    padding: 6px;
+    overflow-x: auto;
+    flex: 1;
+}
+
+#evolution-container {
+    overflow: visible;
+}
+
+/* === Time Selector === */
 .time-selector {
     display: flex;
     gap: 4px;
@@ -138,154 +159,415 @@
     background: var(--win98-gray);
     border: 2px solid;
     border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
+    box-shadow: inset -1px -1px 0 var(--win98-btn-shadow), inset 1px 1px 0 var(--win98-btn-light);
     font-family: var(--win98-font);
     font-size: 10px;
     cursor: pointer;
 }
 
-.time-btn.active {
+.time-btn:active, .time-btn.active {
     border-color: var(--win98-btn-dark-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-dark-shadow);
     box-shadow: inset 1px 1px 0 var(--win98-btn-shadow);
 }
 
+/* === Loading / Empty === */
 .loading {
     text-align: center;
     padding: 20px;
     font-size: 11px;
-    color: #666;
+    color: var(--win98-dark-gray);
 }
 
-.disconnect-link {
-    display: block;
+.empty-state {
     text-align: center;
-    font-size: 10px;
-    color: #666;
-    text-decoration: none;
-    padding: 8px;
+    padding: 12px;
+    font-size: 11px;
+    color: var(--win98-dark-gray);
 }
 
-.disconnect-link:hover {
-    color: red;
-}
-
-/* Player Bar Win98 Style */
-.player-bar {
-    position: fixed;
-    bottom: 28px;
-    left: 0;
-    right: 0;
-    background: var(--win98-gray);
-    border-top: 2px solid;
-    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
-    padding: 8px;
-    z-index: 999;
-}
-
-.player-expand-toggle {
-    position: absolute;
-    top: -20px;
-    left: 50%;
-    transform: translateX(-50%);
+/* === Disconnect Button === */
+.disconnect-btn {
+    display: table;
+    margin: 0 auto 8px;
+    padding: 4px 16px;
     background: var(--win98-gray);
     border: 2px solid;
     border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
-    border-bottom: none;
-    padding: 2px 16px;
-    font-size: 10px;
+    box-shadow: inset -1px -1px 0 var(--win98-btn-shadow), inset 1px 1px 0 var(--win98-btn-light);
+    font-family: var(--win98-font);
+    font-size: 11px;
+    text-decoration: none;
+    color: black;
     cursor: pointer;
+}
+
+.disconnect-btn:active {
+    border-color: var(--win98-btn-dark-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-dark-shadow);
+    box-shadow: inset 1px 1px 0 var(--win98-btn-shadow);
+}
+
+/* === Win98 Progress Bar === */
+.w98-progress {
+    flex: 1;
+    height: 14px;
+    background: white;
+    border: 2px solid;
+    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
+}
+
+.w98-progress__fill {
+    height: 100%;
+    background: repeating-linear-gradient(
+        90deg,
+        var(--win98-title-blue) 0px,
+        var(--win98-title-blue) 8px,
+        transparent 8px,
+        transparent 10px
+    );
+}
+
+/* === Bar List (genres, audio profile, day bars) === */
+.w98-bar-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.w98-bar-row {
+    display: grid;
+    grid-template-columns: 80px 1fr 36px;
+    align-items: center;
+    gap: 6px;
+}
+
+.w98-bar-row__label {
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.w98-bar-row__value {
+    font-size: 10px;
+    text-align: right;
+    font-family: monospace;
+    color: var(--win98-dark-gray);
+}
+
+/* === Listview === */
+.w98-listview {
+    background: white;
+    border: 2px solid;
+    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
+}
+
+.w98-listview__item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 4px;
+    font-size: 11px;
+    cursor: default;
+}
+
+.w98-listview__item:hover {
+    background: var(--win98-title-blue);
+    color: white;
+}
+
+.w98-listview__rank {
+    font-family: monospace;
+    font-size: 10px;
+    min-width: 20px;
+    color: var(--win98-dark-gray);
+}
+
+.w98-listview__item:hover .w98-listview__rank {
+    color: white;
+}
+
+.w98-listview__art {
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--win98-btn-shadow);
+    flex-shrink: 0;
+}
+
+.w98-listview__artist-img {
+    width: 48px;
+    height: 48px;
+    border: 1px solid var(--win98-btn-shadow);
+    flex-shrink: 0;
+}
+
+.w98-listview__info {
+    flex: 1;
+    min-width: 0;
+}
+
+.w98-listview__name {
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.w98-listview__sub {
+    font-size: 10px;
+    color: var(--win98-dark-gray);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.w98-listview__item:hover .w98-listview__sub {
+    color: #ccc;
+}
+
+.w98-listview__duration {
+    font-family: monospace;
+    font-size: 10px;
+    color: var(--win98-dark-gray);
+}
+
+.w98-listview__item:hover .w98-listview__duration {
+    color: white;
+}
+
+.track-item--playable {
+    cursor: pointer;
+}
+
+/* === Activity Chart === */
+.w98-activity {
+    overflow-x: auto;
+}
+
+.w98-activity__bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 100px;
+    border: 2px solid;
+    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
+    background: white;
+    padding: 4px 2px 16px;
+    position: relative;
+}
+
+.w98-activity__col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    min-width: 10px;
+}
+
+.w98-activity__bar-wrap {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    align-items: flex-end;
+}
+
+.w98-activity__bar-fill {
+    width: 100%;
+    background: repeating-linear-gradient(
+        0deg,
+        var(--win98-title-blue) 0px,
+        var(--win98-title-blue) 6px,
+        transparent 6px,
+        transparent 8px
+    );
+    min-height: 1px;
+}
+
+.w98-activity__label {
+    font-size: 9px;
+    color: var(--win98-dark-gray);
+    position: absolute;
+    bottom: 2px;
+}
+
+/* === Patterns (two-column day + peaks) === */
+.w98-patterns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+/* === Taste Evolution === */
+.w98-evolution {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.w98-evolution__period {
+    min-width: 0;
+    overflow: hidden;
+}
+
+.w98-evolution .win98-groupbox {
+    margin: 0;
+    padding: 14px 6px 6px;
+}
+
+.w98-evolution .w98-listview {
+    border: none;
+}
+
+/* === Playlist Generator === */
+.playlist-controls {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.win98-select {
+    padding: 2px 4px;
+    background: white;
+    border: 2px solid;
+    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
+    font-family: var(--win98-font);
+    font-size: 10px;
+}
+
+.playlist-result {
+    font-size: 11px;
+    padding: 8px;
+}
+
+.playlist-result a {
+    color: var(--win98-title-blue);
+}
+
+.playlist-result--error {
+    color: #cc0000;
+}
+
+/* === Player Bar === */
+.player-bar {
+    position: sticky;
+    bottom: 0;
+    background: var(--win98-gray);
+    border-top: 2px solid;
+    border-color: var(--win98-btn-highlight);
+    padding: 4px 8px;
+    z-index: 100;
 }
 
 .player-connect-message {
     text-align: center;
     font-size: 11px;
-    color: #666;
+    color: var(--win98-dark-gray);
+    padding: 4px;
 }
 
 .player-content {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
     flex-wrap: wrap;
 }
 
 .player-album-art {
-    width: 48px;
-    height: 48px;
-    border: 2px solid;
-    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--win98-btn-shadow);
+    flex-shrink: 0;
 }
 
 .player-track-info {
     flex: 1;
-    min-width: 150px;
+    min-width: 120px;
 }
 
 .player-track-name {
     font-size: 11px;
     font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .player-artist-name, .player-album-name {
     font-size: 10px;
-    color: #666;
+    color: var(--win98-dark-gray);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .player-controls {
     display: flex;
-    gap: 4px;
-}
-
-.player-btn {
-    width: 28px;
-    height: 28px;
-    background: var(--win98-gray);
-    border: 2px solid;
-    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
-    font-size: 12px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.player-btn:active {
-    border-color: var(--win98-btn-dark-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-dark-shadow);
-}
-
-.player-btn--play {
-    width: 36px;
-    height: 36px;
-    font-size: 16px;
-}
-
-.player-btn--small {
-    width: 24px;
-    height: 24px;
-    font-size: 10px;
+    gap: 2px;
 }
 
 .player-extra-controls {
     display: flex;
-    gap: 4px;
+    gap: 2px;
+}
+
+.player-btn {
+    width: 24px;
+    height: 24px;
+    background: var(--win98-gray);
+    border: 2px solid;
+    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
+    box-shadow: inset -1px -1px 0 var(--win98-btn-shadow), inset 1px 1px 0 var(--win98-btn-light);
+    font-size: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    font-family: inherit;
+}
+
+.player-btn:active {
+    border-color: var(--win98-btn-dark-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-dark-shadow);
+    box-shadow: inset 1px 1px 0 var(--win98-btn-shadow);
+}
+
+.player-btn.active {
+    border-color: var(--win98-btn-dark-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-dark-shadow);
+    box-shadow: inset 1px 1px 0 var(--win98-btn-shadow);
+    background: var(--win98-light-gray);
+}
+
+.player-btn--play {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+}
+
+.player-btn--small {
+    width: 22px;
+    height: 22px;
+    font-size: 10px;
 }
 
 .player-progress {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
     flex: 1;
-    min-width: 200px;
+    min-width: 150px;
 }
 
 .player-time {
     font-size: 10px;
     font-family: monospace;
-    min-width: 35px;
+    min-width: 30px;
 }
 
 .player-progress-bar {
     flex: 1;
-    height: 12px;
+    height: 14px;
     background: white;
     border: 2px solid;
     border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
@@ -294,7 +576,13 @@
 
 .player-progress-fill {
     height: 100%;
-    background: var(--win98-title-blue);
+    background: repeating-linear-gradient(
+        90deg,
+        var(--win98-title-blue) 0px,
+        var(--win98-title-blue) 8px,
+        transparent 8px,
+        transparent 10px
+    );
     width: 0%;
 }
 
@@ -305,12 +593,40 @@
 }
 
 .player-volume-slider {
-    width: 80px;
+    width: 60px;
+    height: 14px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: white;
+    border: 2px solid;
+    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
+    cursor: pointer;
+}
+
+.player-volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 10px;
+    height: 14px;
+    background: var(--win98-gray);
+    border: 2px solid;
+    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
+    cursor: pointer;
+}
+
+.player-volume-slider::-moz-range-thumb {
+    width: 10px;
+    height: 14px;
+    background: var(--win98-gray);
+    border: 2px solid;
+    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
+    cursor: pointer;
+    border-radius: 0;
 }
 
 .player-volume-value {
     font-size: 10px;
-    min-width: 30px;
+    min-width: 28px;
 }
 
 .player-devices {
@@ -322,11 +638,15 @@
     position: absolute;
     bottom: 100%;
     right: 0;
-    background: var(--win98-gray);
+    background: white;
     border: 2px solid;
     border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
     min-width: 200px;
     margin-bottom: 4px;
+}
+
+.player-devices-dropdown.active {
+    display: block;
 }
 
 .player-devices-header {
@@ -338,20 +658,47 @@
 }
 
 .player-devices-list {
-    padding: 4px;
+    padding: 2px;
     max-height: 200px;
     overflow-y: auto;
 }
 
-/* ASCII visualizations */
-.ascii-bar, .genre-bars, .heatmap-grid, .track-list, .evolution-chart, .audio-profile, .activity-chart, .patterns-display {
-    font-family: monospace;
-    font-size: 10px;
-    line-height: 1.4;
-    white-space: pre;
-    overflow-x: auto;
+.device-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 4px;
+    cursor: pointer;
+    font-size: 11px;
 }
 
+.device-item:hover {
+    background: var(--win98-title-blue);
+    color: white;
+}
+
+.device-item.active {
+    font-weight: bold;
+}
+
+.device-indicator {
+    font-size: 8px;
+}
+
+.device-name {
+    flex: 1;
+}
+
+.device-type {
+    font-size: 10px;
+    color: var(--win98-dark-gray);
+}
+
+.device-item:hover .device-type {
+    color: #ccc;
+}
+
+/* === Responsive === */
 @media (max-width: 768px) {
     .stats-row {
         grid-template-columns: repeat(2, 1fr);
@@ -359,12 +706,29 @@
     .dashboard-grid {
         grid-template-columns: 1fr;
     }
+    .w98-evolution {
+        grid-template-columns: 1fr;
+    }
+    .w98-patterns {
+        grid-template-columns: 1fr;
+    }
+    .w98-bar-row {
+        grid-template-columns: 60px 1fr 30px;
+    }
+}
+
+@media (max-width: 640px) {
     .player-content {
         justify-content: center;
     }
     .player-progress {
         width: 100%;
         order: 10;
+    }
+    .player-volume {
+        width: 100%;
+        order: 11;
+        justify-content: center;
     }
 }
 </style>
@@ -421,68 +785,96 @@
             </div>
         </div>
 
+        <!-- Row 1: Taste Evolution | Top Tracks -->
         <div class="dashboard-grid">
             <div class="section-card">
-                <h3 class="section-card__title">Taste Evolution</h3>
-                <div id="evolution-container">
+                <span class="section-card__title">Taste Evolution</span>
+                <div class="section-card__content" id="evolution-container">
                     <div class="loading">Loading...</div>
                 </div>
             </div>
-            <div class="section-card">
-                <h3 class="section-card__title">Audio Profile</h3>
-                <div id="audio-profile-container">
-                    <div class="loading">Loading...</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="dashboard-grid">
-            <div class="section-card">
-                <h3 class="section-card__title">Listening Patterns</h3>
-                <div id="patterns-container">
-                    <div class="loading">Loading...</div>
-                </div>
-            </div>
-            <div class="section-card">
-                <h3 class="section-card__title">Genre Analysis</h3>
-                <div id="genre-container">
-                    <div class="loading">Loading...</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="section-card dashboard-full">
-            <h3 class="section-card__title">Weekly Timeline</h3>
-            <div id="heatmap-container">
-                <div class="loading">Loading...</div>
-            </div>
-        </div>
-
-        <div class="dashboard-grid">
-            <div class="section-card">
-                <h3 class="section-card__title">Hourly Activity</h3>
-                <div id="activity-container">
-                    <div class="loading">Loading...</div>
-                </div>
-            </div>
-            <div class="section-card">
+            <div class="section-card" id="tracks-section">
                 <div class="time-selector">
                     <button class="time-btn active" data-range="short_term">4 Weeks</button>
                     <button class="time-btn" data-range="medium_term">6 Months</button>
                     <button class="time-btn" data-range="long_term">All Time</button>
                 </div>
-                <h3 class="section-card__title">Top Tracks</h3>
-                <div id="tracks-container">
+                <span class="section-card__title" style="top: -8px;">Top Tracks</span>
+                <div class="section-card__content" id="tracks-container">
                     <div class="loading">Loading...</div>
                 </div>
             </div>
         </div>
 
-        <a href="{{ url_for('spotify.logout') }}" class="disconnect-link">&gt; disconnect</a>
+        <!-- Row 2: Top Artists | Genre Analysis -->
+        <div class="dashboard-grid">
+            <div class="section-card" id="artists-section">
+                <div class="time-selector">
+                    <button class="time-btn active" data-range="short_term">4 Weeks</button>
+                    <button class="time-btn" data-range="medium_term">6 Months</button>
+                    <button class="time-btn" data-range="long_term">All Time</button>
+                </div>
+                <span class="section-card__title" style="top: -8px;">Top Artists</span>
+                <div class="section-card__content" id="artists-container">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+            <div class="section-card">
+                <span class="section-card__title">Genre Analysis</span>
+                <div class="section-card__content" id="genre-container">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 3: Recently Played | Listening Patterns -->
+        <div class="dashboard-grid">
+            <div class="section-card">
+                <span class="section-card__title">Recently Played</span>
+                <div class="section-card__content" id="recent-container">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+            <div class="section-card">
+                <span class="section-card__title">Listening Patterns</span>
+                <div class="section-card__content" id="patterns-container">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 4: Playlist Generator | Hourly Activity -->
+        <div class="dashboard-grid">
+            <div class="section-card" id="playlist-section">
+                <span class="section-card__title">Playlist Generator</span>
+                <div class="section-card__content">
+                    <div class="playlist-controls">
+                        <select id="playlist-range" class="win98-select">
+                            <option value="short_term">4 Weeks</option>
+                            <option value="medium_term">6 Months</option>
+                            <option value="long_term">All Time</option>
+                        </select>
+                        <select id="playlist-size" class="win98-select">
+                            <option value="10">10 tracks</option>
+                            <option value="20" selected>20 tracks</option>
+                            <option value="30">30 tracks</option>
+                        </select>
+                        <button id="playlist-create" class="time-btn">Create Playlist</button>
+                    </div>
+                    <div id="playlist-result" class="playlist-result"></div>
+                </div>
+            </div>
+            <div class="section-card">
+                <span class="section-card__title">Hourly Activity</span>
+                <div class="section-card__content" id="activity-container">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <a href="{{ url_for('spotify.logout') }}" class="disconnect-btn">Disconnect</a>
 
         <div id="player-bar" class="player-bar">
-            <button id="player-expand-toggle" class="player-expand-toggle" aria-label="Expand player">&#9650;</button>
-
             <div id="player-connect-message" class="player-connect-message">
                 Connecting to Spotify...
             </div>
@@ -508,7 +900,7 @@
                 </div>
 
                 <div class="player-progress">
-                    <span id="player-current-time" class="player-time player-time--current">0:00</span>
+                    <span id="player-current-time" class="player-time">0:00</span>
                     <div id="player-progress-bar" class="player-progress-bar">
                         <div id="player-progress-fill" class="player-progress-fill"></div>
                     </div>
@@ -549,28 +941,30 @@
 <script src="{{ url_for('static', filename='js/spotify-player.js') }}"></script>
 <script>
 (function() {
+    // --- Data loaders ---
+
     async function loadRecentData() {
         try {
-            const response = await fetch('/projects/spotify/api/recent');
+            var response = await fetch('/projects/spotify/api/recent');
             if (!response.ok) return;
-            const data = await response.json();
+            var data = await response.json();
             if (data.items && data.items.length > 0) {
                 updateStats(data.items);
                 renderPatterns(data.items);
-                renderHeatmap(data.items);
                 renderActivity(data.items);
+                renderRecent(data.items);
             }
         } catch (error) {
             console.error('Failed to load recent data:', error);
         }
     }
 
-    async function loadTopData(timeRange) {
+    async function loadTopTracks(timeRange) {
         timeRange = timeRange || 'short_term';
         try {
-            const response = await fetch('/projects/spotify/api/top/' + timeRange);
+            var response = await fetch('/projects/spotify/api/top/' + timeRange);
             if (!response.ok) return;
-            const data = await response.json();
+            var data = await response.json();
             if (data.artists && data.artists.items) {
                 updateTopArtist(data.artists.items);
             }
@@ -583,60 +977,48 @@
         }
     }
 
-    async function loadTasteEvolution() {
-        const container = document.getElementById('evolution-container');
+    async function loadTopArtists(timeRange) {
+        timeRange = timeRange || 'short_term';
         try {
-            const response = await fetch('/projects/spotify/api/taste-evolution');
+            var response = await fetch('/projects/spotify/api/top/' + timeRange);
+            if (!response.ok) return;
+            var data = await response.json();
+            if (data.artists && data.artists.items) {
+                var container = document.getElementById('artists-container');
+                container.innerHTML = SpotifyASCII.renderArtistList(data.artists.items, 10);
+            }
+        } catch (error) {
+            console.error('Failed to load top artists:', error);
+        }
+    }
+
+    async function loadTasteEvolution() {
+        var container = document.getElementById('evolution-container');
+        try {
+            var response = await fetch('/projects/spotify/api/taste-evolution');
             if (!response.ok) { container.textContent = 'Failed to load data'; return; }
-            const data = await response.json();
-            container.textContent = '';
-            const content = SpotifyASCII.renderTasteEvolution(data);
-            const wrapper = document.createElement('div');
-            wrapper.innerHTML = content;
-            container.appendChild(wrapper.firstElementChild || wrapper);
+            var data = await response.json();
+            container.innerHTML = SpotifyASCII.renderTasteEvolution(data);
         } catch (error) {
             console.error('Failed to load taste evolution:', error);
             container.textContent = 'Failed to load data';
         }
     }
 
-    async function loadAudioProfile() {
-        const container = document.getElementById('audio-profile-container');
-        try {
-            const response = await fetch('/projects/spotify/api/audio-features');
-            if (!response.ok) { container.textContent = 'Failed to load data'; return; }
-            const data = await response.json();
-            container.textContent = '';
-            if (data.features) {
-                const content = SpotifyASCII.renderAudioProfile(data.features);
-                const wrapper = document.createElement('div');
-                wrapper.innerHTML = content;
-                container.appendChild(wrapper.firstElementChild || wrapper);
-            } else {
-                container.textContent = 'No audio data available';
-            }
-        } catch (error) {
-            console.error('Failed to load audio profile:', error);
-            container.textContent = 'Failed to load data';
-        }
-    }
-
     async function loadGenres() {
-        const container = document.getElementById('genre-container');
+        var container = document.getElementById('genre-container');
         try {
-            const response = await fetch('/projects/spotify/api/genres');
+            var response = await fetch('/projects/spotify/api/genres');
             if (!response.ok) { container.textContent = 'Failed to load genres'; return; }
-            const data = await response.json();
-            container.textContent = '';
-            const content = SpotifyASCII.renderGenreBars(data.genres);
-            const wrapper = document.createElement('div');
-            wrapper.innerHTML = content;
-            container.appendChild(wrapper.firstElementChild || wrapper);
+            var data = await response.json();
+            container.innerHTML = SpotifyASCII.renderGenreBars(data.genres);
         } catch (error) {
             console.error('Failed to load genres:', error);
             container.textContent = 'Failed to load genres';
         }
     }
+
+    // --- Stat updaters ---
 
     function updateStats(items) {
         var uniqueArtists = new Set(items.map(function(i) { return i.track.artists[0].name; }));
@@ -656,6 +1038,8 @@
         }
     }
 
+    // --- Section renderers ---
+
     function renderPatterns(items) {
         var container = document.getElementById('patterns-container');
         var dayData = [0, 0, 0, 0, 0, 0, 0];
@@ -672,27 +1056,7 @@
             .map(function(count, hour) { return { hour: hour, count: count }; })
             .sort(function(a, b) { return b.count - a.count; });
 
-        container.textContent = '';
-        var content = SpotifyASCII.renderListeningPatterns(dayData, peakHours);
-        var wrapper = document.createElement('div');
-        wrapper.innerHTML = content;
-        container.appendChild(wrapper.firstElementChild || wrapper);
-    }
-
-    function renderHeatmap(items) {
-        var container = document.getElementById('heatmap-container');
-        var heatmapData = {};
-        items.forEach(function(item) {
-            var date = new Date(item.played_at);
-            var key = date.getDay() + '-' + date.getHours();
-            heatmapData[key] = (heatmapData[key] || 0) + 1;
-        });
-
-        container.textContent = '';
-        var content = SpotifyASCII.renderHeatmap(heatmapData);
-        var wrapper = document.createElement('div');
-        wrapper.innerHTML = content;
-        container.appendChild(wrapper.firstElementChild || wrapper);
+        container.innerHTML = SpotifyASCII.renderListeningPatterns(dayData, peakHours);
     }
 
     function renderActivity(items) {
@@ -704,29 +1068,83 @@
             hourData[hour]++;
         });
 
-        container.textContent = '';
-        var content = SpotifyASCII.renderActivityChart(hourData);
-        var wrapper = document.createElement('div');
-        wrapper.innerHTML = content;
-        container.appendChild(wrapper.firstElementChild || wrapper);
+        container.innerHTML = SpotifyASCII.renderActivityChart(hourData);
     }
 
     function renderTracks(tracks) {
         var container = document.getElementById('tracks-container');
-        container.textContent = '';
-        var content = SpotifyASCII.renderTrackList(tracks, 8);
-        var wrapper = document.createElement('div');
-        wrapper.innerHTML = content;
-        container.appendChild(wrapper.firstElementChild || wrapper);
+        container.innerHTML = SpotifyASCII.renderTrackList(tracks, 8);
     }
 
-    document.querySelectorAll('.time-btn').forEach(function(btn) {
+    function renderRecent(items) {
+        var container = document.getElementById('recent-container');
+        container.innerHTML = SpotifyASCII.renderRecentTracks(items, 10);
+    }
+
+    // --- Scoped time selector handlers ---
+
+    document.querySelectorAll('#tracks-section .time-btn').forEach(function(btn) {
         btn.addEventListener('click', function(e) {
-            document.querySelectorAll('.time-btn').forEach(function(b) { b.classList.remove('active'); });
+            document.querySelectorAll('#tracks-section .time-btn').forEach(function(b) { b.classList.remove('active'); });
             e.target.classList.add('active');
-            loadTopData(e.target.dataset.range);
+            loadTopTracks(e.target.dataset.range);
         });
     });
+
+    document.querySelectorAll('#artists-section .time-btn').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            document.querySelectorAll('#artists-section .time-btn').forEach(function(b) { b.classList.remove('active'); });
+            e.target.classList.add('active');
+            loadTopArtists(e.target.dataset.range);
+        });
+    });
+
+    // --- Playlist generator ---
+
+    document.getElementById('playlist-create').addEventListener('click', async function() {
+        var btn = this;
+        var resultEl = document.getElementById('playlist-result');
+        btn.disabled = true;
+        btn.textContent = 'Creating...';
+        resultEl.textContent = '';
+        resultEl.className = 'playlist-result';
+
+        try {
+            var response = await fetch('/projects/spotify/api/create-playlist', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    time_range: document.getElementById('playlist-range').value,
+                    size: parseInt(document.getElementById('playlist-size').value)
+                })
+            });
+
+            if (response.status === 403) {
+                resultEl.className = 'playlist-result playlist-result--error';
+                resultEl.innerHTML = 'Missing permissions. Please <a href="' + '{{ url_for("spotify.logout") }}' + '">disconnect</a> and reconnect to grant playlist access.';
+                return;
+            }
+
+            if (!response.ok) {
+                var err = await response.json();
+                resultEl.className = 'playlist-result playlist-result--error';
+                resultEl.textContent = err.detail || 'Failed to create playlist';
+                return;
+            }
+
+            var data = await response.json();
+            resultEl.innerHTML = 'Created <strong>' + SpotifyASCII.escapeHtml(data.playlist_name) + '</strong> (' + data.track_count + ' tracks) &mdash; <a href="' + SpotifyASCII.escapeHtml(data.playlist_url) + '" target="_blank" rel="noopener noreferrer">Open in Spotify</a>';
+        } catch (error) {
+            console.error('Failed to create playlist:', error);
+            resultEl.className = 'playlist-result playlist-result--error';
+            resultEl.textContent = 'Network error - please try again';
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Create Playlist';
+        }
+    });
+
+    // --- Track playback click handler ---
 
     document.addEventListener('click', function(e) {
         var trackItem = e.target.closest('.track-item--playable');
@@ -738,10 +1156,12 @@
         }
     });
 
+    // --- Init ---
+
     loadRecentData();
-    loadTopData();
+    loadTopTracks();
+    loadTopArtists();
     loadTasteEvolution();
-    loadAudioProfile();
     loadGenres();
 })();
 </script>

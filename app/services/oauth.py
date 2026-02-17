@@ -91,6 +91,7 @@ class SpotifyOAuth(OAuthClient):
                 'user-read-playback-state',
                 'user-modify-playback-state',
                 'streaming',
+                'playlist-modify-private',
             ]
         )
 

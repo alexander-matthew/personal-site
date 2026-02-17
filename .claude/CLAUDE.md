@@ -40,7 +40,7 @@ Personal-Site/
 │   │   ├── blog/            # Blog templates
 │   │   ├── news/            # News templates
 │   │   ├── resume/          # Resume timeline
-│   │   ├── spotify/         # Spotify dashboard (ASCII theme)
+│   │   ├── spotify/         # Spotify dashboard (Win98 theme)
 │   │   ├── blackjack/       # Blackjack trainer UI
 │   │   ├── sudoku/          # Sudoku game UI
 │   │   ├── pr_review/       # PR Review showcase
@@ -50,7 +50,7 @@ Personal-Site/
 │       ├── css/
 │       │   ├── win98.css           # Win98 design system (primary)
 │       │   ├── style.css           # Legacy styles with CSS variables
-│       │   ├── spotify.css         # Spotify ASCII dashboard theme
+│       │   ├── spotify.css         # Deprecated (unlinked, retained on disk)
 │       │   ├── resume.css          # Resume timeline styles
 │       │   ├── blackjack.css       # Blackjack game styles
 │       │   ├── sudoku.css          # Sudoku grid styles
@@ -59,7 +59,7 @@ Personal-Site/
 │       ├── icons/                  # Win98 SVG icons (13 files)
 │       └── js/
 │           ├── win98.js                 # Win98 interactivity (clock, start menu, dialogs)
-│           ├── spotify-ascii.js         # Spotify ASCII rendering (bars, charts)
+│           ├── spotify-ascii.js         # Spotify Win98 component rendering (progress bars, tables, listviews)
 │           ├── spotify-player.js        # Spotify Web Playback SDK integration
 │           ├── blackjack-engine.js      # Blackjack game logic + strategy
 │           ├── blackjack-engine.test.js # Jest tests
@@ -335,7 +335,7 @@ heroku logs --tail
 ## Mini-Apps
 
 ### Spotify Dashboard (`/projects/spotify`)
-OAuth-authenticated data visualization with ASCII theme and Web Playback SDK:
+OAuth-authenticated data visualization with Win98 theme and Web Playback SDK:
 - Recently played tracks (last 50)
 - Top artists/tracks by time range (4 weeks, 6 months, all time)
 - Genre breakdown with percentages
@@ -343,7 +343,7 @@ OAuth-authenticated data visualization with ASCII theme and Web Playback SDK:
 - Taste evolution comparison
 - In-browser playback with Spotify Web Playback SDK
 
-**API Endpoints:** `/api/recent`, `/api/top/<time_range>`, `/api/genres`, `/api/audio-features`, `/api/taste-evolution`, `/api/token`, `/api/playback-state`, `/api/devices`, and playback control endpoints (`/api/play`, `/api/pause`, `/api/next`, etc.)
+**API Endpoints:** `/api/recent`, `/api/top/<time_range>`, `/api/genres`, `/api/taste-evolution`, `/api/create-playlist` (POST), `/api/token`, `/api/playback-state`, `/api/devices`, and playback control endpoints (`/api/play`, `/api/pause`, `/api/next`, etc.)
 
 ### Blackjack Trainer (`/projects/blackjack`)
 Interactive game with basic strategy guidance:
@@ -434,6 +434,6 @@ npm run test:coverage     # Coverage report
 - **Typing animation**: Home page cycles "Alex" ↔ "Alexander"
 - **Interests carousel**: About page fades through interests list
 - **Responsive**: Mobile-friendly with breakpoint at 640px
-- **ASCII theme**: Spotify dashboard with ASCII-rendered visualizations and Web Playback SDK
+- **Spotify dashboard**: Win98-styled data visualizations (progress bars, tables, listviews) and Web Playback SDK
 - **Game engines**: Pure JavaScript with Jest test coverage
 - **Security**: CSP headers, secure session cookies, required SECRET_KEY in production
