@@ -36,30 +36,41 @@
 └───────────┼──────────────────────┼──────────────────────────────┘
             │                      │
 ┌───────────┼──────────────────────┼──────────────────────────────┐
-│  FastAPI  │                      │                              │
+│  EC2 (Docker Compose)            │                              │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │  nginx (reverse proxy, HTTPS termination, Let's Encrypt)  │  │
+│  └────────┬──────────────────────┬───────────────────────────┘  │
 │  ┌────────▼──────────────────────▼────────────────────────────┐ │
-│  │  Routers (10 registered)                                    │ │
-│  │  main │ blog │ news │ spotify │ blackjack │ sudoku │ ...   │ │
-│  ├─────────────────────────────────────────────────────────────┤ │
-│  │  Services                                                   │ │
-│  │  ┌──────────┐  ┌───────────┐  ┌──────────────┐            │ │
-│  │  │ Cache    │  │ OAuth     │  │ Rate Limiter │            │ │
-│  │  │ (file)   │  │ (Spotify) │  │ (in-memory)  │            │ │
-│  │  └────┬─────┘  └─────┬─────┘  └──────────────┘            │ │
-│  ├───────┼───────────────┼─────────────────────────────────────┤ │
-│  │  Shared HTTP Client (httpx.AsyncClient)                    │ │
-│  └───────┼───────────────┼─────────────────────────────────────┘ │
-│          │               │                                       │
-└──────────┼───────────────┼───────────────────────────────────────┘
-           │               │
-    ┌──────▼──────┐  ┌─────▼──────────────┐
-    │ /tmp cache  │  │ External APIs      │
-    │ (JSON files)│  │ - Spotify Web API  │
-    └─────────────┘  │ - Open-Meteo       │
-                     └────────────────────┘
+│  │  FastAPI (uvicorn, --proxy-headers)                         │ │
+│  │  ┌─────────────────────────────────────────────────────────┤ │
+│  │  │  Routers (10 registered)                                │ │
+│  │  │  main │ blog │ news │ spotify │ blackjack │ sudoku │ .. │ │
+│  │  ├─────────────────────────────────────────────────────────┤ │
+│  │  │  Services                                               │ │
+│  │  │  ┌──────────┐  ┌───────────┐  ┌──────────────┐         │ │
+│  │  │  │ Cache    │  │ OAuth     │  │ Rate Limiter │         │ │
+│  │  │  │ (file)   │  │ (Spotify) │  │ (in-memory)  │         │ │
+│  │  │  └────┬─────┘  └─────┬─────┘  └──────────────┘         │ │
+│  │  ├───────┼───────────────┼─────────────────────────────────┤ │
+│  │  │  Shared HTTP Client (httpx.AsyncClient)                 │ │
+│  │  └───────┼───────────────┼─────────────────────────────────┘ │
+│  │          │               │                                    │
+│  └──────────┼───────────────┼────────────────────────────────────┘
+│             │               │
+│      ┌──────▼──────┐        │
+│      │ /tmp cache  │        │
+│      │ (JSON files)│        │
+│      └─────────────┘        │
+└─────────────────────────────┼────────────────────────────────────┘
+                              │
+                        ┌─────▼──────────────┐
+                        │ External APIs      │
+                        │ - Spotify Web API  │
+                        │ - Open-Meteo       │
+                        └────────────────────┘
 ```
 
-**Stack:** Python 3.11 / FastAPI / Uvicorn / Heroku
+**Stack:** Python 3.11 / FastAPI / Uvicorn / Docker Compose / nginx / AWS EC2
 **Frontend:** Vanilla JS, Spotify Web Playback SDK
 **External APIs:** Spotify Web API (OAuth 2.0), Open-Meteo (public, no auth)
 
@@ -636,25 +647,53 @@ Both Spotify route files (`app/routes/spotify.py` and `app/routes/tools/spotify.
 
 ### Platform
 
-Heroku (`mighty-shelf-14141`) with automatic deployment via GitHub Actions on merge to `main`.
+AWS EC2 (t3.micro, Amazon Linux 2023) with Docker Compose. Automatic deployment via GitHub Actions SSH on merge to `main`.
+
+### Architecture
+
+```
+EC2 Instance
+├── Docker Compose
+│   ├── web       — Python app (Dockerfile: python:3.11-slim + uv)
+│   ├── nginx     — Reverse proxy, HTTPS termination (nginx:1.27-alpine)
+│   └── certbot   — Let's Encrypt certificate renewal
+├── certbot/      — SSL certs (Let's Encrypt)
+└── .env          — Environment variables (written by deploy.sh)
+```
 
 ### Runtime
 
-| File | Purpose | Value |
-|------|---------|-------|
-| `Procfile` | Process definition | `web: uvicorn main:app --host 0.0.0.0 --port $PORT --proxy-headers` |
-| `requirements.txt` | Dependencies | fastapi, uvicorn, httpx, jinja2, python-dotenv, itsdangerous |
+| File | Purpose |
+|------|---------|
+| `Dockerfile` | Builds app image: python:3.11-slim, uv sync, uvicorn with `--proxy-headers` |
+| `docker-compose.yml` | Orchestrates web + nginx + certbot services |
+| `nginx/default.conf.template` | HTTP→HTTPS redirect, reverse proxy to `web:8000` |
+
+### Infrastructure (Terraform)
+
+| File | Purpose |
+|------|---------|
+| `infra/main.tf` | EC2, security group (SSH/HTTP/HTTPS), elastic IP |
+| `infra/variables.tf` | Domain, secrets, SSH key path, region, instance type |
+| `infra/outputs.tf` | Elastic IP, SSH command, next steps |
 
 ### Deploy Pipeline
 
 ```
 PR merged to main
   → GitHub Actions workflow triggers
-    → Pushes to Heroku
-      → Heroku builds + deploys
+    → SSH into EC2 (appleboy/ssh-action)
+      → git pull origin main
+      → docker compose up -d --build
 ```
 
-Manual: `git push heroku main`
+### Initial Deploy
+
+```bash
+cd infra && terraform init && terraform apply   # Provision EC2
+# Point DNS A record → Elastic IP
+./deploy.sh                                      # Sync files, bootstrap HTTPS
+```
 
 ### Dependencies
 

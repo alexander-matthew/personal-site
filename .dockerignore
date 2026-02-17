@@ -1,0 +1,13 @@
+.venv/
+.git/
+__pycache__/
+.env
+.claude/
+nginx/
+certbot/
+infra/
+tests/
+node_modules/
+docs/
+Procfile
+requirements.txt

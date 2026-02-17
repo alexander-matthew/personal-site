@@ -1,0 +1,10 @@
+domain                = "yourdomain.com"
+letsencrypt_email     = "you@example.com"
+secret_key            = "generate-with-python-c-import-secrets-print-secrets-token_urlsafe-64"
+spotify_client_id     = "your-spotify-client-id"
+spotify_client_secret = "your-spotify-client-secret"
+ssh_public_key_path   = "~/.ssh/id_rsa.pub"
+
+# Optional — defaults shown
+# aws_region    = "us-east-2"
+# instance_type = "t3.micro"

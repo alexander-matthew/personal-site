@@ -29,3 +29,13 @@ dist/
 build/
 *.egg-info/
 node_modules/
+
+# Deployment (Let's Encrypt certs)
+certbot/
+
+# Terraform
+infra/.terraform/
+infra/*.tfstate
+infra/*.tfstate.backup
+infra/*.tfvars
+infra/.terraform.lock.hcl
