@@ -2,6 +2,15 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Shared Context (Canonical)
+
+This repository keeps cross-agent context in shared docs so Claude and Codex can follow the same project facts and workflow.
+Update shared docs first, then this file only for Claude-specific overlays.
+
+@docs/ai/project-context.md
+@docs/ai/engineering-standards.md
+@docs/ai/workflow-rules.md
+
 ## Project Overview
 
 A FastAPI-based personal website deployed on AWS EC2 with Docker Compose + nginx + Let's Encrypt. Built to showcase personal projects and side interests (not professional work - see LinkedIn for that). Uses uvicorn (ASGI) for serving, httpx for async HTTP calls, and uv for dependency management.
@@ -34,6 +43,8 @@ Personal-Site/
 │   │   ├── win98_base.html  # Win98 desktop base (primary template)
 │   │   ├── win98_window.html # Win98 window chrome wrapper
 │   │   ├── base.html        # Legacy base layout (used by 500.html, tools)
+│   │   ├── 404.html         # BSOD-style 404 page (standalone)
+│   │   ├── 500.html         # Error page (extends base.html)
 │   │   ├── home.html        # Landing page (Win98 desktop with icons)
 │   │   ├── about.html       # Bio with cycling interests animation
 │   │   ├── projects.html    # Project showcase grid
@@ -41,12 +52,17 @@ Personal-Site/
 │   │   ├── news/            # News templates
 │   │   ├── resume/          # Resume timeline
 │   │   ├── spotify/         # Spotify dashboard (Win98 theme)
-│   │   ├── blackjack/       # Blackjack trainer UI
+│   │   ├── blackjack/       # Blackjack trainer UI + game.js
 │   │   ├── sudoku/          # Sudoku game UI
 │   │   ├── pr_review/       # PR Review showcase
 │   │   ├── weather/         # Weather dashboard templates
 │   │   └── tools/           # Tools framework templates
+│   │       ├── index.html
+│   │       ├── base_tool.html
+│   │       ├── spotify/index.html
+│   │       └── components/  # chart_container, data_card
 │   └── static/
+│       ├── favicon.svg
 │       ├── css/
 │       │   ├── win98.css           # Win98 design system (primary)
 │       │   ├── style.css           # Legacy styles with CSS variables
@@ -71,10 +87,31 @@ Personal-Site/
 │   ├── agents/                  # Subagent definitions (5 agents)
 │   └── CLAUDE.md                # This file
 ├── tests/                   # Python tests (pytest)
+├── e2e/                     # End-to-end tests (Playwright)
+│   ├── conftest.py
+│   └── test_pages.py
 ├── docs/
-│   └── ARCHITECTURE.md      # Detailed architecture reference
+│   ├── ARCHITECTURE.md      # Detailed architecture reference
+│   ├── EC2_MIGRATION.md     # EC2 deployment migration guide
+│   ├── ai/                  # Shared AI context (cross-agent)
+│   │   ├── project-context.md
+│   │   ├── engineering-standards.md
+│   │   └── workflow-rules.md
+│   └── plans/               # Archived implementation plans
+├── scripts/
+│   ├── check_agent_skill_sync.sh  # Verify agent/skill definitions stay in sync
+│   └── install_git_hooks.sh       # Install .githooks/ into local repo
+├── .githooks/
+│   └── pre-commit           # Custom pre-commit hook
+├── .github/
+│   └── workflows/
+│       ├── deploy.yml             # Auto-deploy on merge to main
+│       └── agent-skill-sync.yml   # CI check for agent/skill sync
+├── skills/                  # Claude Code skill definitions
+├── AGENTS.md                # Codex/agent instructions
 ├── main.py                  # App entry point (uvicorn)
 ├── pyproject.toml           # Dependencies (managed by uv)
+├── .python-version          # Python version pin
 ├── Dockerfile               # Python 3.11-slim + uv, runs uvicorn
 ├── docker-compose.yml       # web + nginx + certbot services
 ├── nginx/

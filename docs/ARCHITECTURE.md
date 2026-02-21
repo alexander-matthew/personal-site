@@ -9,7 +9,7 @@
 
 - [System Overview](#system-overview)
 - [Application Lifecycle](#application-lifecycle)
-- [Routing & Blueprints](#routing--blueprints)
+- [Routing & Routers](#routing--routers)
 - [Template Architecture](#template-architecture)
 - [Static Assets](#static-assets)
 - [Services Layer](#services-layer)
@@ -88,9 +88,9 @@ main.py  →  create_app()  →  FastAPI instance
                 ├── SECRET_KEY from env (required in production, raises RuntimeError if missing)
                 ├── Security headers middleware (CSP, X-Frame-Options, HSTS in production)
                 ├── Session middleware (1 week max_age, lax same_site, https_only in production)
-                ├── Context processor: injects SITE_CONFIG as {{ site }}
+                ├── Template globals: injects SITE_CONFIG as {{ site }}
                 ├── Error handlers: 404, 500
-                └── Blueprint registration (10 routers, in order)
+                └── Router registration (10 routers, in order)
 ```
 
 ### App Factory: `app/__init__.py`
@@ -103,7 +103,7 @@ The factory (`create_app()`) performs these steps:
 4. Adds security headers middleware (CSP, X-Frame-Options, Referrer-Policy, HSTS)
 5. Adds session middleware (1 week max_age)
 6. Validates `SECRET_KEY` (required in production, raises RuntimeError if missing)
-7. Registers context processor that injects `SITE_CONFIG` into all templates
+7. Registers Jinja globals (`site`, custom `url_for`) for all templates
 8. Registers error handlers for 404 and 500
 9. Registers all 10 routers with their URL prefixes
 
@@ -130,7 +130,7 @@ Global site metadata available in every template as `{{ site }}`:
 
 ---
 
-## Routing & Blueprints
+## Routing & Routers
 
 ### Registration Order
 
@@ -302,7 +302,7 @@ base.html
     └── tools/spotify/index.html
 ```
 
-Retained for the 500 error page and the inactive tools framework. Uses `style.css` and dark/light theme toggle.
+Retained for the 500 error page and the legacy tools framework. Uses `style.css` and dark/light theme toggle.
 
 ### Standalone: 404 Page
 
@@ -316,7 +316,7 @@ Retained for the 500 error page and the inactive tools framework. Uses `style.cs
 
 | File | Used By | Purpose |
 |------|---------|---------|
-| `css/win98.css` | win98_base.html | Complete Win98 design system (996 lines) |
+| `css/win98.css` | win98_base.html | Complete Win98 design system |
 | `css/style.css` | base.html (legacy) | Modern dark/light theme with CSS variables |
 | `css/spotify.css` | (deprecated, unlinked) | Retained on disk but no longer loaded |
 | `css/resume.css` | resume/index.html | Resume timeline styles |
@@ -372,7 +372,7 @@ Decorator: @cached(ttl_seconds=3600, key_prefix='')
   Cache key: {prefix}:{func_name}:{args}:{kwargs}
 ```
 
-**Note:** The weather blueprint uses the shared `SimpleCache` instance via `cache.get()`/`cache.set()` calls with varying TTLs (10min for current, 30min for forecast, 30min–6h for extremes). The `@cached` decorator works with both sync and async functions (detects via `inspect.iscoroutinefunction`).
+**Note:** The weather router uses the shared `SimpleCache` instance via `cache.get()`/`cache.set()` calls with varying TTLs (10min for current, 30min for forecast, 30min–6h for extremes). The `@cached` decorator works with both sync and async functions (detects via `inspect.iscoroutinefunction`).
 
 ### OAuth Client (`app/services/oauth.py`)
 
@@ -384,7 +384,9 @@ OAuthClient (base)
 
 SpotifyOAuth(OAuthClient)
   ├── Reads SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET from env
-  ├── Scopes: user-read-recently-played, user-top-read
+  ├── Scopes: user-read-recently-played, user-top-read,
+  │           user-read-currently-playing, user-read-playback-state,
+  │           user-modify-playback-state, streaming, playlist-modify-private
   └── is_configured property
 ```
 
@@ -530,7 +532,7 @@ User types (debounced 300ms)
 
 ### Win98 Design System (`win98.css`)
 
-A 996-line CSS framework implementing the full Win98 visual language:
+A dedicated CSS framework implementing the full Win98 visual language:
 
 | Component | CSS Selector | Description |
 |-----------|-------------|-------------|
@@ -593,7 +595,7 @@ A 996-line CSS framework implementing the full Win98 visual language:
 - **404:** Renders standalone BSOD page (`404.html`)
 - **500:** Renders error page via `base.html` chain (`500.html`)
 
-**Blog:** `abort(404)` if post slug not found.
+**Blog:** Raises `HTTPException(status_code=404)` if post slug not found.
 
 **Spotify API endpoints:**
 - Missing auth → 401 JSON `{ error: 'Not authenticated' }`
@@ -616,18 +618,18 @@ A 996-line CSS framework implementing the full Win98 visual language:
 
 ## Legacy Systems
 
-### Tools Framework (Inactive)
+### Tools Framework (Legacy but Active)
 
 **Files:** `app/routes/tools/__init__.py`, `app/routes/tools/spotify.py`, `app/templates/tools/`
 
-An extensible mini-app system with a registry pattern. Predates the current blueprint-per-app architecture.
+An extensible mini-app system with a registry pattern. Predates the current router-per-app architecture.
 
 ```python
 TOOLS_REGISTRY = []
 register_tool({ id, name, description, icon, tags, requires_auth })
 ```
 
-Routes would mount at `/tools/{tool_id}`. Uses the `base.html` chain, cyberpunk Spotify theme, Chart.js radar charts, and the shared OAuth/rate-limiter services.
+Routes mount at `/tools/*`. Uses the `base.html` chain, cyberpunk Spotify theme, Chart.js radar charts, and the shared OAuth/rate-limiter services.
 
 **Status:** The tools router IS registered in `create_app()` and its routes are active at `/tools/`.
 
@@ -635,7 +637,7 @@ Routes would mount at `/tools/{tool_id}`. Uses the `base.html` chain, cyberpunk 
 
 **Files:** `base.html`, `css/style.css`
 
-The original theme with CSS custom properties and dark/light toggle. Still used by `500.html` and the inactive tools framework.
+The original theme with CSS custom properties and dark/light toggle. Still used by `500.html` and the legacy tools framework.
 
 ### Shared Spotify Helpers
 
@@ -705,6 +707,7 @@ cd infra && terraform init && terraform apply   # Provision EC2
 | jinja2 | >=3.1.0 | Template engine |
 | python-dotenv | >=1.0.0 | Environment variable loading |
 | itsdangerous | >=2.2.0 | Session signing |
+| pytest-playwright | >=0.5.0 | End-to-end browser testing (dev) |
 
 ### Testing
 
@@ -722,3 +725,10 @@ uv run pytest -v      # Run all Python tests
 ```
 
 Test coverage: `tests/test_cache.py`, `tests/test_oauth.py`, `tests/test_rate_limit.py`, `tests/test_routes.py`, `tests/test_spotify_helpers.py`, `tests/test_templating.py`
+
+**End-to-End Tests (Playwright):**
+```bash
+uv run pytest e2e/ -v       # Run e2e tests (requires playwright browsers)
+```
+
+Test files: `e2e/conftest.py` (fixtures, server setup), `e2e/test_pages.py` (page smoke tests)
