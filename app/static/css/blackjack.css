@@ -1,7 +1,7 @@
 /* Blackjack Trainer - Win98 Solitaire Theme */
 
 /* ===== Window Content Override ===== */
-/* Remove padding and make flex column so toolbar + felt fill space */
+/* Remove padding and make flex column so felt fills space */
 .win98-window-content:has(.bj-felt) {
     padding: 0;
     display: flex;
@@ -60,132 +60,35 @@
     border-bottom: 1px solid var(--win98-btn-highlight);
 }
 
-/* ===== Toolbar ===== */
-.bj-toolbar {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    padding: 2px 4px;
-    background: var(--win98-gray);
-    border-bottom: 1px solid var(--win98-btn-shadow);
-    flex-shrink: 0;
-    flex-wrap: wrap;
+/* Menu checkmark (Options > Show Hints) */
+.bj-dropdown-check {
+    padding-left: 24px;
+    position: relative;
 }
 
-.bj-toolbar-group {
-    display: flex;
-    gap: 2px;
-    align-items: center;
-}
-
-.bj-toolbar-btn {
-    padding: 3px 8px;
-    background: var(--win98-gray);
-    border: 2px solid;
-    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow)
-                  var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
-    box-shadow: inset -1px -1px 0 var(--win98-btn-shadow),
-                inset 1px 1px 0 var(--win98-btn-light);
-    font-family: var(--win98-font);
+.bj-check-mark {
+    position: absolute;
+    left: 6px;
+    top: 4px;
     font-size: 11px;
-    cursor: pointer;
-    min-width: 40px;
-    text-align: center;
-    color: var(--win98-text);
+    line-height: 1;
 }
 
-.bj-toolbar-btn:active:not(:disabled) {
-    border-color: var(--win98-btn-dark-shadow) var(--win98-btn-highlight)
-                  var(--win98-btn-highlight) var(--win98-btn-dark-shadow);
-    box-shadow: inset 1px 1px 0 var(--win98-btn-shadow);
-    padding: 4px 7px 2px 9px;
-}
-
-.bj-toolbar-btn:disabled {
-    color: var(--win98-text-disabled);
-    cursor: default;
-}
-
-.bj-toolbar-btn.hint-active {
-    font-weight: bold;
-    text-decoration: underline;
-}
-
-/* Chip buttons with colored dot */
-.bj-chip-btn {
-    padding: 3px 6px;
-    background: var(--win98-gray);
-    border: 2px solid;
-    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow)
-                  var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
-    box-shadow: inset -1px -1px 0 var(--win98-btn-shadow),
-                inset 1px 1px 0 var(--win98-btn-light);
-    font-family: var(--win98-font);
-    font-size: 11px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 3px;
-    color: var(--win98-text);
-}
-
-.bj-chip-btn:active:not(:disabled) {
-    border-color: var(--win98-btn-dark-shadow) var(--win98-btn-highlight)
-                  var(--win98-btn-highlight) var(--win98-btn-dark-shadow);
-    box-shadow: inset 1px 1px 0 var(--win98-btn-shadow);
-}
-
-.bj-chip-btn:disabled {
-    color: var(--win98-text-disabled);
-    cursor: default;
-}
-
-.bj-chip-btn:disabled .bj-chip-dot {
-    opacity: 0.4;
-}
-
-.bj-chip-dot {
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    border: 1px solid rgba(0, 0, 0, 0.3);
-    flex-shrink: 0;
-}
-
-.bj-toolbar-sep {
-    width: 2px;
-    height: 20px;
-    margin: 0 2px;
-    border-left: 1px solid var(--win98-btn-shadow);
-    border-right: 1px solid var(--win98-btn-highlight);
-    flex-shrink: 0;
-}
-
-.bj-toolbar-spacer { flex: 1; }
-
-.bj-toolbar-check {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-family: var(--win98-font);
-    font-size: 11px;
-    cursor: pointer;
-    margin-right: 4px;
-    white-space: nowrap;
+.bj-dropdown-check.checked .bj-check-mark::before {
+    content: '\2713';
 }
 
 /* ===== Green Felt ===== */
 .bj-felt {
     flex: 1;
-    background: #008000;
+    background: radial-gradient(ellipse at center, #009000, #006800);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: 16px 24px;
+    padding: 20px 32px;
     min-height: 0;
     position: relative;
-    overflow: auto;
+    overflow: hidden;
 }
 
 /* ===== Hand Areas ===== */
@@ -221,36 +124,97 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100px;
+    min-height: 120px;
 }
 
 .card {
-    width: 67px;
-    height: 96px;
+    width: 80px;
+    height: 116px;
     background: #fff;
-    border: 1px solid #000;
-    border-radius: 3px;
+    border: 1px solid #333;
+    border-radius: 4px;
     position: relative;
-    box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.25);
+    box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.35);
     flex-shrink: 0;
-    margin-left: -20px;
+    margin-left: -24px;
+    font-family: Georgia, 'Times New Roman', serif;
 }
 
 .card:first-child { margin-left: 0; }
 
+/* Card corners */
+.card-corner {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+}
+
+.card-corner-tl {
+    top: 4px;
+    left: 5px;
+}
+
+.card-corner-br {
+    bottom: 4px;
+    right: 5px;
+    transform: rotate(180deg);
+}
+
+.card-rank {
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.card-suit-small {
+    font-size: 10px;
+    margin-top: -1px;
+}
+
+/* Pip layout for number cards */
+.card-pip {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    font-size: 16px;
+    line-height: 1;
+}
+
+/* Face card banner (J/Q/K) */
+.card-face-banner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 28px;
+    font-weight: bold;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.15);
+}
+
+/* Ace center symbol */
+.card-ace-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 36px;
+    line-height: 1;
+}
+
 /* Face-down: Classic Solitaire blue crosshatch */
 .card.face-down {
-    background-color: #000088;
+    background-color: #00008B;
     background-image:
-        linear-gradient(45deg, #0000AA 25%, transparent 25%,
-                        transparent 75%, #0000AA 75%),
-        linear-gradient(45deg, #0000AA 25%, transparent 25%,
-                        transparent 75%, #0000AA 75%);
-    background-size: 6px 6px;
-    background-position: 0 0, 3px 3px;
-    box-shadow: inset 0 0 0 3px #fff,
-                inset 0 0 0 4px #000088,
-                1px 1px 0 rgba(0, 0, 0, 0.25);
+        linear-gradient(45deg, #0000BB 25%, transparent 25%,
+                        transparent 75%, #0000BB 75%),
+        linear-gradient(45deg, #0000BB 25%, transparent 25%,
+                        transparent 75%, #0000BB 75%);
+    background-size: 5px 5px;
+    background-position: 0 0, 2.5px 2.5px;
+    box-shadow: inset 0 0 0 2px #00008B,
+                inset 0 0 0 3px #fff,
+                inset 0 0 0 5px #00008B,
+                1px 2px 3px rgba(0, 0, 0, 0.35);
 }
 
 /* Split hands */
@@ -268,6 +232,102 @@
 .bj-player-hand.active-hand {
     outline: 2px solid #fff;
     outline-offset: 2px;
+}
+
+/* ===== Betting Area (on felt) ===== */
+.bj-betting-area {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    z-index: 10;
+}
+
+.bj-betting-area.hidden {
+    display: none;
+}
+
+.bj-felt-chips {
+    display: flex;
+    gap: 10px;
+}
+
+.bj-felt-chip {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.2), transparent 60%), var(--chip-color);
+    border: 3px dashed rgba(255, 255, 255, 0.5);
+    color: #fff;
+    font-family: Georgia, serif;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4), inset 0 1px 3px rgba(255, 255, 255, 0.2);
+    transition: transform 0.1s;
+}
+
+.bj-felt-chip:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4), inset 0 1px 3px rgba(255, 255, 255, 0.2);
+}
+
+.bj-felt-chip:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.bj-felt-chip:disabled {
+    opacity: 0.4;
+    cursor: default;
+    transform: none !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.bj-bet-display {
+    color: #fff;
+    font-family: Georgia, serif;
+    font-size: 14px;
+    font-weight: bold;
+    text-shadow: 1px 1px 0 #004000;
+}
+
+.bj-bet-buttons {
+    display: flex;
+    gap: 6px;
+}
+
+/* ===== Action Bar (on felt) ===== */
+.bj-action-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 16px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.3), transparent);
+    z-index: 10;
+}
+
+.bj-action-bar.hidden {
+    display: none;
+}
+
+.bj-action-bar .win98-btn {
+    min-width: 64px;
+}
+
+.bj-action-bar .win98-btn.hint-active {
+    font-weight: bold;
+    outline: 2px solid #ffff00;
+    outline-offset: 1px;
 }
 
 /* ===== Result Dialog (on felt) ===== */
@@ -493,51 +553,75 @@
 
 /* ===== Responsive ===== */
 @media (max-width: 768px) {
-    .bj-toolbar {
-        gap: 1px;
-        padding: 2px;
-    }
-
-    .bj-toolbar-btn {
-        padding: 2px 5px;
-        min-width: 32px;
-        font-size: 10px;
-    }
-
-    .bj-chip-btn {
-        padding: 2px 4px;
-        font-size: 10px;
-    }
-
-    .bj-chip-dot {
-        width: 6px;
-        height: 6px;
-    }
-
     .card {
-        width: 52px;
-        height: 74px;
+        width: 62px;
+        height: 90px;
+        margin-left: -18px;
     }
+
+    .card-rank { font-size: 11px; }
+    .card-suit-small { font-size: 8px; }
+    .card-pip { font-size: 13px; }
+    .card-face-banner { font-size: 22px; }
+    .card-ace-center { font-size: 28px; }
 
     .bj-felt {
-        padding: 8px 12px;
+        padding: 12px 16px;
     }
 
-    .bj-cards { min-height: 78px; }
-
+    .bj-cards { min-height: 94px; }
     .bj-result { min-width: 180px; }
+
+    .bj-felt-chip {
+        width: 36px;
+        height: 36px;
+        font-size: 11px;
+        border-width: 2px;
+    }
+
+    .bj-felt-chips { gap: 6px; }
+
+    .bj-action-bar .win98-btn {
+        min-width: 48px;
+        font-size: 10px;
+    }
 }
 
 @media (max-width: 480px) {
-    .bj-toolbar-group {
-        flex-wrap: wrap;
-    }
-
     .card {
-        width: 44px;
-        height: 63px;
-        margin-left: -16px;
+        width: 50px;
+        height: 72px;
+        margin-left: -14px;
     }
 
-    .bj-cards { min-height: 67px; }
+    .card-corner-tl { top: 2px; left: 3px; }
+    .card-corner-br { bottom: 2px; right: 3px; }
+    .card-rank { font-size: 9px; }
+    .card-suit-small { font-size: 7px; }
+    .card-pip { font-size: 10px; }
+    .card-face-banner { font-size: 16px; }
+    .card-ace-center { font-size: 22px; }
+
+    .bj-cards { min-height: 76px; }
+
+    .bj-felt-chip {
+        width: 32px;
+        height: 32px;
+        font-size: 10px;
+        border-width: 2px;
+    }
+
+    .bj-felt-chips { gap: 4px; }
+    .bj-bet-display { font-size: 12px; }
+
+    .bj-action-bar {
+        gap: 4px;
+        padding: 8px 8px;
+    }
+
+    .bj-action-bar .win98-btn {
+        min-width: 40px;
+        font-size: 9px;
+        padding: 2px 4px;
+    }
 }

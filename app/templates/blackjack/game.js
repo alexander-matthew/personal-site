@@ -8,7 +8,7 @@
     // --- DOM refs ---
     const $ = id => document.getElementById(id);
 
-    // Toolbar buttons
+    // Action buttons
     const hitBtn       = $('hit-btn');
     const standBtn     = $('stand-btn');
     const doubleBtn    = $('double-btn');
@@ -16,7 +16,15 @@
     const insuranceBtn = $('insurance-btn');
     const dealBtn      = $('deal-btn');
     const clearBetBtn  = $('clear-bet');
-    const hintCheckbox = $('hint-mode');
+
+    // Betting & action areas
+    const bettingArea   = $('betting-area');
+    const betDisplay    = $('bet-display');
+    const actionBar     = $('action-bar');
+
+    // Hints state (toggled via Options menu)
+    let hintsEnabled = false;
+    const menuHintsItem = $('menu-hints');
 
     // Felt areas
     const dealerCardsEl = $('dealer-cards');
@@ -43,7 +51,7 @@
     const mistakesList   = $('mistakes-list');
 
     // Chip buttons
-    const chipBtns = document.querySelectorAll('.bj-chip-btn');
+    const chipBtns = document.querySelectorAll('.bj-felt-chip');
 
     // --- Stats ---
     let stats = loadStats();
@@ -73,31 +81,70 @@
     const SUIT_SYMBOLS = { hearts: '\u2665', diamonds: '\u2666', clubs: '\u2663', spades: '\u2660' };
     const SUIT_COLORS  = { hearts: '#c00', diamonds: '#c00', clubs: '#000', spades: '#000' };
 
+    // Pip positions [left%, top%] for number cards (standard playing card layout)
+    const PIP_LAYOUTS = {
+        '2':  [[50,20], [50,80]],
+        '3':  [[50,20], [50,50], [50,80]],
+        '4':  [[30,20], [70,20], [30,80], [70,80]],
+        '5':  [[30,20], [70,20], [50,50], [30,80], [70,80]],
+        '6':  [[30,20], [70,20], [30,50], [70,50], [30,80], [70,80]],
+        '7':  [[30,20], [70,20], [50,35], [30,50], [70,50], [30,80], [70,80]],
+        '8':  [[30,20], [70,20], [50,35], [30,50], [70,50], [50,65], [30,80], [70,80]],
+        '9':  [[30,20], [70,20], [30,38], [70,38], [50,50], [30,62], [70,62], [30,80], [70,80]],
+        '10': [[30,18], [70,18], [50,30], [30,40], [70,40], [30,60], [70,60], [50,70], [30,82], [70,82]]
+    };
+
     function renderCard(card) {
         const el = document.createElement('div');
         el.className = 'card' + (card.faceDown ? ' face-down' : '');
-        if (!card.faceDown) {
-            const sym = SUIT_SYMBOLS[card.suit];
-            const color = SUIT_COLORS[card.suit];
+        if (card.faceDown) return el;
 
-            const topRank = document.createElement('span');
-            topRank.style.cssText = 'position:absolute;top:4px;left:5px;font-size:15px;font-weight:bold;color:' + color;
-            topRank.textContent = card.rank;
+        const sym = SUIT_SYMBOLS[card.suit];
+        const color = SUIT_COLORS[card.suit];
+        const rank = '' + card.rank;
 
-            const topSuit = document.createElement('span');
-            topSuit.style.cssText = 'position:absolute;top:19px;left:5px;font-size:12px;color:' + color;
-            topSuit.textContent = sym;
+        // Corner indices — top-left
+        const cornerTL = document.createElement('div');
+        cornerTL.className = 'card-corner card-corner-tl';
+        cornerTL.style.color = color;
+        cornerTL.innerHTML = '<span class="card-rank">' + rank + '</span><span class="card-suit-small">' + sym + '</span>';
 
-            const bottomRank = document.createElement('span');
-            bottomRank.style.cssText = 'position:absolute;bottom:4px;right:5px;font-size:15px;font-weight:bold;color:' + color + ';transform:rotate(180deg)';
-            bottomRank.textContent = card.rank;
+        // Corner indices — bottom-right (rotated)
+        const cornerBR = document.createElement('div');
+        cornerBR.className = 'card-corner card-corner-br';
+        cornerBR.style.color = color;
+        cornerBR.innerHTML = '<span class="card-rank">' + rank + '</span><span class="card-suit-small">' + sym + '</span>';
 
-            const center = document.createElement('span');
-            center.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:26px;color:' + color;
-            center.textContent = sym;
+        el.append(cornerTL, cornerBR);
 
-            el.append(topRank, topSuit, bottomRank, center);
+        // Card body
+        if (rank === 'A') {
+            const ace = document.createElement('span');
+            ace.className = 'card-ace-center';
+            ace.style.color = color;
+            ace.textContent = sym;
+            el.appendChild(ace);
+        } else if (rank === 'J' || rank === 'Q' || rank === 'K') {
+            const banner = document.createElement('div');
+            banner.className = 'card-face-banner';
+            banner.style.color = color;
+            banner.textContent = rank;
+            el.appendChild(banner);
+        } else {
+            const pips = PIP_LAYOUTS[rank];
+            if (pips) {
+                pips.forEach(function(pos) {
+                    const pip = document.createElement('span');
+                    pip.className = 'card-pip';
+                    pip.style.color = color;
+                    pip.style.left = pos[0] + '%';
+                    pip.style.top = pos[1] + '%';
+                    pip.textContent = sym;
+                    el.appendChild(pip);
+                });
+            }
         }
+
         return el;
     }
 
@@ -139,11 +186,19 @@
         // Status bar
         statusBalance.textContent = 'Balance: $' + game.balance;
         statusBet.textContent = 'Bet: $' + pendingBet;
+        betDisplay.textContent = '$' + pendingBet;
 
-        // Toolbar state
+        // Toggle betting area vs action bar
+        if (game.isPlaying) {
+            bettingArea.classList.add('hidden');
+            actionBar.classList.remove('hidden');
+        } else {
+            bettingArea.classList.remove('hidden');
+            actionBar.classList.add('hidden');
+        }
+
+        // Deal/chip state
         dealBtn.disabled = pendingBet === 0 || game.isPlaying;
-
-        // Chip buttons: disabled during play
         chipBtns.forEach(btn => { btn.disabled = game.isPlaying; });
         clearBetBtn.disabled = game.isPlaying || pendingBet === 0;
 
@@ -163,7 +218,7 @@
         splitBtn.disabled = !game.canSplit();
         insuranceBtn.disabled = !game.canTakeInsurance();
 
-        if (hintCheckbox.checked) showHint();
+        if (hintsEnabled) showHint();
     }
 
     function showHint() {
@@ -379,7 +434,7 @@
     resultOkBtn.addEventListener('click', hideResult);
 
     // --- Menu System ---
-    const menuMap = { game: $('menu-game'), help: $('menu-help') };
+    const menuMap = { game: $('menu-game'), options: $('menu-options'), help: $('menu-help') };
     let openMenu = null;
 
     document.querySelectorAll('[data-menu]').forEach(trigger => {
@@ -432,6 +487,12 @@
                     saveStats();
                     updateStatusBar();
                 }
+                break;
+            case 'toggle-hints':
+                hintsEnabled = !hintsEnabled;
+                menuHintsItem.classList.toggle('checked', hintsEnabled);
+                if (hintsEnabled && game.isPlaying) showHint();
+                else clearHints();
                 break;
             case 'about':
                 aboutDialog.style.display = '';
@@ -505,6 +566,14 @@
         legend.textContent = 'H=Hit S=Stand D=Double P=Split Ds=Double/Stand';
         strategyChart.appendChild(legend);
     }
+
+    // --- Keyboard Shortcuts ---
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'F2') {
+            e.preventDefault();
+            if (pendingBet > 0 && !game.isPlaying) startDeal();
+        }
+    });
 
     // --- Init ---
     updateUI();
