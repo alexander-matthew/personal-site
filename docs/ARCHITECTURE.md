@@ -1,7 +1,7 @@
 # Architecture Reference
 
 > Personal-Site — A FastAPI application styled as a Windows 98 desktop environment.
-> This document describes the system as it exists on the `feature/spotify-redesign` branch.
+> This document describes the system architecture and design decisions.
 
 ---
 
@@ -9,7 +9,7 @@
 
 - [System Overview](#system-overview)
 - [Application Lifecycle](#application-lifecycle)
-- [Routing & Blueprints](#routing--blueprints)
+- [Routing & Routers](#routing--routers)
 - [Template Architecture](#template-architecture)
 - [Static Assets](#static-assets)
 - [Services Layer](#services-layer)
@@ -27,38 +27,51 @@
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │  Browser                                                        │
-│  ┌───────────────────┐  ┌────────────────┐  ┌───────────────┐  │
-│  │ Win98 UI (CSS/JS) │  │ Spotify Player │  │ ASCII Background│ │
-│  │ Desktop, Taskbar, │  │ (Web Playback  │  │ (Three.js)     │ │
-│  │ Start Menu, Icons │  │  SDK)          │  │                │ │
-│  └────────┬──────────┘  └───────┬────────┘  └───────┬────────┘ │
-│           │ fetch                │ fetch              │ events   │
-└───────────┼──────────────────────┼───────────────────┼──────────┘
-            │                      │                    │
-┌───────────┼──────────────────────┼────────────────────┼─────────┐
-│  FastAPI  │                      │                    │         │
-│  ┌────────▼──────────────────────▼────────────────────┘         │
-│  │  Routers (10 registered)                                      │
-│  │  main │ blog │ news │ spotify │ blackjack │ sudoku │ ...     │
-│  ├───────────────────────────────────────────────────────────── │
-│  │  Services                                                    │
-│  │  ┌──────────┐  ┌───────────┐  ┌──────────────┐              │
-│  │  │ Cache    │  │ OAuth     │  │ Rate Limiter │              │
-│  │  │ (file)   │  │ (Spotify) │  │ (in-memory)  │              │
-│  │  └────┬─────┘  └─────┬─────┘  └──────────────┘              │
-│  └───────┼───────────────┼──────────────────────────────────────┘
-│          │               │                                       │
-└──────────┼───────────────┼───────────────────────────────────────┘
-           │               │
-    ┌──────▼──────┐  ┌─────▼──────────────┐
-    │ /tmp cache  │  │ External APIs      │
-    │ (JSON files)│  │ - Spotify Web API  │
-    └─────────────┘  │ - Open-Meteo       │
-                     └────────────────────┘
+│  ┌───────────────────┐  ┌────────────────┐                     │
+│  │ Win98 UI (CSS/JS) │  │ Spotify Player │                     │
+│  │ Desktop, Taskbar, │  │ (Web Playback  │                     │
+│  │ Start Menu, Icons │  │  SDK)          │                     │
+│  └────────┬──────────┘  └───────┬────────┘                     │
+│           │ fetch                │ fetch                        │
+└───────────┼──────────────────────┼──────────────────────────────┘
+            │                      │
+┌───────────┼──────────────────────┼──────────────────────────────┐
+│  EC2 (Docker Compose)            │                              │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │  nginx (reverse proxy, HTTPS termination, Let's Encrypt)  │  │
+│  └────────┬──────────────────────┬───────────────────────────┘  │
+│  ┌────────▼──────────────────────▼────────────────────────────┐ │
+│  │  FastAPI (uvicorn, --proxy-headers)                         │ │
+│  │  ┌─────────────────────────────────────────────────────────┤ │
+│  │  │  Routers (10 registered)                                │ │
+│  │  │  main │ blog │ news │ spotify │ blackjack │ sudoku │ .. │ │
+│  │  ├─────────────────────────────────────────────────────────┤ │
+│  │  │  Services                                               │ │
+│  │  │  ┌──────────┐  ┌───────────┐  ┌──────────────┐         │ │
+│  │  │  │ Cache    │  │ OAuth     │  │ Rate Limiter │         │ │
+│  │  │  │ (file)   │  │ (Spotify) │  │ (in-memory)  │         │ │
+│  │  │  └────┬─────┘  └─────┬─────┘  └──────────────┘         │ │
+│  │  ├───────┼───────────────┼─────────────────────────────────┤ │
+│  │  │  Shared HTTP Client (httpx.AsyncClient)                 │ │
+│  │  └───────┼───────────────┼─────────────────────────────────┘ │
+│  │          │               │                                    │
+│  └──────────┼───────────────┼────────────────────────────────────┘
+│             │               │
+│      ┌──────▼──────┐        │
+│      │ /tmp cache  │        │
+│      │ (JSON files)│        │
+│      └─────────────┘        │
+└─────────────────────────────┼────────────────────────────────────┘
+                              │
+                        ┌─────▼──────────────┐
+                        │ External APIs      │
+                        │ - Spotify Web API  │
+                        │ - Open-Meteo       │
+                        └────────────────────┘
 ```
 
-**Stack:** Python 3.11 / FastAPI / Uvicorn / Heroku
-**Frontend:** Vanilla JS, Three.js (ASCII background), Spotify Web Playback SDK
+**Stack:** Python 3.11 / FastAPI / Uvicorn / Docker Compose / nginx / AWS EC2
+**Frontend:** Vanilla JS, Spotify Web Playback SDK
 **External APIs:** Spotify Web API (OAuth 2.0), Open-Meteo (public, no auth)
 
 ---
@@ -71,21 +84,28 @@
 
 ```
 main.py  →  create_app()  →  FastAPI instance
-                ├── SECRET_KEY from env (fallback: 'dev-key-for-local-only')
-                ├── Context processor: injects SITE_CONFIG as {{ site }}
+                ├── Lifespan: create/close shared httpx.AsyncClient
+                ├── SECRET_KEY from env (required in production, raises RuntimeError if missing)
+                ├── Security headers middleware (CSP, X-Frame-Options, HSTS in production)
+                ├── Session middleware (1 week max_age, lax same_site, https_only in production)
+                ├── Template globals: injects SITE_CONFIG as {{ site }}
                 ├── Error handlers: 404, 500
-                └── Blueprint registration (9 blueprints, in order)
+                └── Router registration (10 routers, in order)
 ```
 
 ### App Factory: `app/__init__.py`
 
 The factory (`create_app()`) performs these steps:
 
-1. Creates FastAPI instance
-2. Sets `SECRET_KEY` from environment
-3. Registers a context processor that injects `SITE_CONFIG` into all templates
-4. Registers error handlers for 404 and 500
-5. Registers all 9 blueprints with their URL prefixes
+1. Creates FastAPI instance with lifespan context manager
+2. Lifespan startup: creates shared `httpx.AsyncClient` on `app.state.http_client`
+3. Lifespan shutdown: closes HTTP client to release connections
+4. Adds security headers middleware (CSP, X-Frame-Options, Referrer-Policy, HSTS)
+5. Adds session middleware (1 week max_age)
+6. Validates `SECRET_KEY` (required in production, raises RuntimeError if missing)
+7. Registers Jinja globals (`site`, custom `url_for`) for all templates
+8. Registers error handlers for 404 and 500
+9. Registers all 10 routers with their URL prefixes
 
 ### SITE_CONFIG
 
@@ -110,7 +130,7 @@ Global site metadata available in every template as `{{ site }}`:
 
 ---
 
-## Routing & Blueprints
+## Routing & Routers
 
 ### Registration Order
 
@@ -162,7 +182,6 @@ Global site metadata available in every template as `{{ site }}`:
 | `/projects/spotify/api/recent` | Last 50 played tracks |
 | `/projects/spotify/api/top/<time_range>` | Top artists/tracks (`short_term`, `medium_term`, `long_term`) |
 | `/projects/spotify/api/genres` | Genre breakdown from top artists |
-| `/projects/spotify/api/audio-features` | Average audio feature analysis |
 | `/projects/spotify/api/taste-evolution` | Artist comparison across time ranges |
 | `/projects/spotify/api/token` | Access token for Web Playback SDK |
 | `/projects/spotify/api/playback-state` | Current playback state |
@@ -172,6 +191,7 @@ Global site metadata available in every template as `{{ site }}`:
 
 | Route | Description |
 |-------|-------------|
+| `/projects/spotify/api/create-playlist` | Create private playlist from top tracks |
 | `/projects/spotify/api/transfer` | Transfer playback to device |
 | `/projects/spotify/api/play` | Start/resume playback |
 | `/projects/spotify/api/pause` | Pause playback |
@@ -282,7 +302,7 @@ base.html
     └── tools/spotify/index.html
 ```
 
-Retained for the 500 error page and the inactive tools framework. Uses `style.css`, Three.js ASCII background, and dark/light theme toggle.
+Retained for the 500 error page and the legacy tools framework. Uses `style.css` and dark/light theme toggle.
 
 ### Standalone: 404 Page
 
@@ -296,9 +316,9 @@ Retained for the 500 error page and the inactive tools framework. Uses `style.cs
 
 | File | Used By | Purpose |
 |------|---------|---------|
-| `css/win98.css` | win98_base.html | Complete Win98 design system (996 lines) |
+| `css/win98.css` | win98_base.html | Complete Win98 design system |
 | `css/style.css` | base.html (legacy) | Modern dark/light theme with CSS variables |
-| `css/spotify.css` | spotify/index.html | ASCII-themed Spotify dashboard |
+| `css/spotify.css` | (deprecated, unlinked) | Retained on disk but no longer loaded |
 | `css/resume.css` | resume/index.html | Resume timeline styles |
 | `css/blackjack.css` | blackjack/index.html | Blackjack game (supplemented by inline styles) |
 | `css/sudoku.css` | sudoku/index.html | Sudoku grid (supplemented by inline styles) |
@@ -312,8 +332,7 @@ Retained for the 500 error page and the inactive tools framework. Uses `style.cs
 | File | Type | Purpose |
 |------|------|---------|
 | `js/win98.js` | IIFE | Win98 interactivity: clock, start menu, desktop icons, tabs, window controls, dialog system |
-| `js/ascii-background.js` | ES Module | Three.js ASCII particle animation with weather-reactive patterns and mouse ripple effect |
-| `js/spotify-ascii.js` | IIFE → `SpotifyASCII` | ASCII rendering utilities (bars, heatmaps, charts using Unicode block characters) |
+| `js/spotify-ascii.js` | IIFE → `SpotifyASCII` | Win98 HTML component rendering (progress bars, tables, listviews) |
 | `js/spotify-player.js` | IIFE → `SpotifyPlayer` | Spotify Web Playback SDK integration (player init, state, UI, device management) |
 | `js/blackjack-engine.js` | Classic | Blackjack game logic, strategy charts, card shuffling |
 | `js/sudoku-engine.js` | Classic | Sudoku puzzle generation, validation, solver |
@@ -327,7 +346,6 @@ Retained for the 500 error page and the inactive tools framework. Uses `style.cs
 
 | Library | Version | Used In |
 |---------|---------|---------|
-| Three.js | 0.160.0 | `base.html` via import map (unpkg) |
 | Chart.js | latest | `tools/spotify/index.html` (jsdelivr) |
 | Font Awesome | 6.4.0 | `weather/index.html` (cdnjs) |
 | Spotify Web Playback SDK | latest | `spotify-player.js` (dynamically loaded from sdk.scdn.co) |
@@ -354,7 +372,7 @@ Decorator: @cached(ttl_seconds=3600, key_prefix='')
   Cache key: {prefix}:{func_name}:{args}:{kwargs}
 ```
 
-**Note:** The weather blueprint uses the shared `SimpleCache` instance via `cache.get()`/`cache.set()` calls with varying TTLs (10min for current, 30min for forecast, 30min–6h for extremes). The `@cached` decorator is sync-only; async endpoints must use the cache instance directly.
+**Note:** The weather router uses the shared `SimpleCache` instance via `cache.get()`/`cache.set()` calls with varying TTLs (10min for current, 30min for forecast, 30min–6h for extremes). The `@cached` decorator works with both sync and async functions (detects via `inspect.iscoroutinefunction`).
 
 ### OAuth Client (`app/services/oauth.py`)
 
@@ -366,7 +384,9 @@ OAuthClient (base)
 
 SpotifyOAuth(OAuthClient)
   ├── Reads SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET from env
-  ├── Scopes: user-read-recently-played, user-top-read
+  ├── Scopes: user-read-recently-played, user-top-read,
+  │           user-read-currently-playing, user-read-playback-state,
+  │           user-modify-playback-state, streaming, playlist-modify-private
   └── is_configured property
 ```
 
@@ -382,7 +402,7 @@ SpotifyOAuth(OAuthClient)
   On limit: Returns 429 JSON
 ```
 
-Used by Spotify auth/data endpoints and all Weather API endpoints. Note: Spotify playback control POST endpoints (`/api/play`, `/api/pause`, etc.) do not currently have rate limiting.
+Used by all Spotify endpoints (auth, data, and playback control) and all Weather API endpoints.
 
 ---
 
@@ -399,6 +419,7 @@ Used by Spotify auth/data endpoints and all Weather API endpoints. Note: Spotify
 - `user-read-playback-state`
 - `user-modify-playback-state`
 - `streaming`
+- `playlist-modify-private`
 
 **Flow:**
 
@@ -468,7 +489,7 @@ _spotify_request(endpoint)
 2. Fetches token from `/api/token`
 3. Creates Spotify player instance in browser
 4. Manages playback state, device transfer, volume
-5. Dispatches `audioProfileChange` events consumed by ASCII background
+5. Dispatches `audioProfileChange` events
 
 ### Weather
 
@@ -494,11 +515,6 @@ Page Load
   │
   ▼
 Frontend renders data
-  │  Dispatches 'weatherchange' CustomEvent
-  │
-  ▼
-ascii-background.js
-    Transitions particle animation to match weather theme
 ```
 
 **City Search:**
@@ -516,7 +532,7 @@ User types (debounced 300ms)
 
 ### Win98 Design System (`win98.css`)
 
-A 996-line CSS framework implementing the full Win98 visual language:
+A dedicated CSS framework implementing the full Win98 visual language:
 
 | Component | CSS Selector | Description |
 |-----------|-------------|-------------|
@@ -561,38 +577,12 @@ A 996-line CSS framework implementing the full Win98 visual language:
 | Window Controls | 122-144 | Close/Minimize → navigate to `/`, Maximize is decorative |
 | Dialog System | 146-229 | `win98Alert(msg, title)` and `win98Confirm(msg, title)` (Promise-based) |
 
-### ASCII Background (`ascii-background.js`)
-
-Only active on pages using `base.html` (currently just 500 error page and inactive tools framework). Uses Three.js to render 250 sphere particles as ASCII characters.
-
-**Weather-Reactive Animations:**
-
-| Theme | Motion Pattern |
-|-------|---------------|
-| Sunny | Gentle upward heat shimmer |
-| Partly Cloudy | Moderate billowing with drift |
-| Cloudy | Large slow horizontal waves |
-| Rainy | Fast downward streaks angled by wind |
-| Stormy | Heavy rain with chaotic bursts |
-| Snowy | Gentle swaying descent with wind drift |
-| Foggy | Very slow, large particle drift |
-
-**Exports:** `initAsciiBackground(containerId, isDark)`, `updateAsciiTheme(isDark)`, `updateAsciiWeather(weatherTheme)`
-
-### Custom Events
-
-| Event | Source | Consumer | Payload |
-|-------|--------|----------|---------|
-| `weatherchange` | Weather page JS | `ascii-background.js` | `{ theme: string }` |
-| `audioProfileChange` | `spotify-ascii.js` | `ascii-background.js` | `{ energy, danceability, valence, acousticness, tempo }` |
-
 ### Client-Side State (localStorage)
 
 | Key | Type | Purpose |
 |-----|------|---------|
 | `theme` | `'dark'` \| `'light'` | Dark/light mode preference (legacy, base.html only) |
 | `weather_last_city` | JSON `{ lat, lon, name }` | Last searched weather city |
-| `spotify_player_expanded` | boolean | Player bar expand/collapse state |
 | `spotify_player_volume` | float (0-1) | Playback volume level |
 
 ---
@@ -605,7 +595,7 @@ Only active on pages using `base.html` (currently just 500 error page and inacti
 - **404:** Renders standalone BSOD page (`404.html`)
 - **500:** Renders error page via `base.html` chain (`500.html`)
 
-**Blog:** `abort(404)` if post slug not found.
+**Blog:** Raises `HTTPException(status_code=404)` if post slug not found.
 
 **Spotify API endpoints:**
 - Missing auth → 401 JSON `{ error: 'Not authenticated' }`
@@ -613,9 +603,8 @@ Only active on pages using `base.html` (currently just 500 error page and inacti
 - Token expiry → auto-refresh and retry (once)
 
 **Weather API endpoints:**
-- Missing parameters → 400 JSON
-- Invalid coordinates → 400 JSON (on `float()` ValueError)
-- External API failure → 500 JSON (catches `httpx.HTTPError`)
+- Missing/invalid parameters → 422 JSON (FastAPI Query validation)
+- External API failure → 502 JSON (catches `httpx.HTTPError`)
 - Individual location failures in extremes endpoint → silently skipped
 
 ### Client-Side
@@ -629,26 +618,26 @@ Only active on pages using `base.html` (currently just 500 error page and inacti
 
 ## Legacy Systems
 
-### Tools Framework (Inactive)
+### Tools Framework (Legacy but Active)
 
 **Files:** `app/routes/tools/__init__.py`, `app/routes/tools/spotify.py`, `app/templates/tools/`
 
-An extensible mini-app system with a registry pattern. Predates the current blueprint-per-app architecture.
+An extensible mini-app system with a registry pattern. Predates the current router-per-app architecture.
 
 ```python
 TOOLS_REGISTRY = []
 register_tool({ id, name, description, icon, tags, requires_auth })
 ```
 
-Routes would mount at `/tools/{tool_id}`. Uses the `base.html` chain, cyberpunk Spotify theme, Chart.js radar charts, and the shared OAuth/rate-limiter services.
+Routes mount at `/tools/*`. Uses the `base.html` chain, cyberpunk Spotify theme, Chart.js radar charts, and the shared OAuth/rate-limiter services.
 
 **Status:** The tools router IS registered in `create_app()` and its routes are active at `/tools/`.
 
 ### Modern Dark Theme (Partially Active)
 
-**Files:** `base.html`, `css/style.css`, `js/ascii-background.js`
+**Files:** `base.html`, `css/style.css`
 
-The original theme with CSS custom properties, dark/light toggle, and Three.js ASCII background. Still used by `500.html`. The ASCII background JS is also referenced by the Spotify and Weather pages for audio/weather-reactive animations, though those pages now use the Win98 template chain.
+The original theme with CSS custom properties and dark/light toggle. Still used by `500.html` and the legacy tools framework.
 
 ### Shared Spotify Helpers
 
@@ -660,25 +649,53 @@ Both Spotify route files (`app/routes/spotify.py` and `app/routes/tools/spotify.
 
 ### Platform
 
-Heroku (`mighty-shelf-14141`) with automatic deployment via GitHub Actions on merge to `main`.
+AWS EC2 (t3.micro, Amazon Linux 2023) with Docker Compose. Automatic deployment via GitHub Actions SSH on merge to `main`.
+
+### Architecture
+
+```
+EC2 Instance
+├── Docker Compose
+│   ├── web       — Python app (Dockerfile: python:3.11-slim + uv)
+│   ├── nginx     — Reverse proxy, HTTPS termination (nginx:1.27-alpine)
+│   └── certbot   — Let's Encrypt certificate renewal
+├── certbot/      — SSL certs (Let's Encrypt)
+└── .env          — Environment variables (written by deploy.sh)
+```
 
 ### Runtime
 
-| File | Purpose | Value |
-|------|---------|-------|
-| `Procfile` | Process definition | `web: uvicorn main:app --host 0.0.0.0 --port $PORT --proxy-headers` |
-| `requirements.txt` | Dependencies | fastapi, uvicorn, httpx, jinja2, python-dotenv, itsdangerous |
+| File | Purpose |
+|------|---------|
+| `Dockerfile` | Builds app image: python:3.11-slim, uv sync, uvicorn with `--proxy-headers` |
+| `docker-compose.yml` | Orchestrates web + nginx + certbot services |
+| `nginx/default.conf.template` | HTTP→HTTPS redirect, reverse proxy to `web:8000` |
+
+### Infrastructure (Terraform)
+
+| File | Purpose |
+|------|---------|
+| `infra/main.tf` | EC2, security group (SSH/HTTP/HTTPS), elastic IP |
+| `infra/variables.tf` | Domain, secrets, SSH key path, region, instance type |
+| `infra/outputs.tf` | Elastic IP, SSH command, next steps |
 
 ### Deploy Pipeline
 
 ```
 PR merged to main
   → GitHub Actions workflow triggers
-    → Pushes to Heroku
-      → Heroku builds + deploys
+    → SSH into EC2 (appleboy/ssh-action)
+      → git pull origin main
+      → docker compose up -d --build
 ```
 
-Manual: `git push heroku main`
+### Initial Deploy
+
+```bash
+cd infra && terraform init && terraform apply   # Provision EC2
+# Point DNS A record → Elastic IP
+./deploy.sh                                      # Sync files, bootstrap HTTPS
+```
 
 ### Dependencies
 
@@ -690,6 +707,7 @@ Manual: `git push heroku main`
 | jinja2 | >=3.1.0 | Template engine |
 | python-dotenv | >=1.0.0 | Environment variable loading |
 | itsdangerous | >=2.2.0 | Session signing |
+| pytest-playwright | >=0.5.0 | End-to-end browser testing (dev) |
 
 ### Testing
 
@@ -706,4 +724,11 @@ uv sync --dev         # Install test deps (pytest, pytest-asyncio, respx)
 uv run pytest -v      # Run all Python tests
 ```
 
-Test coverage: `tests/test_cache.py`, `tests/test_oauth.py`, `tests/test_rate_limit.py`, `tests/test_routes.py`, `tests/test_templating.py`
+Test coverage: `tests/test_cache.py`, `tests/test_oauth.py`, `tests/test_rate_limit.py`, `tests/test_routes.py`, `tests/test_spotify_helpers.py`, `tests/test_templating.py`
+
+**End-to-End Tests (Playwright):**
+```bash
+uv run pytest e2e/ -v       # Run e2e tests (requires playwright browsers)
+```
+
+Test files: `e2e/conftest.py` (fixtures, server setup), `e2e/test_pages.py` (page smoke tests)

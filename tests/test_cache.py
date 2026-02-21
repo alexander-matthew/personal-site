@@ -3,6 +3,8 @@ import json
 import os
 import time
 
+import pytest
+
 from app.services.cache import SimpleCache, cached
 
 
@@ -119,5 +121,47 @@ class TestCachedDecorator:
 
             assert add(1, 2) == 3
             assert add(3, 4) == 7
+        finally:
+            cache_module.cache = original
+
+    @pytest.mark.asyncio
+    async def test_async_cached_decorator(self, tmp_cache_dir):
+        """Async functions should be cached and awaited correctly."""
+        call_count = 0
+        c = SimpleCache(cache_dir=tmp_cache_dir)
+
+        import app.services.cache as cache_module
+        original = cache_module.cache
+        cache_module.cache = c
+        try:
+            @cached(ttl_seconds=60, key_prefix='async_test')
+            async def async_expensive(x):
+                nonlocal call_count
+                call_count += 1
+                return {"value": x * 2}
+
+            first = await async_expensive(5)
+            second = await async_expensive(5)
+            assert first == {"value": 10}
+            assert first == second
+            assert call_count == 1  # only called once due to cache hit
+        finally:
+            cache_module.cache = original
+
+    @pytest.mark.asyncio
+    async def test_async_cached_different_args(self, tmp_cache_dir):
+        """Async cached decorator should produce different keys for different args."""
+        c = SimpleCache(cache_dir=tmp_cache_dir)
+
+        import app.services.cache as cache_module
+        original = cache_module.cache
+        cache_module.cache = c
+        try:
+            @cached(ttl_seconds=60, key_prefix='async_test')
+            async def async_add(a, b):
+                return a + b
+
+            assert await async_add(1, 2) == 3
+            assert await async_add(3, 4) == 7
         finally:
             cache_module.cache = original

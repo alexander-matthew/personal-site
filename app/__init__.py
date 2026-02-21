@@ -1,5 +1,8 @@
 import logging
 import os
+from contextlib import asynccontextmanager
+
+import httpx
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -22,30 +25,58 @@ SITE_CONFIG = {
 
 def create_app() -> FastAPI:
     logging.basicConfig(level=logging.INFO)
-    app = FastAPI(docs_url=None, redoc_url=None)
 
-    # Security headers middleware
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        # Startup: create a shared HTTP client for all outbound requests
+        app.state.http_client = httpx.AsyncClient(timeout=10)
+        yield
+        # Shutdown: close the client to release connections
+        await app.state.http_client.aclose()
+
+    app = FastAPI(docs_url=None, redoc_url=None, lifespan=lifespan)
+
     is_production = os.environ.get('FLASK_DEBUG', 'true').lower() == 'false'
 
+    # Require SECRET_KEY in production — refuse to start with a weak default
+    secret_key = os.environ.get('SECRET_KEY')
+    if not secret_key:
+        if is_production:
+            raise RuntimeError(
+                "SECRET_KEY environment variable is required in production. "
+                "Generate one with: python -c \"import secrets; print(secrets.token_urlsafe(64))\""
+            )
+        secret_key = 'dev-key-for-local-only'
+
+    # Security headers middleware
     class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         async def dispatch(self, request, call_next):
             response = await call_next(request)
             response.headers['X-Content-Type-Options'] = 'nosniff'
             response.headers['X-Frame-Options'] = 'DENY'
             response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+            response.headers['Content-Security-Policy'] = (
+                "default-src 'self'; "
+                "script-src 'self' 'unsafe-inline' https://unpkg.com https://sdk.scdn.co; "
+                "style-src 'self' 'unsafe-inline'; "
+                "img-src 'self' data: https:; "
+                "connect-src 'self' https:; "
+                "media-src 'self' https:; "
+                "frame-ancestors 'none'"
+            )
             if is_production:
                 response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
             return response
 
     app.add_middleware(SecurityHeadersMiddleware)
 
-    # Session middleware (replaces Flask's signed cookie sessions)
+    # Session middleware
     app.add_middleware(
         SessionMiddleware,
-        secret_key=os.environ.get('SECRET_KEY', 'dev-key-for-local-only'),
+        secret_key=secret_key,
         same_site='lax',
         https_only=is_production,
-        max_age=14 * 24 * 3600,  # 2 weeks
+        max_age=7 * 24 * 3600,  # 1 week
     )
 
     # Mount static files

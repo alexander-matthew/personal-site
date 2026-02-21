@@ -45,35 +45,33 @@ class OAuthClient:
             f"{self.client_id}:{self.client_secret}".encode()
         ).decode()
 
-    async def exchange_code(self, code, redirect_uri):
+    async def exchange_code(self, code, redirect_uri, *, http_client: httpx.AsyncClient):
         """Exchange authorization code for tokens. Raises OAuthError on failure."""
-        async with httpx.AsyncClient(timeout=10) as client:
-            response = await client.post(self.token_url, data={
-                'grant_type': 'authorization_code',
-                'code': code,
-                'redirect_uri': redirect_uri,
-            }, headers={
-                'Authorization': f'Basic {self._auth_header()}',
-                'Content-Type': 'application/x-www-form-urlencoded'
-            })
+        response = await http_client.post(self.token_url, data={
+            'grant_type': 'authorization_code',
+            'code': code,
+            'redirect_uri': redirect_uri,
+        }, headers={
+            'Authorization': f'Basic {self._auth_header()}',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        })
         if response.is_success:
             return response.json()
-        logger.error("OAuth exchange_code failed: %s %s", response.status_code, response.text)
+        logger.error("OAuth exchange_code failed: %s", response.status_code)
         raise OAuthError(f"Token exchange failed with status {response.status_code}")
 
-    async def refresh_token(self, refresh_token):
+    async def refresh_token(self, refresh_token, *, http_client: httpx.AsyncClient):
         """Refresh access token. Raises OAuthError on failure."""
-        async with httpx.AsyncClient(timeout=10) as client:
-            response = await client.post(self.token_url, data={
-                'grant_type': 'refresh_token',
-                'refresh_token': refresh_token,
-            }, headers={
-                'Authorization': f'Basic {self._auth_header()}',
-                'Content-Type': 'application/x-www-form-urlencoded'
-            })
+        response = await http_client.post(self.token_url, data={
+            'grant_type': 'refresh_token',
+            'refresh_token': refresh_token,
+        }, headers={
+            'Authorization': f'Basic {self._auth_header()}',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        })
         if response.is_success:
             return response.json()
-        logger.error("OAuth refresh_token failed: %s %s", response.status_code, response.text)
+        logger.error("OAuth refresh_token failed: %s", response.status_code)
         raise OAuthError(f"Token refresh failed with status {response.status_code}")
 
 
@@ -93,6 +91,7 @@ class SpotifyOAuth(OAuthClient):
                 'user-read-playback-state',
                 'user-modify-playback-state',
                 'streaming',
+                'playlist-modify-private',
             ]
         )
 

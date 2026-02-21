@@ -53,7 +53,10 @@ class TestOAuthClient:
                 'token_type': 'Bearer',
             })
         )
-        tokens = await client.exchange_code('auth_code', 'https://app.example.com/callback')
+        async with httpx.AsyncClient() as http_client:
+            tokens = await client.exchange_code(
+                'auth_code', 'https://app.example.com/callback', http_client=http_client
+            )
         assert tokens['access_token'] == 'new_access'
         assert tokens['refresh_token'] == 'new_refresh'
 
@@ -64,7 +67,10 @@ class TestOAuthClient:
             return_value=httpx.Response(400, json={'error': 'invalid_grant'})
         )
         with pytest.raises(OAuthError):
-            await client.exchange_code('bad_code', 'https://app.example.com/callback')
+            async with httpx.AsyncClient() as http_client:
+                await client.exchange_code(
+                    'bad_code', 'https://app.example.com/callback', http_client=http_client
+                )
 
     @respx.mock
     async def test_refresh_token_success(self):
@@ -75,7 +81,8 @@ class TestOAuthClient:
                 'token_type': 'Bearer',
             })
         )
-        tokens = await client.refresh_token('old_refresh')
+        async with httpx.AsyncClient() as http_client:
+            tokens = await client.refresh_token('old_refresh', http_client=http_client)
         assert tokens['access_token'] == 'refreshed_token'
 
     @respx.mock
@@ -85,7 +92,8 @@ class TestOAuthClient:
             return_value=httpx.Response(401, json={'error': 'invalid_token'})
         )
         with pytest.raises(OAuthError):
-            await client.refresh_token('bad_refresh')
+            async with httpx.AsyncClient() as http_client:
+                await client.refresh_token('bad_refresh', http_client=http_client)
 
     def test_auth_header_is_base64_encoded(self):
         client = self._make_client()

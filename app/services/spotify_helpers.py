@@ -20,13 +20,19 @@ def require_oauth(request: Request):
         raise HTTPException(status_code=401, detail='Not authenticated')
 
 
+def _get_http_client(request: Request) -> httpx.AsyncClient:
+    """Get the shared HTTP client from app state."""
+    return request.app.state.http_client
+
+
 async def refresh_spotify_token(request: Request):
     """Refresh Spotify access token if we have a refresh token."""
     refresh_tok = request.session.get('spotify_refresh_token')
     if not refresh_tok:
         return None
     try:
-        tokens = await spotify_oauth.refresh_token(refresh_tok)
+        client = _get_http_client(request)
+        tokens = await spotify_oauth.refresh_token(refresh_tok, http_client=client)
     except OAuthError:
         logger.warning("Failed to refresh Spotify token")
         return None
@@ -43,32 +49,33 @@ async def spotify_request(request: Request, endpoint, params=None,
     if not token:
         return None, 401
 
+    client = _get_http_client(request)
+
     try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            response = await client.request(
-                method,
-                f'https://api.spotify.com/v1{endpoint}',
-                params=params,
-                json=json_body,
-                headers={'Authorization': f'Bearer {token}'}
-            )
+        response = await client.request(
+            method,
+            f'https://api.spotify.com/v1{endpoint}',
+            params=params,
+            json=json_body,
+            headers={'Authorization': f'Bearer {token}'}
+        )
 
-            if response.status_code == 401:
-                new_token = await refresh_spotify_token(request)
-                if new_token:
-                    response = await client.request(
-                        method,
-                        f'https://api.spotify.com/v1{endpoint}',
-                        params=params,
-                        json=json_body,
-                        headers={'Authorization': f'Bearer {new_token}'}
-                    )
+        if response.status_code == 401:
+            new_token = await refresh_spotify_token(request)
+            if new_token:
+                response = await client.request(
+                    method,
+                    f'https://api.spotify.com/v1{endpoint}',
+                    params=params,
+                    json=json_body,
+                    headers={'Authorization': f'Bearer {new_token}'}
+                )
 
-            if response.status_code == 204:
-                return {}, 204
+        if response.status_code == 204:
+            return {}, 204
 
-            data = response.json() if response.is_success else None
-            return (data, response.status_code)
+        data = response.json() if response.is_success else None
+        return (data, response.status_code)
     except httpx.HTTPError as exc:
         logger.error("Spotify API request failed: %s %s - %s", method, endpoint, exc)
         return None, 503

@@ -9,7 +9,6 @@
     {% block head %}{% endblock %}
 </head>
 <body class="home-dark {% block body_class %}{% endblock %}">
-    <div id="ascii-background"></div>
     <nav class="navbar">
         <div class="nav-brand">
             <a href="{{ url_for('main.home') }}">{{ site.name }}</a>
@@ -80,30 +79,6 @@
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
         });
     })();
-    </script>
-
-    <script type="importmap">
-    {
-        "imports": {
-            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-        }
-    }
-    </script>
-    <script type="module">
-    import { initAsciiBackground, updateAsciiTheme } from '{{ url_for("static", filename="js/ascii-background.js") }}';
-    // Always init ASCII background with current theme
-    const isDark = document.body.classList.contains('home-dark');
-    initAsciiBackground('ascii-background', isDark);
-
-    // Update theme colors on toggle
-    document.getElementById('theme-toggle').addEventListener('click', function() {
-        // Small delay to ensure class has been toggled
-        setTimeout(() => {
-            const isDarkNow = document.body.classList.contains('home-dark');
-            updateAsciiTheme(isDarkNow);
-        }, 10);
-    });
     </script>
 
     {% block scripts %}{% endblock %}

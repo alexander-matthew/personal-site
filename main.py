@@ -7,4 +7,4 @@ if __name__ == '__main__':
     import uvicorn
     debug = os.environ.get('FLASK_DEBUG', 'true').lower() == 'true'
     port = int(os.environ.get('PORT', 5005))
-    uvicorn.run('main:app', host='0.0.0.0', port=port, reload=debug)
+    uvicorn.run('main:app', host='127.0.0.1', port=port, reload=debug)

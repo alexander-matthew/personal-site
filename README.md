@@ -1,85 +1,86 @@
 # Personal Site
 
-A Flask-based personal website to showcase side projects and interests. Built for fun, not for work (see LinkedIn for that).
-
-**Live Site:** [mighty-shelf-14141.herokuapp.com](https://mighty-shelf-14141.herokuapp.com)
+A FastAPI personal website styled as a Windows 98 desktop, with interactive mini-apps and API-backed dashboards.
 
 ## Features
 
-### Mini-Apps
-
-- **Spotify Dashboard** - OAuth-authenticated data visualization with a cyberpunk theme. View listening history, top artists, genre breakdowns, and audio feature analysis.
-
-- **Blackjack Trainer** - Interactive game with basic strategy guidance. Learn optimal play with real-time feedback on your decisions.
-
-- **Sudoku Game** - Puzzle game with Easy, Medium, and Hard difficulty levels. Features real-time validation and keyboard navigation.
-
-- **PR Review Tool** - Documentation showcase for automated code review workflows.
-
-### Site Features
-
-- Typing animation on the home page
-- Responsive design (mobile-friendly)
-- Blog and news/press sections
-- Dark theme with CSS variables
+- Windows 98 desktop UI with taskbar/start menu metaphors
+- Spotify dashboard with OAuth and playback controls
+- Blackjack trainer, Sudoku, and Weather apps
+- Blog, news, resume, and project pages
 
 ## Tech Stack
 
-- **Backend:** Python, Flask
-- **Frontend:** HTML, CSS, JavaScript
-- **Deployment:** Heroku
-- **Testing:** Jest (JavaScript game engines)
+- Backend: Python 3.11, FastAPI, Uvicorn, Jinja2
+- Frontend: HTML, CSS, Vanilla JavaScript
+- Deployment: Docker Compose, nginx, Let's Encrypt, AWS EC2
+- Testing: Pytest (Python), Jest (JavaScript game engines)
 
 ## Project Structure
 
-```
-Personal-Site/
+```text
+personal-site/
 ├── app/
-│   ├── routes/          # Flask blueprints (main, blog, spotify, etc.)
+│   ├── routes/          # FastAPI routers (main, blog, spotify, etc.)
 │   ├── services/        # Cache, OAuth, rate limiting
 │   ├── templates/       # Jinja2 templates
-│   └── static/          # CSS and JavaScript
-├── main.py              # App entry point
-├── Procfile             # Heroku configuration
-└── requirements.txt     # Python dependencies
+│   └── static/          # CSS, JS, icons
+├── tests/               # Python tests (pytest)
+├── e2e/                 # End-to-end tests (Playwright)
+├── docs/                # Architecture and deployment docs
+├── infra/               # Terraform for EC2 infrastructure
+├── scripts/             # Helper scripts
+├── .github/workflows/   # CI/CD (deploy, agent-skill sync)
+├── main.py              # Local app entry point
+├── pyproject.toml       # Python dependencies (managed by uv)
+├── Dockerfile
+└── docker-compose.yml
 ```
 
 ## Local Development
 
 ```bash
-# Clone the repo
-git clone https://github.com/alexander-matthew/Personal-Site.git
-cd Personal-Site
+git clone https://github.com/alexander-matthew/personal-site.git
+cd personal-site
 
-# Set up virtual environment
-python -m venv .venv
-source .venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run locally
-python main.py
+cp .env.example .env
+uv sync --dev
+uv run python main.py
 ```
 
-Visit [http://localhost:5000](http://localhost:5000)
+App runs at `http://127.0.0.1:5005` by default.
 
 ## Environment Variables
 
-| Variable | Description |
-|----------|-------------|
-| `SECRET_KEY` | Flask session secret (required in production) |
-| `FLASK_DEBUG` | Set to `false` in production |
-| `SPOTIFY_CLIENT_ID` | Spotify API client ID |
-| `SPOTIFY_CLIENT_SECRET` | Spotify API client secret |
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `SECRET_KEY` | Production | Session signing key |
+| `FLASK_DEBUG` | No | Set `false` in production (controls local reload mode) |
+| `PORT` | No | Local dev server port (default `5005`) |
+| `SPOTIFY_CLIENT_ID` | Spotify features | Spotify OAuth client ID |
+| `SPOTIFY_CLIENT_SECRET` | Spotify features | Spotify OAuth client secret |
+| `DOMAIN` | Docker/nginx deploy | Public domain used by nginx/certbot |
+| `LETSENCRYPT_EMAIL` | Docker/nginx deploy | Email for cert renewal notices |
 
 ## Testing
 
 ```bash
-npm test          # Run JavaScript tests
-npm run test:watch    # Watch mode
+# Python (unit)
+uv run pytest -v
+
+# Python (end-to-end, requires playwright browsers)
+uv run pytest e2e/ -v
+
+# JavaScript
+npm test
+npm run test:watch
 ```
 
-## License
+## Deployment
 
-This is a personal project. Feel free to use it as inspiration for your own site.
+- Infrastructure: Terraform files in `infra/`
+- Runtime: `docker-compose.yml` (`web`, `nginx`, `certbot`)
+- App deploy script: `./deploy.sh`
+- CI deploy: `.github/workflows/deploy.yml`
+
+See `docs/ARCHITECTURE.md` and `docs/EC2_MIGRATION.md` for deployment details.

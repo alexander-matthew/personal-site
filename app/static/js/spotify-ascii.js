@@ -1,79 +1,9 @@
 /**
- * Spotify ASCII Rendering Utilities
- * Renders data visualizations using ASCII block characters
+ * Spotify Win98 Rendering Utilities
+ * Renders data visualizations using Win98 HTML components
  */
 
 const SpotifyASCII = (function() {
-    // ASCII block characters for density/fill
-    const BLOCKS = {
-        FULL: '\u2588',      // █
-        LIGHT: '\u2591',     // ░
-        MEDIUM: '\u2592',    // ▒
-        DARK: '\u2593',      // ▓
-        EMPTY: '\u00B7',     // ·
-    };
-
-    // Heatmap density characters (lowest to highest)
-    const HEAT_CHARS = [BLOCKS.EMPTY, BLOCKS.LIGHT, BLOCKS.MEDIUM, BLOCKS.DARK, BLOCKS.FULL];
-
-    /**
-     * Render a horizontal ASCII bar
-     * @param {number} percent - Value from 0-100
-     * @param {number} width - Total width in characters (default 20)
-     * @returns {string} ASCII bar string
-     */
-    function renderBar(percent, width = 20) {
-        const filled = Math.round((percent / 100) * width);
-        const empty = width - filled;
-        return BLOCKS.FULL.repeat(filled) + BLOCKS.LIGHT.repeat(empty);
-    }
-
-    /**
-     * Render a meter with brackets [████░░░░░░]
-     * @param {number} percent - Value from 0-100
-     * @param {number} width - Width inside brackets (default 10)
-     * @returns {string} ASCII meter string
-     */
-    function renderMeter(percent, width = 10) {
-        const filled = Math.round((percent / 100) * width);
-        const empty = width - filled;
-        return '[' + BLOCKS.FULL.repeat(filled) + BLOCKS.LIGHT.repeat(empty) + ']';
-    }
-
-    /**
-     * Get heatmap character based on intensity
-     * @param {number} value - Current value
-     * @param {number} max - Maximum value
-     * @returns {string} Single ASCII character
-     */
-    function getHeatChar(value, max) {
-        if (value === 0 || max === 0) return HEAT_CHARS[0];
-        const level = Math.min(4, Math.ceil((value / max) * 4));
-        return HEAT_CHARS[level];
-    }
-
-    /**
-     * Render a vertical bar chart row (for hourly activity)
-     * Returns array of characters for one row (from top to bottom)
-     * @param {number[]} values - Array of values
-     * @param {number} maxHeight - Maximum height in rows
-     * @returns {string[][]} 2D array [row][column] of characters
-     */
-    function renderVerticalChart(values, maxHeight = 8) {
-        const max = Math.max(...values, 1);
-        const rows = [];
-
-        for (let row = maxHeight; row >= 1; row--) {
-            const rowChars = values.map(val => {
-                const height = Math.round((val / max) * maxHeight);
-                return height >= row ? BLOCKS.FULL : ' ';
-            });
-            rows.push(rowChars);
-        }
-
-        return rows;
-    }
-
     /**
      * Format duration in mm:ss
      * @param {number} ms - Duration in milliseconds
@@ -84,24 +14,6 @@ const SpotifyASCII = (function() {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
         return `${mins}:${secs.toString().padStart(2, '0')}`;
-    }
-
-    /**
-     * Dispatch audio profile event for reactive background
-     * @param {Object} features - Audio features object
-     */
-    function dispatchAudioProfile(features) {
-        if (!features) return;
-
-        window.dispatchEvent(new CustomEvent('audioProfileChange', {
-            detail: {
-                energy: features.energy || 50,
-                danceability: features.danceability || 50,
-                valence: features.valence || 50,
-                acousticness: features.acousticness || 50,
-                tempo: features.tempo || 120
-            }
-        }));
     }
 
     /**
@@ -116,6 +28,15 @@ const SpotifyASCII = (function() {
     }
 
     /**
+     * Render a Win98 progress bar (chunked blue fill in sunken container)
+     * @param {number} percent - Value from 0-100
+     * @returns {string} HTML string
+     */
+    function renderProgressBar(percent) {
+        return `<div class="w98-progress"><div class="w98-progress__fill" style="width: ${Math.round(percent)}%"></div></div>`;
+    }
+
+    /**
      * Render genre bars section
      * @param {Array} genres - Array of {name, percent} objects
      * @returns {string} HTML string
@@ -126,47 +47,12 @@ const SpotifyASCII = (function() {
         }
 
         return `
-            <div class="ascii-bars">
+            <div class="w98-bar-list">
                 ${genres.map(genre => `
-                    <div class="ascii-bar-row">
-                        <span class="ascii-bar__label" title="${escapeHtml(genre.name)}">${escapeHtml(genre.name)}</span>
-                        <span class="ascii-bar__blocks">${renderBar(genre.percent, 24)}</span>
-                        <span class="ascii-bar__value">${genre.percent}%</span>
-                    </div>
-                `).join('')}
-            </div>
-        `;
-    }
-
-    /**
-     * Render audio profile panel
-     * @param {Object} features - Audio features object with percentages
-     * @returns {string} HTML string
-     */
-    function renderAudioProfile(features) {
-        if (!features) {
-            return '<div class="empty-state">No audio data available</div>';
-        }
-
-        const metrics = [
-            { key: 'danceability', label: 'Danceability' },
-            { key: 'energy', label: 'Energy' },
-            { key: 'acousticness', label: 'Acousticness' },
-            { key: 'valence', label: 'Valence' },
-            { key: 'instrumentalness', label: 'Instrumental' },
-            { key: 'liveness', label: 'Liveness' }
-        ];
-
-        // Dispatch event for reactive background
-        dispatchAudioProfile(features);
-
-        return `
-            <div class="audio-profile">
-                ${metrics.map(m => `
-                    <div class="audio-profile__row">
-                        <span class="audio-profile__label">${m.label}</span>
-                        <span class="audio-profile__meter">${renderMeter(features[m.key] || 0, 16)}</span>
-                        <span class="audio-profile__value">${features[m.key] || 0}%</span>
+                    <div class="w98-bar-row">
+                        <span class="w98-bar-row__label" title="${escapeHtml(genre.name)}">${escapeHtml(genre.name)}</span>
+                        ${renderProgressBar(genre.percent)}
+                        <span class="w98-bar-row__value">${genre.percent}%</span>
                     </div>
                 `).join('')}
             </div>
@@ -184,32 +70,30 @@ const SpotifyASCII = (function() {
         const maxDay = Math.max(...dayData, 1);
 
         return `
-            <div class="patterns-grid">
-                <div class="pattern-section">
-                    <div class="pattern-section__title">By Day</div>
-                    <div class="ascii-bars">
+            <div class="w98-patterns">
+                <div class="w98-patterns__days">
+                    <div style="font-weight: bold; margin-bottom: 4px;">By Day</div>
+                    <div class="w98-bar-list">
                         ${days.map((day, i) => {
                             const percent = (dayData[i] / maxDay) * 100;
                             return `
-                                <div class="ascii-bar-row">
-                                    <span class="ascii-bar__label">${day}</span>
-                                    <span class="ascii-bar__blocks">${renderBar(percent, 20)}</span>
-                                    <span class="ascii-bar__value">${dayData[i]}</span>
+                                <div class="w98-bar-row">
+                                    <span class="w98-bar-row__label">${day}</span>
+                                    ${renderProgressBar(percent)}
+                                    <span class="w98-bar-row__value">${dayData[i]}</span>
                                 </div>
                             `;
                         }).join('')}
                     </div>
                 </div>
-                <div class="pattern-section">
-                    <div class="pattern-section__title">Peak Hours</div>
-                    <div class="peak-hours">
-                        ${peakHours.slice(0, 3).map((peak, i) => `
-                            <div class="peak-hour">
-                                <span class="peak-hour__time">${String(peak.hour).padStart(2, '0')}:00</span>
-                                <span class="peak-hour__info">
-                                    <span class="peak-hour__count">${peak.count} tracks</span>
-                                    ${i === 0 ? ' - Peak' : ` - #${i + 1}`}
-                                </span>
+                <div class="w98-patterns__peaks">
+                    <div style="font-weight: bold; margin-bottom: 4px;">Peak Hours</div>
+                    <div class="w98-listview">
+                        ${peakHours.slice(0, 5).map((peak, i) => `
+                            <div class="w98-listview__item">
+                                <span style="font-family: monospace; min-width: 40px;">${String(peak.hour).padStart(2, '0')}:00</span>
+                                <span style="flex: 1;">${peak.count} tracks</span>
+                                <span style="color: var(--win98-dark-gray);">${i === 0 ? 'Peak' : '#' + (i + 1)}</span>
                             </div>
                         `).join('')}
                     </div>
@@ -219,84 +103,34 @@ const SpotifyASCII = (function() {
     }
 
     /**
-     * Render weekly heatmap
-     * @param {Object} heatmapData - Object with "day-hour" keys and count values
+     * Render vertical activity chart as Win98 bar columns
+     * @param {number[]} hourData - Array of 24 values (hours 0-23)
      * @returns {string} HTML string
      */
-    function renderHeatmap(heatmapData) {
-        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        const maxCount = Math.max(...Object.values(heatmapData), 1);
-
-        // Hour labels (every 3 hours)
-        let headerHtml = '<div class="ascii-heatmap__header">';
-        for (let h = 0; h < 24; h++) {
-            if (h % 3 === 0) {
-                headerHtml += `<span class="ascii-heatmap__hour">${h}</span>`;
-            } else {
-                headerHtml += `<span class="ascii-heatmap__hour"></span>`;
-            }
-        }
-        headerHtml += '</div>';
-
-        let rowsHtml = '';
-        for (let d = 0; d < 7; d++) {
-            let cellsHtml = '';
-            for (let h = 0; h < 24; h++) {
-                const count = heatmapData[`${d}-${h}`] || 0;
-                const char = getHeatChar(count, maxCount);
-                cellsHtml += `<span class="ascii-heatmap__cell" title="${count} track${count !== 1 ? 's' : ''}">${char}</span>`;
-            }
-            rowsHtml += `
-                <div class="ascii-heatmap__row">
-                    <span class="ascii-heatmap__day">${days[d]}</span>
-                    <div class="ascii-heatmap__cells">${cellsHtml}</div>
-                </div>
-            `;
-        }
+    function renderActivityChart(hourData) {
+        const max = Math.max(...hourData, 1);
 
         return `
-            <div class="ascii-heatmap">
-                ${headerHtml}
-                ${rowsHtml}
+            <div class="w98-activity">
+                <div class="w98-activity__bars">
+                    ${hourData.map((val, h) => {
+                        const pct = (val / max) * 100;
+                        return `
+                            <div class="w98-activity__col" title="${h}:00 - ${val} tracks">
+                                <div class="w98-activity__bar-wrap">
+                                    <div class="w98-activity__bar-fill" style="height: ${pct}%"></div>
+                                </div>
+                                <span class="w98-activity__label">${h % 4 === 0 ? h : ''}</span>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
             </div>
         `;
     }
 
     /**
-     * Render vertical activity chart
-     * @param {number[]} hourData - Array of 24 values (hours 0-23)
-     * @returns {string} HTML string
-     */
-    function renderActivityChart(hourData) {
-        const rows = renderVerticalChart(hourData, 8);
-
-        let html = '<div class="ascii-chart">';
-
-        rows.forEach(row => {
-            html += '<div class="ascii-chart__row">';
-            row.forEach(char => {
-                html += `<span class="ascii-chart__bar">${char}</span>`;
-            });
-            html += '</div>';
-        });
-
-        // X-axis labels
-        html += '<div class="ascii-chart__axis">';
-        for (let h = 0; h < 24; h++) {
-            if (h % 4 === 0) {
-                html += `<span class="ascii-chart__label">${h}</span>`;
-            } else {
-                html += `<span class="ascii-chart__label"></span>`;
-            }
-        }
-        html += '</div>';
-
-        html += '</div>';
-        return html;
-    }
-
-    /**
-     * Render track list
+     * Render track list as Win98 listview
      * @param {Array} tracks - Array of track objects from Spotify API
      * @param {number} limit - Max tracks to show
      * @param {boolean} playable - Whether tracks should be clickable for playback
@@ -308,18 +142,96 @@ const SpotifyASCII = (function() {
         }
 
         return `
-            <div class="track-list">
+            <div class="w98-listview">
                 ${tracks.slice(0, limit).map((track, i) => `
-                    <div class="track-item${playable ? ' track-item--playable' : ''}" ${playable ? `data-track-uri="${track.uri}"` : ''}>
-                        <span class="track-item__rank">${String(i + 1).padStart(2, '0')}</span>
-                        <img src="${track.album.images[2]?.url || ''}" alt="" class="track-item__cover">
-                        <div class="track-item__info">
-                            <div class="track-item__name">${escapeHtml(track.name)}</div>
-                            <div class="track-item__artist">${escapeHtml(track.artists[0].name)}</div>
+                    <div class="w98-listview__item${playable ? ' track-item--playable' : ''}" ${playable ? `data-track-uri="${track.uri}"` : ''}>
+                        <span class="w98-listview__rank">${String(i + 1).padStart(2, '0')}</span>
+                        <img src="${track.album.images[2]?.url || ''}" alt="" class="w98-listview__art">
+                        <div class="w98-listview__info">
+                            <div class="w98-listview__name">${escapeHtml(track.name)}</div>
+                            <div class="w98-listview__sub">${escapeHtml(track.artists[0].name)}</div>
                         </div>
-                        <span class="track-item__duration">${formatDuration(track.duration_ms)}</span>
+                        <span class="w98-listview__duration">${formatDuration(track.duration_ms)}</span>
                     </div>
                 `).join('')}
+            </div>
+        `;
+    }
+
+    /**
+     * Render artist list as Win98 listview with images and genre subtitle
+     * @param {Array} artists - Array of artist objects from Spotify API
+     * @param {number} limit - Max artists to show
+     * @returns {string} HTML string
+     */
+    function renderArtistList(artists, limit = 10) {
+        if (!artists || artists.length === 0) {
+            return '<div class="empty-state">No artists found</div>';
+        }
+
+        return `
+            <div class="w98-listview">
+                ${artists.slice(0, limit).map((artist, i) => `
+                    <div class="w98-listview__item">
+                        <span class="w98-listview__rank">${String(i + 1).padStart(2, '0')}</span>
+                        ${artist.images && artist.images.length > 0
+                            ? `<img src="${artist.images[artist.images.length - 1].url}" alt="" class="w98-listview__art">`
+                            : ''}
+                        <div class="w98-listview__info">
+                            <div class="w98-listview__name">${escapeHtml(artist.name)}</div>
+                            <div class="w98-listview__sub">${escapeHtml((artist.genres || []).slice(0, 2).join(', ') || 'Unknown genre')}</div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    /**
+     * Format a relative timestamp (e.g. "5 min ago")
+     * @param {string} isoDate - ISO date string
+     * @returns {string} Relative time string
+     */
+    function formatRelativeTime(isoDate) {
+        const now = Date.now();
+        const then = new Date(isoDate).getTime();
+        const diffMs = now - then;
+        const diffMin = Math.floor(diffMs / 60000);
+
+        if (diffMin < 1) return 'just now';
+        if (diffMin < 60) return `${diffMin} min ago`;
+        const diffHr = Math.floor(diffMin / 60);
+        if (diffHr < 24) return `${diffHr}h ago`;
+        const diffDay = Math.floor(diffHr / 24);
+        return `${diffDay}d ago`;
+    }
+
+    /**
+     * Render recently played tracks as Win98 listview with relative timestamps
+     * @param {Array} items - Array of recently played items from Spotify API
+     * @param {number} limit - Max tracks to show
+     * @returns {string} HTML string
+     */
+    function renderRecentTracks(items, limit = 10) {
+        if (!items || items.length === 0) {
+            return '<div class="empty-state">No recent tracks</div>';
+        }
+
+        return `
+            <div class="w98-listview">
+                ${items.slice(0, limit).map(item => {
+                    const track = item.track;
+                    return `
+                        <div class="w98-listview__item track-item--playable" data-track-uri="${track.uri}">
+                            <img src="${track.album.images[2]?.url || ''}" alt="" class="w98-listview__art">
+                            <div class="w98-listview__info">
+                                <div class="w98-listview__name">${escapeHtml(track.name)}</div>
+                                <div class="w98-listview__sub">${escapeHtml(track.artists[0].name)}</div>
+                            </div>
+                            <span class="w98-listview__duration">${formatRelativeTime(item.played_at)}</span>
+                        </div>
+                    `;
+                }).join('')}
             </div>
         `;
     }
@@ -337,28 +249,32 @@ const SpotifyASCII = (function() {
         ];
 
         return `
-            <div class="taste-evolution">
+            <div class="w98-evolution">
                 ${periods.map(period => {
                     const periodData = data[period.key];
                     if (!periodData || !periodData.artists || periodData.artists.length === 0) {
                         return `
-                            <div class="taste-period">
-                                <div class="taste-period__label">${period.label}</div>
-                                <div class="empty-state">No data</div>
+                            <div class="w98-evolution__period">
+                                <div class="win98-groupbox">
+                                    <span class="win98-groupbox-label">${period.label}</span>
+                                    <div class="empty-state">No data</div>
+                                </div>
                             </div>
                         `;
                     }
                     return `
-                        <div class="taste-period">
-                            <div class="taste-period__label">${period.label}</div>
-                            <div class="taste-period__list">
-                                ${periodData.artists.slice(0, 5).map((artist, i) => `
-                                    <div class="taste-artist">
-                                        <span class="taste-artist__rank">${i + 1}.</span>
-                                        ${artist.image ? `<img src="${artist.image}" alt="" class="taste-artist__img">` : ''}
-                                        <span class="taste-artist__name">${escapeHtml(artist.name)}</span>
-                                    </div>
-                                `).join('')}
+                        <div class="w98-evolution__period">
+                            <div class="win98-groupbox">
+                                <span class="win98-groupbox-label">${period.label}</span>
+                                <div class="w98-listview">
+                                    ${periodData.artists.slice(0, 5).map((artist, i) => `
+                                        <div class="w98-listview__item">
+                                            <span class="w98-listview__rank">${i + 1}.</span>
+                                            ${artist.image ? `<img src="${artist.image}" alt="" class="w98-listview__artist-img">` : ''}
+                                            <span class="w98-listview__name">${escapeHtml(artist.name)}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
                             </div>
                         </div>
                     `;
@@ -369,20 +285,14 @@ const SpotifyASCII = (function() {
 
     // Public API
     return {
-        BLOCKS,
-        renderBar,
-        renderMeter,
-        getHeatChar,
-        renderVerticalChart,
         formatDuration,
         escapeHtml,
-        dispatchAudioProfile,
         renderGenreBars,
-        renderAudioProfile,
         renderListeningPatterns,
-        renderHeatmap,
         renderActivityChart,
         renderTrackList,
+        renderArtistList,
+        renderRecentTracks,
         renderTasteEvolution
     };
 })();

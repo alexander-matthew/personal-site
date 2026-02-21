@@ -645,29 +645,6 @@ body {
     z-index: 100;
 }
 
-/* ASCII Background Container */
-#ascii-background {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 1;
-    pointer-events: none;
-    overflow: hidden;
-}
-
-#ascii-background > * {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 1;
-}
-
-#ascii-background table {
-    margin: 0 auto;
-}
-
 /* Responsive */
 @media (max-width: 640px) {
     .navbar {
