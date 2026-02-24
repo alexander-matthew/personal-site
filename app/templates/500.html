@@ -1,14 +1,14 @@
-{% extends "base.html" %}
+{% extends "palantir_base.html" %}
 
 {% block title %}Server Error | {{ site.name }}{% endblock %}
 
-{% block content %}
-<section class="error-page">
-    <h1>500</h1>
-    <p class="error-message">Something went wrong</p>
-    <p class="error-description">An unexpected error occurred. Please try again later.</p>
-    <div class="error-actions">
+{% block main %}
+<div style="display: flex; justify-content: center; align-items: center; min-height: 60vh; padding: var(--space-lg);">
+    <div class="panel" style="max-width: 480px; width: 100%; text-align: center; padding: var(--space-xl);">
+        <h1 style="font-size: 48px; color: var(--color-error); margin-bottom: var(--space-sm);">500</h1>
+        <p style="font-size: var(--font-size-base); color: var(--text-primary); margin-bottom: var(--space-xs);">Something went wrong</p>
+        <p style="font-size: var(--font-size-sm); color: var(--text-secondary); margin-bottom: var(--space-lg);">An unexpected error occurred. Please try again later.</p>
         <a href="{{ url_for('main.home') }}" class="btn btn-primary">Go Home</a>
     </div>
-</section>
+</div>
 {% endblock %}

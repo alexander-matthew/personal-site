@@ -1,0 +1,136 @@
+{# ============================================================
+   Reusable UI Component Macros
+   Import with: {% from "components/macros.html" import ... %}
+   ============================================================ #}
+
+{# --- Project Card ---
+   Renders a clickable project card with title, description, and tags.
+   Usage: {{ project_card(project) }}
+   Expects: project.link, project.title, project.description, project.tags
+#}
+{% macro project_card(project) %}
+<a href="{{ project.link }}" class="project-card">
+    <h3>{{ project.title }}</h3>
+    <p>{{ project.description }}</p>
+    {% if project.tags %}
+    <div class="tags">
+        {% for tag in project.tags %}
+        <span class="tag">{{ tag }}</span>
+        {% endfor %}
+    </div>
+    {% endif %}
+</a>
+{% endmacro %}
+
+{# --- Tag List ---
+   Renders a flex-wrap list of tag badges.
+   Usage: {{ tag_list(['Python', 'JS'], class='skills-grid') }}
+#}
+{% macro tag_list(tags, class='tags') %}
+<div class="{{ class }}">
+    {% for tag in tags %}
+    <span class="tag">{{ tag }}</span>
+    {% endfor %}
+</div>
+{% endmacro %}
+
+{# --- Empty State ---
+   Renders a centered empty-state placeholder.
+   Usage: {{ empty_state("No items found.") }}
+#}
+{% macro empty_state(message) %}
+<div class="empty-state">
+    <p>{{ message }}</p>
+</div>
+{% endmacro %}
+
+{# --- Timeline Entry ---
+   Renders a resume timeline entry with date, title, org, description,
+   highlights, and optional skill tags.
+   Usage: {{ timeline_entry(item, show_skills=true) }}
+#}
+{% macro timeline_entry(item, show_skills=false) %}
+<div class="timeline-entry">
+    <div class="date">{{ item.date }}</div>
+    <div class="title">{{ item.title }}</div>
+    <div class="org">{{ item.org }}{% if item.location %} &mdash; {{ item.location }}{% endif %}</div>
+    {% if item.description %}
+    <div class="description">{{ item.description }}</div>
+    {% endif %}
+    {% if item.highlights %}
+    <ul>
+        {% for highlight in item.highlights %}
+        <li>{{ highlight }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    {% if show_skills and item.skills %}
+    <div class="skill-tags">
+        {% for skill in item.skills %}
+        <span class="tag">{{ skill }}</span>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{# --- Section Card ---
+   Renders a Spotify-style section card with floating title label.
+   Uses caller() for inner content.
+   Usage:
+     {% call(section_card("Title", id="my-id", content_id="content")) %}
+       <div class="loading">Loading...</div>
+     {% endcall %}
+#}
+{% macro section_card(title, id=none, content_id=none) %}
+<div class="section-card"{% if id %} id="{{ id }}"{% endif %}>
+    <span class="section-card__title">{{ title }}</span>
+    <div class="section-card__content"{% if content_id %} id="{{ content_id }}"{% endif %}>
+        {{ caller() }}
+    </div>
+</div>
+{% endmacro %}
+
+{# --- Stat Card ---
+   Renders a small stat display card.
+   Usage: {{ stat_card("Label", "stat-id", text_variant=true) }}
+#}
+{% macro stat_card(label, id, text_variant=false) %}
+<div class="stat-card">
+    <div class="stat-card__label">{{ label }}</div>
+    <div class="stat-card__value{% if text_variant %} stat-card__value--text{% endif %}" id="{{ id }}">--</div>
+</div>
+{% endmacro %}
+
+{# --- Time Selector ---
+   Renders a group of time-range toggle buttons.
+   Usage: {{ time_selector([{"range": "short_term", "label": "4 Weeks"}, ...]) }}
+#}
+{% macro time_selector(buttons) %}
+<div class="time-selector">
+    {% for btn in buttons %}
+    <button class="time-btn{% if loop.first %} active{% endif %}" data-range="{{ btn.range }}">{{ btn.label }}</button>
+    {% endfor %}
+</div>
+{% endmacro %}
+
+{# --- Project Feed Item ---
+   Renders a full-width feed row with title, inline tags, and description.
+   Usage: {{ project_feed_item(project) }}
+   Expects: project.link, project.title, project.description, project.tags
+#}
+{% macro project_feed_item(project, stagger=0) %}
+<a href="{{ project.link }}" class="feed-item" style="--stagger: {{ stagger * 0.08 }}s">
+    <div class="feed-item-header">
+        <span class="feed-item-title">{{ project.title }}</span>
+        {% if project.tags %}
+        <span class="feed-item-tags">
+            {% for tag in project.tags %}
+            <span class="tag">{{ tag }}</span>
+            {% endfor %}
+        </span>
+        {% endif %}
+    </div>
+    <div class="feed-item-desc">{{ project.description }}</div>
+</a>
+{% endmacro %}

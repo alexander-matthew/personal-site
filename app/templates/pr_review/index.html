@@ -1,115 +1,24 @@
-{% extends "win98_window.html" %}
+{% extends "palantir_page.html" %}
 
 {% block title %}PR Review Tool{% endblock %}
-{% block window_title %}PR Review Tool - Help{% endblock %}
-{% block taskbar_title %}Help{% endblock %}
-
-{% set window_icon = 'pr-review.svg' %}
 
 {% block head %}
 <style>
-/* Win98 Help File Overrides */
-.help-container {
-    display: flex;
-    height: 100%;
-    min-height: 500px;
-}
-
-.help-sidebar {
-    width: 200px;
-    background: white;
-    border-right: 2px solid;
-    border-color: var(--win98-btn-shadow);
-    overflow-y: auto;
-}
-
-.help-sidebar-header {
-    background: var(--win98-gray);
-    padding: 4px 8px;
-    font-size: 11px;
-    font-weight: bold;
-    border-bottom: 1px solid #999;
-}
-
-.help-topic {
-    padding: 4px 8px;
-    font-size: 11px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.help-topic:hover {
-    background: var(--win98-title-blue);
-    color: white;
-}
-
-.help-topic.active {
-    background: var(--win98-title-blue);
-    color: white;
-}
-
-.help-topic::before {
-    content: "📄";
-    font-size: 12px;
-}
-
-.help-content {
-    flex: 1;
-    background: white;
-    padding: 16px;
-    overflow-y: auto;
-}
-
-.help-content h1 {
-    font-size: 16px;
-    color: var(--win98-title-blue);
-    margin: 0 0 12px 0;
-    padding-bottom: 8px;
-    border-bottom: 2px solid var(--win98-title-blue);
-}
-
-.help-content h2 {
-    font-size: 14px;
-    color: #333;
-    margin: 16px 0 8px 0;
-}
-
-.help-content h3 {
-    font-size: 12px;
-    color: #333;
-    margin: 12px 0 6px 0;
-}
-
-.help-content p {
-    font-size: 11px;
-    line-height: 1.6;
-    margin: 0 0 12px 0;
-}
-
-.help-content code {
-    background: #f0f0f0;
-    padding: 1px 4px;
-    font-family: 'Courier New', monospace;
-    font-size: 10px;
-}
-
 .code-block {
-    background: #1f2937;
-    border: 2px solid;
-    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
-    padding: 8px;
-    margin: 8px 0;
+    background: #1a1a2e;
+    border: 1px solid var(--border-default);
+    border-radius: 4px;
+    padding: var(--space-md);
+    margin: var(--space-sm) 0;
     overflow-x: auto;
 }
 
 .code-block pre {
     margin: 0;
     color: #e5e7eb;
-    font-family: 'Courier New', monospace;
-    font-size: 10px;
-    line-height: 1.5;
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    line-height: 1.6;
     white-space: pre-wrap;
 }
 
@@ -119,61 +28,65 @@
 .code-block .function { color: #fcd34d; }
 
 .code-header {
-    background: #374151;
-    padding: 4px 8px;
-    font-family: 'Courier New', monospace;
-    font-size: 10px;
-    color: #9ca3af;
-    border: 2px solid;
-    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
+    background: var(--bg-elevated);
+    padding: var(--space-xs) var(--space-sm);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    border: 1px solid var(--border-default);
     border-bottom: none;
-    margin-top: 8px;
+    border-radius: 4px 4px 0 0;
+    margin-top: var(--space-sm);
+}
+
+.code-header + .code-block {
+    border-radius: 0 0 4px 4px;
 }
 
 .value-props {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-    margin: 12px 0;
+    gap: var(--space-sm);
+    margin: var(--space-md) 0;
 }
 
 .value-card {
-    background: var(--win98-gray);
-    border: 2px solid;
-    border-color: var(--win98-btn-highlight) var(--win98-btn-shadow) var(--win98-btn-shadow) var(--win98-btn-highlight);
-    padding: 8px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: 4px;
+    padding: var(--space-md);
     text-align: center;
 }
 
 .value-card .metric {
-    font-size: 18px;
+    font-size: var(--font-size-xl);
     font-weight: bold;
-    color: var(--win98-title-blue);
+    color: var(--accent);
 }
 
 .value-card .label {
-    font-size: 10px;
-    color: #666;
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
 }
 
 .feature-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-    margin: 12px 0;
+    gap: var(--space-sm);
+    margin: var(--space-md) 0;
 }
 
 .feature-card {
-    background: white;
-    border: 2px solid;
-    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
-    padding: 8px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: 4px;
+    padding: var(--space-md);
 }
 
 .feature-card h3 {
-    font-size: 11px;
-    margin: 0 0 6px 0;
-    color: var(--win98-title-blue);
+    font-size: var(--font-size-sm);
+    margin: 0 0 var(--space-sm) 0;
+    color: var(--accent);
 }
 
 .feature-card ul {
@@ -184,37 +97,41 @@
 
 .feature-card li {
     padding: 2px 0;
-    font-size: 10px;
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
 }
 
 .feature-card li::before {
-    content: "► ";
-    color: var(--win98-title-blue);
+    content: "> ";
+    color: var(--accent);
 }
 
 .sample-output {
-    border: 2px solid;
-    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
-    margin: 12px 0;
+    border: 1px solid var(--border-default);
+    border-radius: 4px;
+    margin: var(--space-md) 0;
+    overflow: hidden;
 }
 
 .output-header {
-    background: var(--win98-gray);
-    padding: 4px 8px;
-    font-size: 11px;
+    background: var(--bg-elevated);
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--font-size-sm);
     font-weight: bold;
-    border-bottom: 1px solid #999;
+    border-bottom: 1px solid var(--border-subtle);
+    color: var(--text-primary);
 }
 
 .output-content {
-    padding: 8px;
-    background: white;
+    padding: var(--space-md);
+    background: var(--bg-surface);
 }
 
 .issue-item {
-    padding: 6px 0;
-    border-bottom: 1px solid #eee;
-    font-size: 11px;
+    padding: var(--space-sm) 0;
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
 }
 
 .issue-item:last-child {
@@ -226,33 +143,36 @@
     padding: 1px 6px;
     font-size: 9px;
     font-weight: bold;
-    margin-right: 4px;
+    margin-right: var(--space-xs);
+    border-radius: 3px;
 }
 
-.badge-style { background: #fef3c7; color: #b45309; }
-.badge-convention { background: #ede9fe; color: #6d28d9; }
-.badge-pattern { background: #dbeafe; color: #1d4ed8; }
+.badge-style { background: rgba(251, 191, 36, 0.2); color: var(--color-warning); }
+.badge-convention { background: rgba(139, 92, 246, 0.2); color: #a78bfa; }
+.badge-pattern { background: rgba(77, 166, 255, 0.2); color: var(--accent); }
 
 .issue-file {
     display: block;
-    font-size: 10px;
-    color: #666;
-    font-family: 'Courier New', monospace;
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
     margin-top: 2px;
 }
 
 .issue-suggestion {
-    margin-top: 6px;
-    padding: 6px;
-    background: #f5f5f5;
-    font-size: 10px;
+    margin-top: var(--space-sm);
+    padding: var(--space-sm);
+    background: var(--bg-elevated);
+    font-size: var(--font-size-xs);
+    border-radius: 3px;
+    color: var(--text-secondary);
 }
 
 .before-after {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin: 8px 0;
+    gap: var(--space-sm);
+    margin: var(--space-sm) 0;
 }
 
 .before-after > div {
@@ -266,27 +186,30 @@
     padding: 1px 6px;
     font-size: 9px;
     font-weight: bold;
+    border-radius: 3px;
 }
 
-.before-after .label.before { background: #fecaca; color: #b91c1c; }
-.before-after .label.after { background: #bbf7d0; color: #15803d; }
+.before-after .label.before { background: rgba(248, 113, 113, 0.2); color: var(--color-error); }
+.before-after .label.after { background: rgba(74, 222, 128, 0.2); color: var(--color-success); }
 
 .github-btn {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 4px 12px;
-    background: #1f2937;
-    color: white;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    background: var(--bg-elevated);
+    color: var(--text-primary);
     text-decoration: none;
-    font-size: 11px;
-    border: 2px solid;
-    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
-    margin-top: 8px;
+    font-size: var(--font-size-sm);
+    border: 1px solid var(--border-default);
+    border-radius: 4px;
+    margin-top: var(--space-sm);
+    transition: all var(--transition-fast);
 }
 
 .github-btn:hover {
-    background: #374151;
+    border-color: var(--accent);
+    color: var(--accent);
 }
 
 .github-btn svg {
@@ -295,15 +218,6 @@
 }
 
 @media (max-width: 768px) {
-    .help-container {
-        flex-direction: column;
-    }
-    .help-sidebar {
-        width: 100%;
-        border-right: none;
-        border-bottom: 2px solid var(--win98-btn-shadow);
-        max-height: 150px;
-    }
     .value-props, .feature-grid, .before-after {
         grid-template-columns: 1fr;
     }
@@ -311,45 +225,21 @@
 </style>
 {% endblock %}
 
-{% block menu_bar %}
-<div class="win98-menu-bar">
-    <span class="win98-menu-item">File</span>
-    <span class="win98-menu-item">Edit</span>
-    <span class="win98-menu-item">Bookmark</span>
-    <span class="win98-menu-item">Options</span>
-    <span class="win98-menu-item">Help</span>
-</div>
-<div class="win98-toolbar">
-    <button class="win98-toolbar-btn" title="Back" onclick="history.back()">
-        <span style="font-size: 12px;">◄</span>
-    </button>
-    <button class="win98-toolbar-btn" title="Forward">
-        <span style="font-size: 12px;">►</span>
-    </button>
-    <button class="win98-toolbar-btn" title="Contents">
-        <span style="font-size: 12px;">📚</span>
-    </button>
-    <button class="win98-toolbar-btn" title="Index">
-        <span style="font-size: 12px;">📇</span>
-    </button>
-</div>
-{% endblock %}
-
-{% block window_content %}
-<div class="help-container">
-    <div class="help-sidebar">
-        <div class="help-sidebar-header">Contents</div>
-        <div class="help-topic active" data-section="overview">Overview</div>
-        <div class="help-topic" data-section="standards">Standards File</div>
-        <div class="help-topic" data-section="output">Sample Output</div>
-        <div class="help-topic" data-section="examples">Examples</div>
-        <div class="help-topic" data-section="features">Features</div>
-        <div class="help-topic" data-section="skill">Claude Skill</div>
-        <div class="help-topic" data-section="github">GitHub CLI</div>
-        <div class="help-topic" data-section="commands">Commands</div>
+{% block page_content %}
+<div class="doc-container">
+    <div class="doc-sidebar">
+        <div class="doc-sidebar-header">Contents</div>
+        <div class="doc-topic active" data-section="overview">Overview</div>
+        <div class="doc-topic" data-section="standards">Standards File</div>
+        <div class="doc-topic" data-section="output">Sample Output</div>
+        <div class="doc-topic" data-section="examples">Examples</div>
+        <div class="doc-topic" data-section="features">Features</div>
+        <div class="doc-topic" data-section="skill">Claude Skill</div>
+        <div class="doc-topic" data-section="github">GitHub CLI</div>
+        <div class="doc-topic" data-section="commands">Commands</div>
     </div>
 
-    <div class="help-content">
+    <div class="doc-content">
         <section id="overview-section">
             <h1>PR Review Tool</h1>
             <p><strong>Automate code review for firm-specific standards and style guidelines</strong></p>
@@ -369,7 +259,7 @@
                 to be tedious.
             </p>
             <p>
-                This tool helped in two ways. First, it forced me to clearly define our standards—no more tribal knowledge.
+                This tool helped in two ways. First, it forced me to clearly define our standards&mdash;no more tribal knowledge.
                 Second, it provides a quick first pass for basic conventions, reducing the context switching and mental
                 load required to review large amounts of code. I can focus on what matters: architecture and logic.
             </p>
@@ -420,7 +310,7 @@
                         <span>Variable naming violates snake_case convention</span>
                         <span class="issue-file">src/auth/handlers.py:23</span>
                         <div class="issue-suggestion">
-                            <strong>Found:</strong> <code>userName</code> → <strong>Expected:</strong> <code>user_name</code>
+                            <strong>Found:</strong> <code>userName</code> &rarr; <strong>Expected:</strong> <code>user_name</code>
                         </div>
                     </div>
                     <div class="issue-item">
@@ -444,7 +334,7 @@
         </section>
 
         <section id="examples-section" style="display: none;">
-            <h1>Before & After Examples</h1>
+            <h1>Before &amp; After Examples</h1>
 
             <h3>Error Handling Pattern</h3>
             <div class="before-after">
@@ -505,7 +395,7 @@
 
             <div class="feature-grid">
                 <div class="feature-card">
-                    <h3>Style & Naming</h3>
+                    <h3>Style &amp; Naming</h3>
                     <ul>
                         <li>Variable and function naming conventions</li>
                         <li>Class and module naming patterns</li>
@@ -571,7 +461,7 @@
         <section id="github-section" style="display: none;">
             <h1>GitHub CLI Integration</h1>
             <p>
-                The skill uses the GitHub CLI (<code>gh</code>) to interact with PRs programmatically—viewing diffs,
+                The skill uses the GitHub CLI (<code>gh</code>) to interact with PRs programmatically&mdash;viewing diffs,
                 adding comments, and submitting reviews.
             </p>
 
@@ -618,11 +508,13 @@ gh pr review 42 --approve</pre>
         </section>
     </div>
 </div>
+{% endblock %}
 
+{% block scripts %}
 <script>
 (function() {
-    const topics = document.querySelectorAll('.help-topic');
-    const sections = document.querySelectorAll('.help-content > section');
+    const topics = document.querySelectorAll('.doc-topic');
+    const sections = document.querySelectorAll('.doc-content > section');
 
     topics.forEach(topic => {
         topic.addEventListener('click', () => {
@@ -637,11 +529,4 @@ gh pr review 42 --approve</pre>
     });
 })();
 </script>
-{% endblock %}
-
-{% block status_bar %}
-<div class="win98-status-bar">
-    <span class="win98-status-section" style="flex: 1;">PR Review Tool Help</span>
-    <span class="win98-status-section">Windows Help</span>
-</div>
 {% endblock %}

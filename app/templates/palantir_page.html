@@ -1,0 +1,11 @@
+{% extends "palantir_base.html" %}
+
+{% block main %}
+<div class="page-container">
+    {% set _title %}{% block page_title %}{% endblock %}{% endset %}
+    {% if _title | trim %}
+    <h1 class="page-title">{{ _title | trim }}</h1>
+    {% endif %}
+    {% block page_content %}{% endblock %}
+</div>
+{% endblock %}

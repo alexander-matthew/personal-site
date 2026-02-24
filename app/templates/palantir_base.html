@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ site.name }}{% endblock %}</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/palantir.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <!-- Mobile Header -->
+    <div class="mobile-header">
+        <button class="hamburger" id="hamburger" aria-label="Toggle navigation">&#9776;</button>
+        <span class="mobile-title">{{ site.name }}</span>
+    </div>
+
+    <!-- Sidebar Overlay (mobile) -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <div class="site-layout">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar" id="sidebar">
+            <a href="{{ url_for('main.home') }}" class="sidebar-logo">
+                <span class="logo-text">Alexander</span>
+            </a>
+
+            <div class="sidebar-nav">
+                <div class="sidebar-label">Pages</div>
+                <a href="{{ url_for('main.about') }}" data-path="/about">About</a>
+                <a href="{{ url_for('main.projects') }}" data-path="/projects">Projects</a>
+                <a href="{{ url_for('blog.index') }}" data-path="/blog">Blog</a>
+                <a href="{{ url_for('resume.index') }}" data-path="/resume">Resume</a>
+
+                <div class="sidebar-label">Apps</div>
+                <a href="{{ url_for('spotify.index') }}" data-path="/projects/spotify">Spotify</a>
+                <a href="{{ url_for('blackjack.index') }}" data-path="/projects/blackjack">Blackjack</a>
+                <a href="{{ url_for('sudoku.index') }}" data-path="/projects/sudoku">Sudoku</a>
+                <a href="{{ url_for('weather.index') }}" data-path="/projects/weather">Weather</a>
+
+                <div class="sidebar-label">More</div>
+                <a href="{{ url_for('news.index') }}" data-path="/news">News</a>
+            </div>
+
+            <div class="sidebar-footer">
+                <a href="{{ site.github_url }}" target="_blank" rel="noopener noreferrer">GitHub</a>
+                <a href="{{ site.linkedin_url }}" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="site-main">
+            {% block main %}{% endblock %}
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/palantir.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

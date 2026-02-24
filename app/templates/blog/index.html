@@ -1,54 +1,63 @@
-{% extends "win98_window.html" %}
+{% from "components/macros.html" import empty_state %}
+{% extends "palantir_page.html" %}
 
-{% block title %}My Documents{% endblock %}
-{% block window_title %}C:\My Documents{% endblock %}
-{% block taskbar_title %}My Documents{% endblock %}
+{% block title %}Blog{% endblock %}
 
-{% set window_icon = 'notepad.svg' %}
+{% block head %}
+<style>
+.blog-grid {
+    display: grid;
+    gap: var(--space-md);
+}
 
-{% block menu_bar %}
-<div class="win98-menu-bar">
-    <span class="win98-menu-item">File</span>
-    <span class="win98-menu-item">Edit</span>
-    <span class="win98-menu-item">View</span>
-    <span class="win98-menu-item">Help</span>
-</div>
-<div class="win98-address-bar">
-    <span class="win98-address-label">Address:</span>
-    <input type="text" class="win98-address-input" value="C:\My Documents" readonly>
-</div>
+.blog-card {
+    display: block;
+    padding: var(--space-lg);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: 4px;
+    text-decoration: none;
+    color: inherit;
+    transition: all var(--transition-fast);
+}
+
+.blog-card:hover {
+    border-color: var(--accent);
+    color: inherit;
+}
+
+.blog-card h3 {
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+    margin-bottom: var(--space-xs);
+}
+
+.blog-card .date {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+}
+
+</style>
 {% endblock %}
 
-{% block window_content %}
-<div class="win98-content-inset" style="min-height: 300px;">
-    {% if posts %}
-    <div class="win98-file-grid">
-        {% for post in posts %}
-        <a href="{{ url_for('blog.post', slug=post.slug) }}" class="win98-file-icon">
-            <img src="{{ url_for('static', filename='icons/document.svg') }}" alt="">
-            <span>{{ post.title }}</span>
-        </a>
-        {% endfor %}
-    </div>
-    {% else %}
-    <div style="padding: 20px; text-align: center; color: #808080;">
-        <p>This folder is empty.</p>
-        <p style="font-size: 10px;">No blog posts yet. Check back soon!</p>
-    </div>
-    {% endif %}
-</div>
+{% block page_content %}
+<div class="content-panel">
+    <div class="content-panel-header">Blog</div>
+    <div class="content-panel-body">
+        <p class="page-intro">Thoughts, projects, and things I find interesting.</p>
 
-<div class="win98-groupbox win98-mt-md">
-    <span class="win98-groupbox-label">Blog</span>
-    <p style="margin: 8px; color: #808080;">
-        Thoughts, projects, and things I find interesting. Double-click a document to read.
-    </p>
-</div>
-{% endblock %}
-
-{% block status_bar %}
-<div class="win98-status-bar">
-    <span class="win98-status-section">{{ posts|length }} object(s)</span>
-    <span class="win98-status-section" style="flex: 1;">Personal blog posts</span>
+        {% if posts %}
+        <div class="blog-grid">
+            {% for post in posts %}
+            <a href="{{ url_for('blog.post', slug=post.slug) }}" class="blog-card">
+                <h3>{{ post.title }}</h3>
+                <span class="date">{{ post.date }}</span>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        {{ empty_state("No blog posts yet. Check back soon.") }}
+        {% endif %}
+    </div>
 </div>
 {% endblock %}

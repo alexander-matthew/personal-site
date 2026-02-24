@@ -1,21 +1,19 @@
-{% extends "win98_window.html" %}
+{% extends "palantir_page.html" %}
 
 {% block title %}Blackjack Trainer{% endblock %}
-{% block window_title %}Blackjack Trainer{% endblock %}
-{% block taskbar_title %}Blackjack{% endblock %}
-
-{% set window_icon = 'cards.svg' %}
+{% block page_title %}Blackjack Trainer{% endblock %}
 
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/blackjack.css') }}">
 {% endblock %}
 
-{% block menu_bar %}
-<div class="win98-menu-bar">
+{% block page_content %}
+<!-- Menu Bar -->
+<div class="bj-menubar">
     <div class="bj-menu-wrap">
-        <span class="win98-menu-item" data-menu="game">Game</span>
+        <span class="bj-menu-item" data-menu="game">Game</span>
         <div class="bj-dropdown" id="menu-game">
-            <div class="bj-dropdown-item" data-action="deal">Deal New Hand<span style="float:right;color:var(--win98-text-disabled)">F2</span></div>
+            <div class="bj-dropdown-item" data-action="deal">Deal New Hand<span style="float:right;color:var(--text-muted)">F2</span></div>
             <div class="bj-dropdown-sep"></div>
             <div class="bj-dropdown-item" data-action="stats">Statistics...</div>
             <div class="bj-dropdown-item" data-action="strategy">Strategy Chart...</div>
@@ -24,21 +22,19 @@
         </div>
     </div>
     <div class="bj-menu-wrap">
-        <span class="win98-menu-item" data-menu="options">Options</span>
+        <span class="bj-menu-item" data-menu="options">Options</span>
         <div class="bj-dropdown" id="menu-options">
             <div class="bj-dropdown-item bj-dropdown-check" id="menu-hints" data-action="toggle-hints"><span class="bj-check-mark"></span>Show Hints</div>
         </div>
     </div>
     <div class="bj-menu-wrap">
-        <span class="win98-menu-item" data-menu="help">Help</span>
+        <span class="bj-menu-item" data-menu="help">Help</span>
         <div class="bj-dropdown" id="menu-help">
             <div class="bj-dropdown-item" data-action="about">About Blackjack Trainer</div>
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block window_content %}
 <!-- Green Felt -->
 <div class="bj-felt">
     <!-- Dealer -->
@@ -50,12 +46,12 @@
 
     <!-- Result Dialog (centered on felt) -->
     <div class="bj-result" id="result-dialog" style="display:none">
-        <div class="bj-result-title">Blackjack Trainer</div>
+        <div class="bj-result-title">Result</div>
         <div class="bj-result-body">
             <span id="result-text"></span>
         </div>
         <div class="bj-result-buttons">
-            <button class="win98-btn" id="result-ok">OK</button>
+            <button class="btn" id="result-ok">OK</button>
         </div>
     </div>
 
@@ -80,29 +76,38 @@
         </div>
         <div class="bj-bet-display" id="bet-display">$0</div>
         <div class="bj-bet-buttons">
-            <button class="win98-btn" id="clear-bet">Clear</button>
-            <button class="win98-btn" id="deal-btn" disabled>Deal</button>
+            <button class="btn" id="clear-bet">Clear</button>
+            <button class="btn btn-primary" id="deal-btn" disabled>Deal</button>
         </div>
     </div>
 
     <!-- Action Bar (shown during play) -->
     <div class="bj-action-bar hidden" id="action-bar">
-        <button class="win98-btn" id="hit-btn" disabled>Hit</button>
-        <button class="win98-btn" id="stand-btn" disabled>Stand</button>
-        <button class="win98-btn" id="double-btn" disabled>Double</button>
-        <button class="win98-btn" id="split-btn" disabled>Split</button>
-        <button class="win98-btn" id="insurance-btn" disabled>Insurance</button>
+        <button class="btn" id="hit-btn" disabled>Hit</button>
+        <button class="btn" id="stand-btn" disabled>Stand</button>
+        <button class="btn" id="double-btn" disabled>Double</button>
+        <button class="btn" id="split-btn" disabled>Split</button>
+        <button class="btn" id="insurance-btn" disabled>Insurance</button>
     </div>
+</div>
+
+<!-- Status Info Bar -->
+<div class="bj-info-bar">
+    <span id="status-balance">Balance: $1000</span>
+    <span id="status-bet">Bet: $0</span>
+    <span class="bj-status-feedback" id="status-feedback"></span>
+    <span id="status-accuracy">-- Optimal</span>
+    <span id="status-hands">0 hands</span>
 </div>
 
 <!-- Stats Dialog -->
 <div class="bj-dialog-overlay" id="stats-dialog" style="display:none">
-    <div class="bj-dialog" style="width:320px">
-        <div class="bj-dialog-titlebar">
+    <div class="dialog" style="width:360px">
+        <div class="dialog-header">
             <span>Statistics</span>
-            <button class="bj-dialog-close" data-close="stats-dialog">&#215;</button>
+            <button class="dialog-close" data-close="stats-dialog">&times;</button>
         </div>
-        <div class="bj-dialog-content">
+        <div class="dialog-content">
             <div class="bj-groupbox">
                 <span class="bj-groupbox-label">Session</span>
                 <dl class="bj-stats-grid">
@@ -127,55 +132,45 @@
                 </div>
             </div>
         </div>
-        <div class="bj-dialog-buttons">
-            <button class="win98-btn" data-close="stats-dialog">Close</button>
+        <div class="dialog-footer">
+            <button class="btn" data-close="stats-dialog">Close</button>
         </div>
     </div>
 </div>
 
 <!-- Strategy Chart Dialog -->
 <div class="bj-dialog-overlay" id="strategy-dialog" style="display:none">
-    <div class="bj-dialog" style="max-width:90vw;max-height:90vh">
-        <div class="bj-dialog-titlebar">
+    <div class="dialog" style="max-width:90vw;max-height:90vh">
+        <div class="dialog-header">
             <span>Basic Strategy Chart</span>
-            <button class="bj-dialog-close" data-close="strategy-dialog">&#215;</button>
+            <button class="dialog-close" data-close="strategy-dialog">&times;</button>
         </div>
-        <div class="bj-dialog-content bj-strategy-chart" style="overflow:auto">
-            <div style="font-size:10px;margin-bottom:8px">6-Deck, Dealer Stands on Soft 17</div>
+        <div class="dialog-content bj-strategy-chart" style="overflow:auto">
+            <div style="font-size:var(--font-size-xs);margin-bottom:8px;color:var(--text-muted)">6-Deck, Dealer Stands on Soft 17</div>
             <div id="strategy-chart"></div>
         </div>
-        <div class="bj-dialog-buttons">
-            <button class="win98-btn" data-close="strategy-dialog">Close</button>
+        <div class="dialog-footer">
+            <button class="btn" data-close="strategy-dialog">Close</button>
         </div>
     </div>
 </div>
 
 <!-- About Dialog -->
 <div class="bj-dialog-overlay" id="about-dialog" style="display:none">
-    <div class="bj-dialog" style="width:300px">
-        <div class="bj-dialog-titlebar">
+    <div class="dialog" style="width:320px">
+        <div class="dialog-header">
             <span>About Blackjack Trainer</span>
-            <button class="bj-dialog-close" data-close="about-dialog">&#215;</button>
+            <button class="dialog-close" data-close="about-dialog">&times;</button>
         </div>
-        <div class="bj-dialog-content" style="text-align:center;padding:16px">
-            <div style="font-weight:bold;font-size:12px;margin-bottom:8px">Blackjack Trainer</div>
-            <div style="font-size:11px;margin-bottom:8px">Practice basic strategy with real-time feedback.</div>
-            <div style="font-size:10px;color:var(--win98-text-disabled)">6-deck shoe &#8226; Dealer stands on soft 17</div>
+        <div class="dialog-content" style="text-align:center;padding:var(--space-md)">
+            <div style="font-weight:bold;margin-bottom:var(--space-sm)">Blackjack Trainer</div>
+            <div style="font-size:var(--font-size-sm);margin-bottom:var(--space-sm);color:var(--text-secondary)">Practice basic strategy with real-time feedback.</div>
+            <div style="font-size:var(--font-size-xs);color:var(--text-muted)">6-deck shoe &#8226; Dealer stands on soft 17</div>
         </div>
-        <div class="bj-dialog-buttons">
-            <button class="win98-btn" data-close="about-dialog">OK</button>
+        <div class="dialog-footer">
+            <button class="btn" data-close="about-dialog">OK</button>
         </div>
     </div>
-</div>
-{% endblock %}
-
-{% block status_bar %}
-<div class="win98-status-bar bj-status-bar">
-    <span class="win98-status-section" id="status-balance">Balance: $1000</span>
-    <span class="win98-status-section" id="status-bet">Bet: $0</span>
-    <span class="win98-status-section bj-status-feedback" id="status-feedback"></span>
-    <span class="win98-status-section" id="status-accuracy">-- Optimal</span>
-    <span class="win98-status-section" id="status-hands">0 hands</span>
 </div>
 {% endblock %}
 

@@ -1,80 +1,83 @@
-{% extends "win98_window.html" %}
+{% from "components/macros.html" import empty_state %}
+{% extends "palantir_page.html" %}
 
-{% block title %}Internet Explorer{% endblock %}
-{% block window_title %}In the News - Internet Explorer{% endblock %}
-{% block taskbar_title %}Internet Explorer{% endblock %}
+{% block title %}News{% endblock %}
 
-{% set window_icon = 'internet.svg' %}
+{% block head %}
+<style>
+.news-list {
+    display: grid;
+    gap: var(--space-md);
+}
 
-{% block menu_bar %}
-<div class="win98-menu-bar">
-    <span class="win98-menu-item">File</span>
-    <span class="win98-menu-item">Edit</span>
-    <span class="win98-menu-item">View</span>
-    <span class="win98-menu-item">Favorites</span>
-    <span class="win98-menu-item">Help</span>
-</div>
-<div class="win98-toolbar">
-    <button class="win98-toolbar-btn" title="Back" onclick="history.back()">
-        <span style="font-size: 14px;">&larr;</span>
-    </button>
-    <button class="win98-toolbar-btn" title="Forward">
-        <span style="font-size: 14px;">&rarr;</span>
-    </button>
-    <button class="win98-toolbar-btn" title="Stop">
-        <span style="font-size: 14px;">×</span>
-    </button>
-    <button class="win98-toolbar-btn" title="Refresh" onclick="location.reload()">
-        <span style="font-size: 14px;">↻</span>
-    </button>
-    <button class="win98-toolbar-btn" title="Home" onclick="location.href='/'">
-        <span style="font-size: 14px;">⌂</span>
-    </button>
-    <div class="win98-toolbar-divider"></div>
-</div>
-<div class="win98-address-bar">
-    <span class="win98-address-label">Address:</span>
-    <input type="text" class="win98-address-input" value="http://www.alexander.com/news" readonly>
-    <button class="win98-btn" style="min-width: 50px; padding: 2px 8px;">Go</button>
-</div>
+.news-card {
+    padding: var(--space-lg);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+}
+
+.news-card-meta {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    margin-bottom: var(--space-xs);
+}
+
+.news-card-meta .source {
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.news-card h3 {
+    font-size: var(--font-size-base);
+    margin-bottom: var(--space-sm);
+}
+
+.news-card h3 a {
+    color: var(--text-primary);
+}
+
+.news-card h3 a:hover {
+    color: var(--accent);
+}
+
+.news-card p {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: var(--space-sm);
+}
+
+.news-card .read-more {
+    font-size: var(--font-size-xs);
+}
+
+</style>
 {% endblock %}
 
-{% block window_content %}
-<div class="win98-content-inset" style="background: white; min-height: 350px; padding: 16px;">
-    <h1 style="color: navy; font-size: 18px; border-bottom: 2px solid navy; padding-bottom: 8px; margin-bottom: 16px;">
-        In the News
-    </h1>
-    <p style="color: #666; margin-bottom: 16px;">Articles, interviews, and press mentions.</p>
+{% block page_content %}
+<div class="content-panel">
+    <div class="content-panel-header">In the News</div>
+    <div class="content-panel-body">
+        <p class="page-intro">Articles, interviews, and press mentions.</p>
 
-    {% if articles %}
-    {% for article in articles %}
-    <div style="margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #ccc;">
-        <div style="font-size: 10px; color: #666; margin-bottom: 4px;">
-            <strong style="color: navy;">{{ article.source }}</strong> | {{ article.date }}
+        {% if articles %}
+        <div class="news-list">
+            {% for article in articles %}
+            <div class="news-card">
+                <div class="news-card-meta">
+                    <span class="source">{{ article.source }}</span> | {{ article.date }}
+                </div>
+                <h3><a href="{{ article.url }}" target="_blank" rel="noopener noreferrer">{{ article.title }}</a></h3>
+                <p>{{ article.description }}</p>
+                <a href="{{ article.url }}" target="_blank" rel="noopener noreferrer" class="read-more">Read full article &rarr;</a>
+            </div>
+            {% endfor %}
         </div>
-        <h2 style="font-size: 14px; margin: 4px 0;">
-            <a href="{{ article.url }}" target="_blank" rel="noopener noreferrer" class="win98-link">{{ article.title }}</a>
-        </h2>
-        <p style="margin: 8px 0; color: #333; font-size: 11px; line-height: 1.5;">
-            {{ article.description }}
-        </p>
-        <a href="{{ article.url }}" target="_blank" rel="noopener noreferrer" class="win98-link" style="font-size: 10px;">
-            Read full article &rarr;
-        </a>
+        {% else %}
+        {{ empty_state("No news articles found. Check back soon.") }}
+        {% endif %}
     </div>
-    {% endfor %}
-    {% else %}
-    <div style="text-align: center; padding: 40px; color: #808080;">
-        <p>No news articles found.</p>
-        <p style="font-size: 10px;">Check back soon for updates!</p>
-    </div>
-    {% endif %}
-</div>
-{% endblock %}
-
-{% block status_bar %}
-<div class="win98-status-bar">
-    <span class="win98-status-section" style="flex: 1;">Done</span>
-    <span class="win98-status-section">Internet</span>
 </div>
 {% endblock %}

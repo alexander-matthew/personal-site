@@ -1,22 +1,22 @@
-{% extends "base.html" %}
+{% extends "palantir_page.html" %}
 
 {% block head %}
 {{ super() }}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/tools.css') }}">
 {% block tool_head %}{% endblock %}
 {% endblock %}
 
-{% block content %}
-<div class="tool-page">
-    <header class="tool-header">
-        <a href="{{ url_for('tools.index') }}" class="back-link">&larr; All Tools</a>
-        <h1>{% block tool_title %}Tool{% endblock %}</h1>
-        <p class="tool-description">{% block tool_description %}{% endblock %}</p>
-    </header>
+{% block page_title %}{% block tool_title %}Tool{% endblock %}{% endblock %}
 
-    <div class="tool-content">
-        {% block tool_content %}{% endblock %}
-    </div>
+{% block page_content %}
+<div style="margin-bottom: var(--space-md);">
+    <a href="{{ url_for('tools.index') }}" style="color: var(--text-secondary); text-decoration: none; font-size: var(--font-size-sm);">&larr; All Tools</a>
+    {% block tool_description_block %}
+    <p style="color: var(--text-secondary); font-size: var(--font-size-sm); margin-top: var(--space-xs);">{% block tool_description %}{% endblock %}</p>
+    {% endblock %}
+</div>
+
+<div class="tool-content">
+    {% block tool_content %}{% endblock %}
 </div>
 {% endblock %}
 

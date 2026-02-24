@@ -4,24 +4,278 @@
 {% block tool_description %}Visualize your listening habits and discover patterns in your music taste.{% endblock %}
 
 {% block tool_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/spotify-cyberpunk.css') }}">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+/* ===== Spotify Tools Dashboard (Palantir Theme) ===== */
+.spotify-tools { font-size: var(--font-size-sm); }
+
+.data-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--space-sm);
+    margin-bottom: var(--space-lg);
+}
+
+.data-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: 4px;
+    padding: var(--space-md);
+    text-align: center;
+}
+
+.data-card--primary { border-left: 3px solid var(--accent); }
+.data-card--success { border-left: 3px solid var(--color-success); }
+
+.data-card__title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: var(--space-xs);
+}
+
+.data-card__value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-md);
+    margin-bottom: var(--space-md);
+}
+
+.dashboard-item {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: 4px;
+    padding: var(--space-md);
+}
+
+.dashboard-item h3 {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin-bottom: var(--space-sm);
+    font-weight: 600;
+}
+
+.timeline-heatmap {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: 4px;
+    padding: var(--space-md);
+    margin-bottom: var(--space-md);
+}
+
+.timeline-heatmap h3 {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin-bottom: var(--space-sm);
+    font-weight: 600;
+}
+
+/* Auth state */
+.auth-box {
+    text-align: center;
+    padding: var(--space-xl);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: 4px;
+}
+
+.auth-box h3 {
+    color: var(--text-primary);
+    margin-bottom: var(--space-sm);
+}
+
+.auth-box p {
+    color: var(--text-secondary);
+    margin-bottom: var(--space-md);
+}
+
+.auth-button {
+    display: inline-block;
+    padding: var(--space-sm) var(--space-lg);
+    background: var(--accent);
+    color: #000;
+    border-radius: 3px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: var(--font-size-sm);
+}
+
+.auth-button:hover { background: var(--accent-hover); }
+
+/* Loading spinner */
+.loading-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 120px;
+}
+
+.loading-spinner::after {
+    content: '';
+    width: 28px;
+    height: 28px;
+    border: 2px solid var(--border-default);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Time range selector */
+.time-range-selector {
+    display: flex;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-sm);
+}
+
+.time-btn {
+    padding: var(--space-xs) var(--space-sm);
+    border: 1px solid var(--border-default);
+    border-radius: 3px;
+    background: var(--bg-elevated);
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 12px;
+}
+
+.time-btn:hover { border-color: var(--accent); color: var(--text-primary); }
+.time-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
+
+/* Tracks list */
+.tracks-list { display: flex; flex-direction: column; gap: var(--space-xs); }
+
+.track-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-xs) var(--space-sm);
+    background: var(--bg-elevated);
+    border-radius: 3px;
+}
+
+.track-rank { width: 20px; text-align: center; color: var(--text-muted); font-size: 12px; }
+.track-cover { width: 36px; height: 36px; border-radius: 3px; object-fit: cover; }
+.track-info { display: flex; flex-direction: column; min-width: 0; }
+.track-name { font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; }
+.track-artist { font-size: 12px; color: var(--text-secondary); }
+
+/* Taste evolution */
+.taste-evolution { display: flex; flex-direction: column; gap: var(--space-sm); }
+.evolution-period { margin-bottom: var(--space-xs); }
+.evolution-period-label { font-size: 12px; color: var(--accent); font-weight: 600; margin-bottom: 4px; }
+.evolution-artists { display: flex; flex-direction: column; gap: 4px; }
+.evolution-artist { display: flex; align-items: center; gap: var(--space-xs); font-size: 13px; }
+.evolution-artist-rank { color: var(--text-muted); font-size: 11px; width: 24px; }
+.evolution-artist img { width: 24px; height: 24px; border-radius: 50%; }
+
+/* Audio profile */
+.audio-profile canvas { max-height: 200px; }
+.audio-legend { display: flex; flex-wrap: wrap; gap: var(--space-xs); margin-top: var(--space-sm); }
+.audio-legend-item { font-size: 11px; color: var(--text-secondary); }
+.audio-legend-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 4px; }
+
+/* Patterns */
+.patterns-grid { display: flex; flex-direction: column; gap: var(--space-md); }
+.pattern-section h4 { font-size: 12px; color: var(--text-secondary); margin-bottom: var(--space-xs); }
+.day-bars { display: flex; flex-direction: column; gap: 3px; }
+.day-bar-row { display: flex; align-items: center; gap: var(--space-xs); }
+.day-bar-label { width: 28px; font-size: 11px; color: var(--text-muted); }
+.day-bar-container { flex: 1; height: 14px; background: var(--bg-elevated); border-radius: 2px; overflow: hidden; }
+.day-bar { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s; }
+.day-bar-value { width: 20px; font-size: 11px; color: var(--text-muted); text-align: right; }
+.peak-hours { display: flex; flex-direction: column; gap: var(--space-xs); }
+.peak-hour-item { display: flex; align-items: center; gap: var(--space-sm); }
+.peak-hour-time { font-weight: 700; color: var(--accent); font-size: 13px; }
+.peak-hour-info { font-size: 12px; color: var(--text-secondary); }
+.peak-hour-count { font-weight: 600; color: var(--text-primary); }
+
+/* Genres */
+.genre-bars { display: flex; flex-direction: column; gap: var(--space-xs); }
+.genre-item { display: flex; align-items: center; gap: var(--space-xs); }
+.genre-name { width: 100px; font-size: 12px; color: var(--text-secondary); text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.genre-bar-container { flex: 1; height: 14px; background: var(--bg-elevated); border-radius: 2px; overflow: hidden; }
+.genre-bar { height: 100%; border-radius: 2px; transition: width 0.3s; }
+.genre-bar-1 { background: var(--accent); }
+.genre-bar-2 { background: var(--color-success); }
+.genre-bar-3 { background: var(--color-warning); }
+.genre-bar-4 { background: #a78bfa; }
+.genre-bar-5 { background: var(--color-error); }
+.genre-percent { width: 36px; font-size: 11px; color: var(--text-muted); text-align: right; }
+
+/* Heatmap */
+.heatmap-grid {
+    display: grid;
+    grid-template-columns: 36px repeat(24, 1fr);
+    gap: 2px;
+    font-size: 10px;
+}
+.heatmap-header { color: var(--text-muted); text-align: center; font-size: 9px; }
+.heatmap-day-label { color: var(--text-muted); text-align: right; padding-right: 4px; line-height: 16px; }
+.heatmap-cell {
+    height: 16px;
+    border-radius: 2px;
+    position: relative;
+    cursor: default;
+}
+.heatmap-cell[data-level="0"] { background: var(--bg-elevated); }
+.heatmap-cell[data-level="1"] { background: rgba(77, 166, 255, 0.2); }
+.heatmap-cell[data-level="2"] { background: rgba(77, 166, 255, 0.4); }
+.heatmap-cell[data-level="3"] { background: rgba(77, 166, 255, 0.6); }
+.heatmap-cell[data-level="4"] { background: var(--accent); }
+.heatmap-tooltip {
+    display: none;
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    white-space: nowrap;
+    z-index: 10;
+}
+.heatmap-cell:hover .heatmap-tooltip { display: block; }
+
+/* Chart container */
+.chart-container { min-height: 200px; }
+.chart-title { font-size: var(--font-size-sm); color: var(--text-secondary); margin-bottom: var(--space-sm); font-weight: 600; }
+
+.empty-state { text-align: center; color: var(--text-muted); padding: var(--space-lg); }
+
+.disconnect-link { text-align: center; margin-top: var(--space-lg); }
+.disconnect-link a { color: var(--text-muted); text-decoration: none; font-size: var(--font-size-sm); }
+.disconnect-link a:hover { color: var(--text-secondary); }
+
+@media (max-width: 768px) {
+    .dashboard-grid { grid-template-columns: 1fr; }
+    .data-cards { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
 {% endblock %}
 
 {% block tool_content %}
-<div class="spotify-cyberpunk">
+<div class="spotify-tools">
 {% if not is_configured %}
-<div class="auth-required">
-    <h3>// SYSTEM OFFLINE</h3>
+<div class="auth-box">
+    <h3>System Offline</h3>
     <p>Spotify API credentials not configured. Set SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET to enable this module.</p>
 </div>
 {% elif not is_authenticated %}
-<div class="auth-required">
-    <h3>// ACCESS REQUIRED</h3>
-    <p>Initialize connection to Spotify network to access your listening data.</p>
-    <a href="{{ url_for('tools.spotify_auth') }}" class="auth-button">
-        &gt; CONNECT_SPOTIFY
-    </a>
+<div class="auth-box">
+    <h3>Access Required</h3>
+    <p>Connect to Spotify to access your listening data.</p>
+    <a href="{{ url_for('tools.spotify_auth') }}" class="auth-button">Connect Spotify</a>
 </div>
 {% else %}
 
@@ -37,75 +291,63 @@
     </div>
     <div class="data-card" id="stat-top-artist">
         <h4 class="data-card__title">Top Artist</h4>
-        <div class="data-card__value" style="font-size: 1rem;">--</div>
+        <div class="data-card__value" style="font-size: 14px;">--</div>
     </div>
     <div class="data-card" id="stat-top-track">
         <h4 class="data-card__title">Most Played</h4>
-        <div class="data-card__value" style="font-size: 1rem;">--</div>
+        <div class="data-card__value" style="font-size: 14px;">--</div>
     </div>
 </div>
 
 <!-- Row 1: Taste Evolution + Audio Profile -->
 <div class="dashboard-grid">
-    <div class="cyber-card dashboard-item">
-        <h3 class="cyber-card-title">// Taste Evolution</h3>
-        <div id="evolution-container">
-            <div class="loading-spinner"></div>
-        </div>
+    <div class="dashboard-item">
+        <h3>Taste Evolution</h3>
+        <div id="evolution-container"><div class="loading-spinner"></div></div>
     </div>
-    <div class="cyber-card dashboard-item">
-        <h3 class="cyber-card-title">// Audio Profile</h3>
-        <div id="audio-profile-container">
-            <div class="loading-spinner"></div>
-        </div>
+    <div class="dashboard-item">
+        <h3>Audio Profile</h3>
+        <div id="audio-profile-container"><div class="loading-spinner"></div></div>
     </div>
 </div>
 
 <!-- Row 2: Listening Patterns + Genre Breakdown -->
 <div class="dashboard-grid">
-    <div class="cyber-card dashboard-item">
-        <h3 class="cyber-card-title">// Listening Patterns</h3>
-        <div id="patterns-container">
-            <div class="loading-spinner"></div>
-        </div>
+    <div class="dashboard-item">
+        <h3>Listening Patterns</h3>
+        <div id="patterns-container"><div class="loading-spinner"></div></div>
     </div>
-    <div class="cyber-card dashboard-item">
-        <h3 class="cyber-card-title">// Genre Analysis</h3>
-        <div id="genre-container">
-            <div class="loading-spinner"></div>
-        </div>
+    <div class="dashboard-item">
+        <h3>Genre Analysis</h3>
+        <div id="genre-container"><div class="loading-spinner"></div></div>
     </div>
 </div>
 
-<!-- Row 3: Timeline Heatmap (full width) -->
-<div class="cyber-card timeline-heatmap">
-    <h3 class="cyber-card-title">// Weekly Timeline</h3>
-    <div id="heatmap-container">
-        <div class="loading-spinner"></div>
-    </div>
+<!-- Row 3: Timeline Heatmap -->
+<div class="timeline-heatmap">
+    <h3>Weekly Timeline</h3>
+    <div id="heatmap-container"><div class="loading-spinner"></div></div>
 </div>
 
 <!-- Row 4: Activity Chart + Top Tracks -->
 <div class="dashboard-grid">
-    <div class="chart-container dashboard-item">
-        <h3 class="chart-title">// Hourly Activity</h3>
+    <div class="dashboard-item chart-container">
+        <h3 class="chart-title">Hourly Activity</h3>
         <canvas id="activityChart"></canvas>
     </div>
     <div class="dashboard-item">
         <div class="time-range-selector">
-            <button class="time-btn active" data-range="short_term">&gt; 4_WEEKS</button>
-            <button class="time-btn" data-range="medium_term">&gt; 6_MONTHS</button>
-            <button class="time-btn" data-range="long_term">&gt; ALL_TIME</button>
+            <button class="time-btn active" data-range="short_term">4 Weeks</button>
+            <button class="time-btn" data-range="medium_term">6 Months</button>
+            <button class="time-btn" data-range="long_term">All Time</button>
         </div>
-        <h3>// Top Tracks</h3>
-        <div id="tracks-list" class="tracks-list">
-            <div class="loading-spinner"></div>
-        </div>
+        <h3>Top Tracks</h3>
+        <div id="tracks-list" class="tracks-list"><div class="loading-spinner"></div></div>
     </div>
 </div>
 
-<p style="text-align: center; margin-top: 2rem;">
-    <a href="{{ url_for('tools.spotify_logout') }}" class="back-link">&gt; DISCONNECT_SESSION</a>
+<p class="disconnect-link">
+    <a href="{{ url_for('tools.spotify_logout') }}">&gt; Disconnect Session</a>
 </p>
 {% endif %}
 </div>
@@ -116,47 +358,39 @@
 <script>
 (function() {
     const chartColors = {
-        cyan: '#00ffff',
-        magenta: '#ff00ff',
-        yellow: '#ffff00',
-        green: '#00ff88',
-        red: '#ff3366'
+        accent: '#4da6ff',
+        success: '#4ade80',
+        warning: '#fbbf24',
+        purple: '#a78bfa',
+        error: '#f87171'
     };
     let activityChart = null;
     let audioProfileChart = null;
 
-    // ===============================================
-    // Taste Evolution
-    // ===============================================
     async function loadTasteEvolution() {
         const container = document.getElementById('evolution-container');
         try {
             const response = await fetch('/tools/spotify/api/taste-evolution');
             const data = await response.json();
-
             const periods = ['short_term', 'medium_term', 'long_term'];
             let html = '<div class="taste-evolution">';
-
             for (const period of periods) {
                 const periodData = data[period];
                 if (periodData && periodData.artists.length > 0) {
-                    html += `
-                        <div class="evolution-period">
-                            <div class="evolution-period-label">${periodData.label}</div>
-                            <div class="evolution-artists">
-                                ${periodData.artists.map((artist, i) => `
-                                    <div class="evolution-artist">
-                                        <span class="evolution-artist-rank">#${i + 1}</span>
-                                        ${artist.image ? `<img src="${artist.image}" alt="">` : ''}
-                                        <span>${escapeHtml(artist.name)}</span>
-                                    </div>
-                                `).join('')}
-                            </div>
+                    html += `<div class="evolution-period">
+                        <div class="evolution-period-label">${periodData.label}</div>
+                        <div class="evolution-artists">
+                            ${periodData.artists.map((artist, i) => `
+                                <div class="evolution-artist">
+                                    <span class="evolution-artist-rank">#${i + 1}</span>
+                                    ${artist.image ? `<img src="${artist.image}" alt="">` : ''}
+                                    <span>${escapeHtml(artist.name)}</span>
+                                </div>
+                            `).join('')}
                         </div>
-                    `;
+                    </div>`;
                 }
             }
-
             html += '</div>';
             container.innerHTML = html;
         } catch (error) {
@@ -165,83 +399,27 @@
         }
     }
 
-    // ===============================================
-    // Audio Profile Radar Chart
-    // ===============================================
     async function loadAudioProfile() {
         const container = document.getElementById('audio-profile-container');
         try {
             const response = await fetch('/tools/spotify/api/audio-features');
             const data = await response.json();
-
-            if (!data.features) {
-                container.innerHTML = '<p class="empty-state">No audio data available</p>';
-                return;
-            }
-
+            if (!data.features) { container.innerHTML = '<p class="empty-state">No audio data available</p>'; return; }
             const features = data.features;
             const labels = ['Danceability', 'Energy', 'Acousticness', 'Valence', 'Instrumentalness', 'Liveness'];
-            const values = [
-                features.danceability,
-                features.energy,
-                features.acousticness,
-                features.valence,
-                features.instrumentalness,
-                features.liveness
-            ];
-
+            const values = [features.danceability, features.energy, features.acousticness, features.valence, features.instrumentalness, features.liveness];
             container.innerHTML = `
                 <div class="audio-profile">
                     <canvas id="audioRadarChart"></canvas>
                     <div class="audio-legend">
-                        <div class="audio-legend-item"><span class="audio-legend-dot"></span> Danceability: ${features.danceability}%</div>
-                        <div class="audio-legend-item"><span class="audio-legend-dot"></span> Energy: ${features.energy}%</div>
-                        <div class="audio-legend-item"><span class="audio-legend-dot"></span> Acousticness: ${features.acousticness}%</div>
-                        <div class="audio-legend-item"><span class="audio-legend-dot"></span> Valence (Mood): ${features.valence}%</div>
-                        <div class="audio-legend-item"><span class="audio-legend-dot"></span> Instrumentalness: ${features.instrumentalness}%</div>
-                        <div class="audio-legend-item"><span class="audio-legend-dot"></span> Liveness: ${features.liveness}%</div>
+                        ${labels.map((label, i) => `<div class="audio-legend-item"><span class="audio-legend-dot"></span> ${label}: ${values[i]}%</div>`).join('')}
                     </div>
-                </div>
-            `;
-
+                </div>`;
             const ctx = document.getElementById('audioRadarChart').getContext('2d');
             audioProfileChart = new Chart(ctx, {
                 type: 'radar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: values,
-                        backgroundColor: 'rgba(0, 255, 255, 0.2)',
-                        borderColor: chartColors.cyan,
-                        borderWidth: 2,
-                        pointBackgroundColor: chartColors.magenta,
-                        pointBorderColor: chartColors.magenta,
-                        pointRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        r: {
-                            beginAtZero: true,
-                            max: 100,
-                            ticks: {
-                                display: false
-                            },
-                            grid: {
-                                color: 'rgba(0, 255, 255, 0.15)'
-                            },
-                            angleLines: {
-                                color: 'rgba(0, 255, 255, 0.15)'
-                            },
-                            pointLabels: {
-                                color: '#888899',
-                                font: { family: 'VT323', size: 11 }
-                            }
-                        }
-                    }
-                }
+                data: { labels, datasets: [{ data: values, backgroundColor: 'rgba(77, 166, 255, 0.15)', borderColor: chartColors.accent, borderWidth: 2, pointBackgroundColor: chartColors.accent, pointRadius: 3 }] },
+                options: { responsive: true, plugins: { legend: { display: false } }, scales: { r: { beginAtZero: true, max: 100, ticks: { display: false }, grid: { color: 'rgba(77, 166, 255, 0.1)' }, angleLines: { color: 'rgba(77, 166, 255, 0.1)' }, pointLabels: { color: '#888', font: { family: "'JetBrains Mono'", size: 10 } } } } }
             });
         } catch (error) {
             console.error('Failed to load audio profile:', error);
@@ -249,156 +427,74 @@
         }
     }
 
-    // ===============================================
-    // Listening Patterns
-    // ===============================================
     async function loadListeningPatterns() {
         const container = document.getElementById('patterns-container');
         try {
             const response = await fetch('/tools/spotify/api/recent');
             const data = await response.json();
-
-            if (!data.items || data.items.length === 0) {
-                container.innerHTML = '<p class="empty-state">No recent data</p>';
-                return;
-            }
-
-            // Day of week breakdown
+            if (!data.items || data.items.length === 0) { container.innerHTML = '<p class="empty-state">No recent data</p>'; return; }
             const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
             const dayData = new Array(7).fill(0);
             const hourData = new Array(24).fill(0);
-
-            data.items.forEach(item => {
-                const date = new Date(item.played_at);
-                dayData[date.getDay()]++;
-                hourData[date.getHours()]++;
-            });
-
+            data.items.forEach(item => { const date = new Date(item.played_at); dayData[date.getDay()]++; hourData[date.getHours()]++; });
             const maxDay = Math.max(...dayData);
-
-            // Find peak hours
-            const peakHours = hourData
-                .map((count, hour) => ({ hour, count }))
-                .sort((a, b) => b.count - a.count)
-                .slice(0, 3);
-
+            const peakHours = hourData.map((count, hour) => ({ hour, count })).sort((a, b) => b.count - a.count).slice(0, 3);
             container.innerHTML = `
                 <div class="patterns-grid">
                     <div class="pattern-section">
                         <h4>By Day of Week</h4>
                         <div class="day-bars">
-                            ${days.map((day, i) => `
-                                <div class="day-bar-row">
-                                    <span class="day-bar-label">${day}</span>
-                                    <div class="day-bar-container">
-                                        <div class="day-bar" style="width: ${maxDay ? (dayData[i] / maxDay * 100) : 0}%"></div>
-                                    </div>
-                                    <span class="day-bar-value">${dayData[i]}</span>
-                                </div>
-                            `).join('')}
+                            ${days.map((day, i) => `<div class="day-bar-row"><span class="day-bar-label">${day}</span><div class="day-bar-container"><div class="day-bar" style="width: ${maxDay ? (dayData[i] / maxDay * 100) : 0}%"></div></div><span class="day-bar-value">${dayData[i]}</span></div>`).join('')}
                         </div>
                     </div>
                     <div class="pattern-section">
                         <h4>Peak Hours</h4>
                         <div class="peak-hours">
-                            ${peakHours.map((peak, i) => `
-                                <div class="peak-hour-item">
-                                    <span class="peak-hour-time">${String(peak.hour).padStart(2, '0')}:00</span>
-                                    <div class="peak-hour-info">
-                                        <span class="peak-hour-count">${peak.count} tracks</span><br>
-                                        ${i === 0 ? 'Most active hour' : `#${i + 1} peak`}
-                                    </div>
-                                </div>
-                            `).join('')}
+                            ${peakHours.map((peak, i) => `<div class="peak-hour-item"><span class="peak-hour-time">${String(peak.hour).padStart(2, '0')}:00</span><div class="peak-hour-info"><span class="peak-hour-count">${peak.count} tracks</span><br>${i === 0 ? 'Most active hour' : `#${i + 1} peak`}</div></div>`).join('')}
                         </div>
                     </div>
-                </div>
-            `;
+                </div>`;
         } catch (error) {
             console.error('Failed to load patterns:', error);
             container.innerHTML = '<p class="empty-state">Failed to load data</p>';
         }
     }
 
-    // ===============================================
-    // Genre Breakdown
-    // ===============================================
     async function loadGenres() {
         const container = document.getElementById('genre-container');
         try {
             const response = await fetch('/tools/spotify/api/genres');
             const data = await response.json();
-
             if (data.genres && data.genres.length > 0) {
                 const barClasses = ['genre-bar-1', 'genre-bar-2', 'genre-bar-3', 'genre-bar-4', 'genre-bar-5'];
-                container.innerHTML = `
-                    <div class="genre-bars">
-                        ${data.genres.map((genre, i) => `
-                            <div class="genre-item">
-                                <span class="genre-name">${escapeHtml(genre.name)}</span>
-                                <div class="genre-bar-container">
-                                    <div class="genre-bar ${barClasses[i % barClasses.length]}" style="width: ${genre.percent}%"></div>
-                                </div>
-                                <span class="genre-percent">${genre.percent}%</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-            } else {
-                container.innerHTML = '<p class="empty-state">No genre data available</p>';
-            }
+                container.innerHTML = `<div class="genre-bars">${data.genres.map((genre, i) => `<div class="genre-item"><span class="genre-name">${escapeHtml(genre.name)}</span><div class="genre-bar-container"><div class="genre-bar ${barClasses[i % barClasses.length]}" style="width: ${genre.percent}%"></div></div><span class="genre-percent">${genre.percent}%</span></div>`).join('')}</div>`;
+            } else { container.innerHTML = '<p class="empty-state">No genre data available</p>'; }
         } catch (error) {
             console.error('Failed to load genres:', error);
             container.innerHTML = '<p class="empty-state">Failed to load genres</p>';
         }
     }
 
-    // ===============================================
-    // Timeline Heatmap
-    // ===============================================
     async function loadHeatmap() {
         const container = document.getElementById('heatmap-container');
         try {
             const response = await fetch('/tools/spotify/api/recent');
             const data = await response.json();
-
-            if (!data.items || data.items.length === 0) {
-                container.innerHTML = '<p class="empty-state">No recent listening data</p>';
-                return;
-            }
-
+            if (!data.items || data.items.length === 0) { container.innerHTML = '<p class="empty-state">No recent listening data</p>'; return; }
             const heatmapData = {};
             const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-            data.items.forEach(item => {
-                const date = new Date(item.played_at);
-                const day = date.getDay();
-                const hour = date.getHours();
-                const key = `${day}-${hour}`;
-                heatmapData[key] = (heatmapData[key] || 0) + 1;
-            });
-
+            data.items.forEach(item => { const date = new Date(item.played_at); const key = `${date.getDay()}-${date.getHours()}`; heatmapData[key] = (heatmapData[key] || 0) + 1; });
             const maxCount = Math.max(...Object.values(heatmapData), 1);
-
-            let html = '<div class="heatmap-grid">';
-            html += '<div class="heatmap-header"></div>';
-            for (let h = 0; h < 24; h++) {
-                html += `<div class="heatmap-header">${h}</div>`;
-            }
-
+            let html = '<div class="heatmap-grid"><div class="heatmap-header"></div>';
+            for (let h = 0; h < 24; h++) { html += `<div class="heatmap-header">${h}</div>`; }
             for (let d = 0; d < 7; d++) {
                 html += `<div class="heatmap-day-label">${days[d]}</div>`;
                 for (let h = 0; h < 24; h++) {
                     const count = heatmapData[`${d}-${h}`] || 0;
                     const level = count === 0 ? 0 : Math.min(4, Math.ceil((count / maxCount) * 4));
-                    html += `
-                        <div class="heatmap-cell" data-level="${level}">
-                            <div class="heatmap-tooltip">${count} track${count !== 1 ? 's' : ''}</div>
-                        </div>
-                    `;
+                    html += `<div class="heatmap-cell" data-level="${level}"><div class="heatmap-tooltip">${count} track${count !== 1 ? 's' : ''}</div></div>`;
                 }
             }
-
             html += '</div>';
             container.innerHTML = html;
         } catch (error) {
@@ -407,41 +503,21 @@
         }
     }
 
-    // ===============================================
-    // Recent Data & Stats
-    // ===============================================
     async function loadRecentData() {
         try {
             const response = await fetch('/tools/spotify/api/recent');
             const data = await response.json();
-
-            if (data.items) {
-                updateStats(data.items);
-                renderActivityChart(data.items);
-            }
-        } catch (error) {
-            console.error('Failed to load recent data:', error);
-        }
+            if (data.items) { updateStats(data.items); renderActivityChart(data.items); }
+        } catch (error) { console.error('Failed to load recent data:', error); }
     }
 
-    // ===============================================
-    // Top Data
-    // ===============================================
     async function loadTopData(timeRange = 'short_term') {
         try {
             const response = await fetch(`/tools/spotify/api/top/${timeRange}`);
             const data = await response.json();
-
-            if (data.artists && data.artists.items) {
-                updateTopArtist(data.artists.items);
-            }
-            if (data.tracks && data.tracks.items) {
-                renderTracksList(data.tracks.items);
-                updateTopTrack(data.tracks.items);
-            }
-        } catch (error) {
-            console.error('Failed to load top data:', error);
-        }
+            if (data.artists && data.artists.items) { updateTopArtist(data.artists.items); }
+            if (data.tracks && data.tracks.items) { renderTracksList(data.tracks.items); updateTopTrack(data.tracks.items); }
+        } catch (error) { console.error('Failed to load top data:', error); }
     }
 
     function updateStats(items) {
@@ -450,97 +526,29 @@
         document.querySelector('#stat-artists .data-card__value').textContent = uniqueArtists.size;
     }
 
-    function updateTopArtist(artists) {
-        if (artists.length > 0) {
-            document.querySelector('#stat-top-artist .data-card__value').textContent = artists[0].name;
-        }
-    }
-
-    function updateTopTrack(tracks) {
-        if (tracks.length > 0) {
-            document.querySelector('#stat-top-track .data-card__value').textContent = tracks[0].name;
-        }
-    }
+    function updateTopArtist(artists) { if (artists.length > 0) document.querySelector('#stat-top-artist .data-card__value').textContent = artists[0].name; }
+    function updateTopTrack(tracks) { if (tracks.length > 0) document.querySelector('#stat-top-track .data-card__value').textContent = tracks[0].name; }
 
     function renderActivityChart(items) {
         const hourData = new Array(24).fill(0);
-        items.forEach(item => {
-            const hour = new Date(item.played_at).getHours();
-            hourData[hour]++;
-        });
-
+        items.forEach(item => { hourData[new Date(item.played_at).getHours()]++; });
         const ctx = document.getElementById('activityChart').getContext('2d');
         if (activityChart) activityChart.destroy();
-
         activityChart = new Chart(ctx, {
             type: 'bar',
-            data: {
-                labels: hourData.map((_, i) => `${i}:00`),
-                datasets: [{
-                    label: 'Tracks',
-                    data: hourData,
-                    backgroundColor: chartColors.cyan,
-                    borderColor: chartColors.cyan,
-                    borderWidth: 1,
-                    borderRadius: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: 'rgba(0, 255, 255, 0.1)' },
-                        ticks: { color: '#888899', font: { family: 'VT323' } }
-                    },
-                    x: {
-                        grid: { color: 'rgba(0, 255, 255, 0.05)' },
-                        ticks: {
-                            color: '#888899',
-                            font: { family: 'VT323' },
-                            callback: function(val, index) {
-                                return index % 4 === 0 ? this.getLabelForValue(val) : '';
-                            }
-                        }
-                    }
-                }
-            }
+            data: { labels: hourData.map((_, i) => `${i}:00`), datasets: [{ label: 'Tracks', data: hourData, backgroundColor: chartColors.accent, borderColor: chartColors.accent, borderWidth: 1, borderRadius: 2 }] },
+            options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(77, 166, 255, 0.08)' }, ticks: { color: '#888', font: { family: "'JetBrains Mono'" } } }, x: { grid: { color: 'rgba(77, 166, 255, 0.04)' }, ticks: { color: '#888', font: { family: "'JetBrains Mono'" }, callback: function(val, index) { return index % 4 === 0 ? this.getLabelForValue(val) : ''; } } } } }
         });
     }
 
     function renderTracksList(tracks) {
         const container = document.getElementById('tracks-list');
-        if (!tracks || tracks.length === 0) {
-            container.innerHTML = '<p class="empty-state">No tracks found.</p>';
-            return;
-        }
-
-        container.innerHTML = tracks.slice(0, 8).map((track, i) => `
-            <div class="track-item">
-                <span class="track-rank">${String(i + 1).padStart(2, '0')}</span>
-                <img src="${track.album.images[2]?.url || ''}" alt="" class="track-cover">
-                <div class="track-info">
-                    <span class="track-name">${escapeHtml(track.name)}</span>
-                    <span class="track-artist">${escapeHtml(track.artists[0].name)}</span>
-                </div>
-            </div>
-        `).join('');
+        if (!tracks || tracks.length === 0) { container.innerHTML = '<p class="empty-state">No tracks found.</p>'; return; }
+        container.innerHTML = tracks.slice(0, 8).map((track, i) => `<div class="track-item"><span class="track-rank">${String(i + 1).padStart(2, '0')}</span><img src="${track.album.images[2]?.url || ''}" alt="" class="track-cover"><div class="track-info"><span class="track-name">${escapeHtml(track.name)}</span><span class="track-artist">${escapeHtml(track.artists[0].name)}</span></div></div>`).join('');
     }
 
-    // ===============================================
-    // Utilities
-    // ===============================================
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
+    function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
 
-    // ===============================================
-    // Event Listeners
-    // ===============================================
     document.querySelectorAll('.time-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
@@ -549,9 +557,6 @@
         });
     });
 
-    // ===============================================
-    // Initial Load
-    // ===============================================
     loadRecentData();
     loadTopData();
     loadTasteEvolution();

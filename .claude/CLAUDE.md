@@ -40,42 +40,35 @@ Personal-Site/
 │   │   ├── rate_limit.py        # Rate limiting (FastAPI dependency)
 │   │   └── spotify_helpers.py   # Shared Spotify helpers (require_oauth, spotify_request)
 │   ├── templates/
-│   │   ├── win98_base.html  # Win98 desktop base (primary template)
-│   │   ├── win98_window.html # Win98 window chrome wrapper
-│   │   ├── base.html        # Legacy base layout (used by 500.html, tools)
-│   │   ├── 404.html         # BSOD-style 404 page (standalone)
-│   │   ├── 500.html         # Error page (extends base.html)
-│   │   ├── home.html        # Landing page (Win98 desktop with icons)
-│   │   ├── about.html       # Bio with cycling interests animation
-│   │   ├── projects.html    # Project showcase grid
-│   │   ├── blog/            # Blog templates
-│   │   ├── news/            # News templates
-│   │   ├── resume/          # Resume timeline
-│   │   ├── spotify/         # Spotify dashboard (Win98 theme)
-│   │   ├── blackjack/       # Blackjack trainer UI + game.js
-│   │   ├── sudoku/          # Sudoku game UI
-│   │   ├── pr_review/       # PR Review showcase
-│   │   ├── weather/         # Weather dashboard templates
-│   │   └── tools/           # Tools framework templates
+│   │   ├── palantir_base.html  # Root template: sidebar nav, Google Fonts, dark theme
+│   │   ├── palantir_page.html  # Page wrapper: extends palantir_base, adds .page-container
+│   │   ├── 404.html            # Terminal-style 404 page (standalone)
+│   │   ├── 500.html            # Error page (extends palantir_base.html)
+│   │   ├── home.html           # Landing page (ASCII hero + project cards)
+│   │   ├── about.html          # Bio with cycling interests animation
+│   │   ├── projects.html       # Project showcase grid
+│   │   ├── blog/               # Blog templates
+│   │   ├── news/               # News templates
+│   │   ├── resume/             # Resume timeline
+│   │   ├── spotify/            # Spotify dashboard (Palantir theme)
+│   │   ├── blackjack/          # Blackjack trainer UI + game.js
+│   │   ├── sudoku/             # Sudoku game UI
+│   │   ├── pr_review/          # PR Review showcase
+│   │   ├── weather/            # Weather dashboard templates
+│   │   └── tools/              # Tools framework templates
 │   │       ├── index.html
 │   │       ├── base_tool.html
-│   │       ├── spotify/index.html
-│   │       └── components/  # chart_container, data_card
+│   │       └── spotify/index.html
 │   └── static/
 │       ├── favicon.svg
 │       ├── css/
-│       │   ├── win98.css           # Win98 design system (primary)
-│       │   ├── style.css           # Legacy styles with CSS variables
-│       │   ├── spotify.css         # Deprecated (unlinked, retained on disk)
-│       │   ├── resume.css          # Resume timeline styles
-│       │   ├── blackjack.css       # Blackjack game styles
-│       │   ├── sudoku.css          # Sudoku grid styles
-│       │   ├── weather.css         # Weather dashboard styles
-│       │   └── tools.css           # Tools framework styles
-│       ├── icons/                  # Win98 SVG icons (13 files)
+│       │   ├── palantir.css         # Design system (colors, typography, layout, components)
+│       │   ├── blackjack.css        # Blackjack game styles
+│       │   ├── sudoku.css           # Sudoku grid styles
+│       │   └── weather.css          # Weather dashboard styles
 │       └── js/
-│           ├── win98.js                 # Win98 interactivity (clock, start menu, dialogs)
-│           ├── spotify-ascii.js         # Spotify Win98 component rendering (progress bars, tables, listviews)
+│           ├── palantir.js              # Sidebar toggle, active links, tabs, dialogs
+│           ├── spotify-ascii.js         # Spotify component rendering (progress bars, tables)
 │           ├── spotify-player.js        # Spotify Web Playback SDK integration
 │           ├── blackjack-engine.js      # Blackjack game logic + strategy
 │           ├── blackjack-engine.test.js # Jest tests
@@ -172,38 +165,32 @@ Access in templates via `{{ site.name }}`, `{{ site.linkedin_url }}`, etc.
 
 3. Add templates in `app/templates/myapp/`
 
-4. Add nav link in `app/templates/win98_base.html` (Start Menu)
+4. Add nav link in `app/templates/palantir_base.html` (sidebar nav)
 
 **Important:** Route names must follow `blueprint.endpoint` convention (e.g., `name='myapp.index'`) to match the custom `url_for()` in templates.
 
-### Template System (Win98 — Primary)
+### Template System (Palantir Dark Theme)
 
-The site uses a **Windows 98 desktop** theme as the primary UI. Two template chains exist:
+The site uses a **Palantir-inspired dark** theme: near-black backgrounds, dark grey panels, light blue accent (`#4da6ff`), JetBrains Mono typography.
 
-**Chain 1: Win98 (active)** — `win98_base.html` → `win98_window.html` → page templates
-- `win98_base.html`: Desktop area, Start Menu, Taskbar, loads `win98.css` + `win98.js`
-- `win98_window.html`: Adds window chrome (title bar, menu bar, status bar)
-- `home.html` extends `win98_base.html` directly (desktop with icons)
-- All other pages extend `win98_window.html`
+**Template chain:** `palantir_base.html` → `palantir_page.html` → page templates
+- `palantir_base.html`: Fixed left sidebar nav, Google Fonts, loads `palantir.css` + `palantir.js`
+- `palantir_page.html`: Adds `.page-container` panel with `{% block page_title %}` and `{% block page_content %}`
+- `home.html` extends `palantir_base.html` directly (ASCII hero + project cards)
+- All other pages extend `palantir_page.html`
+- `404.html` is standalone (terminal-style, no template inheritance)
 
-**Chain 2: Legacy** — `base.html` → `500.html`, `tools/` templates
-- Retained for error pages and inactive tools framework
-- Has dark/light toggle with CSS variables
+**Template Blocks:**
+- `{% block title %}` - Page title (palantir_base)
+- `{% block head %}` - Extra CSS/meta in `<head>` (palantir_base)
+- `{% block main %}` - Main content area (palantir_base)
+- `{% block scripts %}` - Page-specific JavaScript (palantir_base)
+- `{% block page_title %}` - Page heading text (palantir_page)
+- `{% block page_content %}` - Page body content (palantir_page)
 
-**Win98 Template Blocks:**
-- `{% block title %}` - Page title (win98_base)
-- `{% block head %}` - Extra CSS/meta in `<head>` (win98_base)
-- `{% block body %}` - Entire body content (win98_base)
-- `{% block main %}` - Desktop area (win98_base)
-- `{% block taskbar_buttons %}` - Taskbar button area (win98_base)
-- `{% block scripts %}` - Page-specific JavaScript (win98_base)
-- `{% block window_title %}` - Title bar text (win98_window)
-- `{% block window_content %}` - Main content area (win98_window)
-- `{% block menu_bar %}` - Menu bar row (win98_window)
-- `{% block status_bar %}` - Status bar row (win98_window)
-- `{% block taskbar_title %}` - Taskbar button text (win98_window)
+**CSS Custom Properties:** All colors, spacing, and typography are defined as CSS variables in `palantir.css`. Use `var(--bg-primary)`, `var(--accent)`, `var(--text-primary)`, `var(--space-md)`, etc.
 
-**Window Icon Convention:** Set `{% set window_icon = 'filename.svg' %}` at the top of child templates.
+**Sidebar Navigation:** Mobile sidebar collapses to hamburger menu at `<768px`. Active link highlighted via `data-path` attributes matched against `window.location.pathname`.
 
 ### External Links
 Always use `rel="noopener noreferrer"` with `target="_blank"` for security.
@@ -387,7 +374,7 @@ docker compose logs -f nginx   # nginx logs
 ## Mini-Apps
 
 ### Spotify Dashboard (`/projects/spotify`)
-OAuth-authenticated data visualization with Win98 theme and Web Playback SDK:
+OAuth-authenticated data visualization with Web Playback SDK:
 - Recently played tracks (last 50)
 - Top artists/tracks by time range (4 weeks, 6 months, all time)
 - Genre breakdown with percentages
@@ -481,11 +468,11 @@ npm run test:coverage     # Coverage report
 
 ## Features
 
-- **Win98 Desktop UI**: Primary theme with desktop icons, Start Menu, taskbar, and window chrome
-- **Dark/Light Mode**: Toggle in legacy base template only (used by 500 error page)
-- **Typing animation**: Home page cycles "Alex" ↔ "Alexander"
+- **Palantir Dark Theme**: Near-black backgrounds, dark grey panels, light blue accent, JetBrains Mono typography
+- **Fixed Sidebar Nav**: Left sidebar with ASCII logo, nav links, social footer; collapses to hamburger on mobile (<768px)
+- **Typing animation**: Home page cycles taglines with ASCII hero banner
 - **Interests carousel**: About page fades through interests list
-- **Responsive**: Mobile-friendly with breakpoint at 640px
-- **Spotify dashboard**: Win98-styled data visualizations (progress bars, tables, listviews) and Web Playback SDK
+- **Responsive**: Mobile-friendly with sidebar collapse at 768px
+- **Spotify dashboard**: Data visualizations (progress bars, tables, listviews) and Web Playback SDK
 - **Game engines**: Pure JavaScript with Jest test coverage
-- **Security**: CSP headers, secure session cookies, required SECRET_KEY in production
+- **Security**: CSP headers (including Google Fonts), secure session cookies, required SECRET_KEY in production
