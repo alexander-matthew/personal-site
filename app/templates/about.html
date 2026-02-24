@@ -1,158 +1,161 @@
-{% extends "win98_window.html" %}
+{% extends "palantir_page.html" %}
 
-{% block title %}System Properties{% endblock %}
-{% block window_title %}System Properties{% endblock %}
-{% block taskbar_title %}System Properties{% endblock %}
+{% block title %}About{% endblock %}
+{% block page_title %}About{% endblock %}
 
-{% set window_icon = 'computer.svg' %}
+{% block head %}
+<style>
+.about-grid {
+    display: grid;
+    gap: var(--space-lg);
+}
 
-{% block window_content %}
-<div class="win98-tabs">
-    <div class="win98-tab-buttons">
-        <button class="win98-tab-btn active">General</button>
-        <button class="win98-tab-btn">Interests</button>
-        <button class="win98-tab-btn">Skills</button>
-        <button class="win98-tab-btn">Contact</button>
+.about-section {
+    padding: var(--space-lg);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: 4px;
+}
+
+.about-section h2 {
+    font-size: var(--font-size-lg);
+    color: var(--accent);
+    margin-bottom: var(--space-md);
+}
+
+.about-section h2::before {
+    content: '// ';
+    color: var(--text-muted);
+}
+
+.about-section p {
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: var(--space-md);
+}
+
+.about-section p:last-child {
+    margin-bottom: 0;
+}
+
+.interests-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.interest-item {
+    padding: var(--space-xs) var(--space-sm);
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    border-left: 2px solid transparent;
+    transition: all var(--transition-fast);
+}
+
+.interest-item.active {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    background: var(--accent-glow);
+}
+
+.skills-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+}
+
+.contact-links {
+    display: flex;
+    gap: var(--space-md);
+    margin-top: var(--space-md);
+}
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div class="about-grid">
+    <div class="about-section">
+        <h2>Bio</h2>
+        <p>
+            Hello! I'm Alexander &mdash; a quant by trade and curious generalist at heart.
+        </p>
+        <p>
+            This site is a project and learning experience in itself &mdash; built from scratch
+            to sharpen my skills while also serving as a place to showcase my other work.
+        </p>
     </div>
-    <div class="win98-tab-content">
-        <!-- General Tab -->
-        <div class="win98-tab-panel active">
-            <div class="win98-flex win98-gap-lg">
-                <div style="text-align: center; padding: 16px;">
-                    <img src="{{ url_for('static', filename='icons/computer.svg') }}" alt="Computer" style="width: 64px; height: 64px;">
-                </div>
-                <div class="win98-flex-1">
-                    <div class="win98-groupbox">
-                        <span class="win98-groupbox-label">System</span>
-                        <p style="margin: 8px 0;"><strong>Alexander</strong></p>
-                        <p style="margin: 4px 0;">Quant & Curious Generalist</p>
-                        <p style="margin: 4px 0; color: #808080;">Version 1.0</p>
-                    </div>
-                    <div class="win98-groupbox">
-                        <span class="win98-groupbox-label">About</span>
-                        <p style="margin: 8px 0; line-height: 1.6;">
-                            Hello! I'm Alexander — a quant by trade and curious generalist at heart.
-                        </p>
-                        <p style="margin: 8px 0; line-height: 1.6;">
-                            This site is a project and learning experience in itself — built from scratch
-                            to sharpen my skills while also serving as a place to showcase my other work.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Interests Tab -->
-        <div class="win98-tab-panel">
-            <div class="win98-groupbox">
-                <span class="win98-groupbox-label">Current Interests</span>
-                <div class="win98-listview" style="height: 200px; overflow-y: auto;">
-                    <div class="win98-listview-item" id="interest-ml">Machine Learning</div>
-                    <div class="win98-listview-item">Artificial Intelligence</div>
-                    <div class="win98-listview-item">3D Printing</div>
-                    <div class="win98-listview-item">Computer Graphics</div>
-                    <div class="win98-listview-item">Electronic Music</div>
-                    <div class="win98-listview-item">Weightlifting</div>
-                    <div class="win98-listview-item">Snowboarding</div>
-                    <div class="win98-listview-item">Fencing</div>
-                    <div class="win98-listview-item">Painting</div>
-                    <div class="win98-listview-item">Strategy Games</div>
-                    <div class="win98-listview-item">World History</div>
-                    <div class="win98-listview-item">Finance</div>
-                    <div class="win98-listview-item">Functional Programming</div>
-                </div>
-            </div>
-            <p style="margin-top: 8px; color: #808080; font-size: 11px;">
-                Click an interest to learn more (just kidding, this is decorative).
-            </p>
-        </div>
-
-        <!-- Skills Tab -->
-        <div class="win98-tab-panel">
-            <div class="win98-groupbox">
-                <span class="win98-groupbox-label">Programming Languages</span>
-                <div class="win98-flex win98-gap-sm" style="flex-wrap: wrap; padding: 8px;">
-                    <button class="win98-btn" style="min-width: auto;">Python</button>
-                    <button class="win98-btn" style="min-width: auto;">JavaScript</button>
-                    <button class="win98-btn" style="min-width: auto;">SQL</button>
-                    <button class="win98-btn" style="min-width: auto;">HTML/CSS</button>
-                </div>
-            </div>
-            <div class="win98-groupbox">
-                <span class="win98-groupbox-label">Frameworks & Tools</span>
-                <div class="win98-flex win98-gap-sm" style="flex-wrap: wrap; padding: 8px;">
-                    <button class="win98-btn" style="min-width: auto;">FastAPI</button>
-                    <button class="win98-btn" style="min-width: auto;">React</button>
-                    <button class="win98-btn" style="min-width: auto;">Git</button>
-                    <button class="win98-btn" style="min-width: auto;">Docker</button>
-                </div>
-            </div>
-            <div class="win98-groupbox">
-                <span class="win98-groupbox-label">Specializations</span>
-                <div class="win98-flex win98-gap-sm" style="flex-wrap: wrap; padding: 8px;">
-                    <button class="win98-btn" style="min-width: auto;">Quantitative Finance</button>
-                    <button class="win98-btn" style="min-width: auto;">Data Analysis</button>
-                    <button class="win98-btn" style="min-width: auto;">Machine Learning</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Contact Tab -->
-        <div class="win98-tab-panel">
-            <div class="win98-groupbox">
-                <span class="win98-groupbox-label">Professional</span>
-                <p style="margin: 8px 0; line-height: 1.6;">
-                    This site is dedicated to my personal projects and side interests.
-                    For my professional work, check out my LinkedIn profile.
-                </p>
-                <div style="margin-top: 16px;">
-                    <a href="{{ site.linkedin_url }}" target="_blank" rel="noopener noreferrer">
-                        <button class="win98-btn">
-                            <img src="{{ url_for('static', filename='icons/internet.svg') }}" alt="" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;">
-                            Open LinkedIn
-                        </button>
-                    </a>
-                </div>
-            </div>
-            <div class="win98-groupbox">
-                <span class="win98-groupbox-label">Code</span>
-                <p style="margin: 8px 0; line-height: 1.6;">
-                    Check out my projects and contributions on GitHub.
-                </p>
-                <div style="margin-top: 16px;">
-                    <a href="{{ site.github_url }}" target="_blank" rel="noopener noreferrer">
-                        <button class="win98-btn">
-                            <img src="{{ url_for('static', filename='icons/internet.svg') }}" alt="" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;">
-                            Open GitHub
-                        </button>
-                    </a>
-                </div>
-            </div>
+    <div class="about-section">
+        <h2>Interests</h2>
+        <div class="interests-list" id="interests-list">
+            <div class="interest-item">Machine Learning</div>
+            <div class="interest-item">Artificial Intelligence</div>
+            <div class="interest-item">3D Printing</div>
+            <div class="interest-item">Computer Graphics</div>
+            <div class="interest-item">Electronic Music</div>
+            <div class="interest-item">Weightlifting</div>
+            <div class="interest-item">Snowboarding</div>
+            <div class="interest-item">Fencing</div>
+            <div class="interest-item">Painting</div>
+            <div class="interest-item">Strategy Games</div>
+            <div class="interest-item">World History</div>
+            <div class="interest-item">Finance</div>
+            <div class="interest-item">Functional Programming</div>
         </div>
     </div>
-</div>
 
-<div style="margin-top: 16px; text-align: right;">
-    <a href="{{ url_for('main.home') }}"><button class="win98-btn win98-btn-default">OK</button></a>
-    <a href="{{ url_for('main.home') }}"><button class="win98-btn">Cancel</button></a>
+    <div class="about-section">
+        <h2>Skills</h2>
+        <h3 style="font-size: var(--font-size-sm); color: var(--text-secondary); margin-bottom: var(--space-sm);">Languages</h3>
+        <div class="skills-grid" style="margin-bottom: var(--space-md);">
+            <span class="tag">Python</span>
+            <span class="tag">JavaScript</span>
+            <span class="tag">SQL</span>
+            <span class="tag">HTML/CSS</span>
+        </div>
+        <h3 style="font-size: var(--font-size-sm); color: var(--text-secondary); margin-bottom: var(--space-sm);">Frameworks & Tools</h3>
+        <div class="skills-grid" style="margin-bottom: var(--space-md);">
+            <span class="tag">FastAPI</span>
+            <span class="tag">React</span>
+            <span class="tag">Git</span>
+            <span class="tag">Docker</span>
+        </div>
+        <h3 style="font-size: var(--font-size-sm); color: var(--text-secondary); margin-bottom: var(--space-sm);">Specializations</h3>
+        <div class="skills-grid">
+            <span class="tag">Quantitative Finance</span>
+            <span class="tag">Data Analysis</span>
+            <span class="tag">Machine Learning</span>
+        </div>
+    </div>
+
+    <div class="about-section">
+        <h2>Contact</h2>
+        <p>
+            This site is dedicated to my personal projects and side interests.
+            For my professional work, check out my LinkedIn profile.
+        </p>
+        <div class="contact-links">
+            <a href="{{ site.linkedin_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">LinkedIn</a>
+            <a href="{{ site.github_url }}" target="_blank" rel="noopener noreferrer" class="btn">GitHub</a>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-// Highlight cycling interest
 (function() {
-    const interests = document.querySelectorAll('.win98-listview-item');
-    let currentIndex = 0;
+    const items = document.querySelectorAll('.interest-item');
+    let current = 0;
 
-    function cycleHighlight() {
-        interests.forEach(i => i.classList.remove('selected'));
-        interests[currentIndex].classList.add('selected');
-        currentIndex = (currentIndex + 1) % interests.length;
+    function cycle() {
+        items.forEach(i => i.classList.remove('active'));
+        items[current].classList.add('active');
+        current = (current + 1) % items.length;
     }
 
-    cycleHighlight();
-    setInterval(cycleHighlight, 2000);
+    cycle();
+    setInterval(cycle, 2000);
 })();
 </script>
 {% endblock %}

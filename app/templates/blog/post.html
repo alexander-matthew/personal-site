@@ -1,62 +1,70 @@
-{% extends "win98_window.html" %}
+{% extends "palantir_page.html" %}
 
-{% block title %}{{ post.title }} - Notepad{% endblock %}
-{% block window_title %}{{ post.title }} - Notepad{% endblock %}
-{% block taskbar_title %}Notepad{% endblock %}
-
-{% set window_icon = 'notepad.svg' %}
-
-{% block menu_bar %}
-<div class="win98-menu-bar">
-    <span class="win98-menu-item">File</span>
-    <span class="win98-menu-item">Edit</span>
-    <span class="win98-menu-item">Search</span>
-    <span class="win98-menu-item">Help</span>
-</div>
-{% endblock %}
-
-{% block window_content %}
-<div class="win98-content-inset" style="background: white; padding: 8px; font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.6; min-height: 400px;">
-    <div style="margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid #c0c0c0;">
-        <strong>{{ post.title }}</strong><br>
-        <span style="color: #808080;">Date: {{ post.date }}</span>
-    </div>
-    <div class="notepad-content">
-        {{ post.content | safe }}
-    </div>
-</div>
-
-<div style="margin-top: 16px; text-align: left;">
-    <a href="{{ url_for('blog.index') }}">
-        <button class="win98-btn">
-            &larr; Back to My Documents
-        </button>
-    </a>
-</div>
-{% endblock %}
+{% block title %}{{ post.title }}{% endblock %}
+{% block page_title %}{{ post.title }}{% endblock %}
 
 {% block head %}
 <style>
-    .notepad-content p {
-        margin-bottom: 12px;
-    }
-    .notepad-content h1, .notepad-content h2, .notepad-content h3 {
-        margin: 16px 0 8px 0;
-    }
-    .notepad-content ul, .notepad-content ol {
-        margin-left: 20px;
-        margin-bottom: 12px;
-    }
-    .notepad-content code {
-        background: #f0f0f0;
-        padding: 2px 4px;
-        font-family: 'Courier New', monospace;
-    }
-    .notepad-content pre {
-        background: #f0f0f0;
-        padding: 8px;
-        overflow-x: auto;
-        margin-bottom: 12px;
-    }
+.post-meta {
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-md);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.post-content {
+    line-height: 1.8;
+    color: var(--text-primary);
+}
+
+.post-content p {
+    margin-bottom: var(--space-md);
+}
+
+.post-content h1, .post-content h2, .post-content h3 {
+    margin: var(--space-lg) 0 var(--space-sm) 0;
+    color: var(--text-primary);
+}
+
+.post-content ul, .post-content ol {
+    margin-left: var(--space-lg);
+    margin-bottom: var(--space-md);
+}
+
+.post-content code {
+    background: var(--bg-elevated);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: var(--font-size-sm);
+}
+
+.post-content pre {
+    background: var(--bg-elevated);
+    padding: var(--space-md);
+    border-radius: 4px;
+    overflow-x: auto;
+    margin-bottom: var(--space-md);
+    border: 1px solid var(--border-default);
+}
+
+.post-content pre code {
+    background: none;
+    padding: 0;
+}
+
+.post-back {
+    margin-top: var(--space-xl);
+}
 </style>
+{% endblock %}
+
+{% block page_content %}
+<div class="post-meta">{{ post.date }}</div>
+<div class="post-content">
+    {{ post.content | safe }}
+</div>
+<div class="post-back">
+    <a href="{{ url_for('blog.index') }}" class="btn">&larr; Back to Blog</a>
+</div>
 {% endblock %}

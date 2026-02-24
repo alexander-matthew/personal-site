@@ -1,178 +1,180 @@
-{% extends "win98_window.html" %}
+{% extends "palantir_page.html" %}
 
-{% block title %}Resume - WordPad{% endblock %}
-{% block window_title %}Resume.doc - WordPad{% endblock %}
-{% block taskbar_title %}WordPad{% endblock %}
-
-{% set window_icon = 'document.svg' %}
+{% block title %}Resume{% endblock %}
+{% block page_title %}Resume{% endblock %}
 
 {% block head %}
 <style>
-    .resume-document {
-        background: white;
-        padding: 40px;
-        font-family: 'Times New Roman', Times, serif;
-        font-size: 12px;
-        line-height: 1.6;
-        max-width: 800px;
-        margin: 0 auto;
-        box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
-    }
-    .resume-header {
-        text-align: center;
-        margin-bottom: 20px;
-        padding-bottom: 10px;
-        border-bottom: 2px solid black;
-    }
-    .resume-header h1 {
-        font-size: 24px;
-        margin: 0;
-    }
-    .resume-header p {
-        margin: 5px 0;
-        color: #666;
-    }
-    .resume-section {
-        margin-bottom: 20px;
-    }
-    .resume-section h2 {
-        font-size: 14px;
-        text-transform: uppercase;
-        border-bottom: 1px solid #ccc;
-        padding-bottom: 5px;
-        margin-bottom: 10px;
-    }
-    .timeline-entry {
-        margin-bottom: 15px;
-        padding-left: 10px;
-        border-left: 2px solid #000080;
-    }
-    .timeline-entry .date {
-        font-size: 10px;
-        color: #666;
-    }
-    .timeline-entry .title {
-        font-weight: bold;
-        font-size: 12px;
-    }
-    .timeline-entry .org {
-        font-style: italic;
-        color: #333;
-    }
-    .timeline-entry .description {
-        margin-top: 5px;
-    }
-    .timeline-entry ul {
-        margin: 5px 0 0 20px;
-        padding: 0;
-    }
-    .timeline-entry li {
-        margin-bottom: 3px;
-    }
-    .skill-tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 5px;
-        margin-top: 5px;
-    }
-    .skill-tag {
-        background: #e0e0e0;
-        padding: 2px 6px;
-        font-size: 10px;
-        border: 1px solid #999;
-    }
+.resume-header {
+    text-align: center;
+    margin-bottom: var(--space-xl);
+    padding-bottom: var(--space-lg);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.resume-header h2 {
+    font-size: var(--font-size-xl);
+    color: var(--text-primary);
+    margin-bottom: var(--space-xs);
+}
+
+.resume-header .location {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--space-sm);
+}
+
+.resume-header .links {
+    font-size: var(--font-size-xs);
+}
+
+.resume-header .links a {
+    margin: 0 var(--space-sm);
+}
+
+.resume-section {
+    margin-bottom: var(--space-xl);
+}
+
+.resume-section h3 {
+    font-size: var(--font-size-base);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+    padding-bottom: var(--space-sm);
+    border-bottom: 1px solid var(--border-default);
+    margin-bottom: var(--space-lg);
+}
+
+.timeline-entry {
+    margin-bottom: var(--space-lg);
+    padding-left: var(--space-md);
+    border-left: 2px solid var(--accent);
+}
+
+.timeline-entry .date {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+}
+
+.timeline-entry .title {
+    font-weight: 600;
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+}
+
+.timeline-entry .org {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.timeline-entry .description {
+    margin-top: var(--space-xs);
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+.timeline-entry ul {
+    margin: var(--space-xs) 0 0 var(--space-lg);
+    padding: 0;
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+.timeline-entry li {
+    margin-bottom: 3px;
+}
+
+.skill-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    margin-top: var(--space-sm);
+}
+
+.resume-footer {
+    text-align: center;
+    padding-top: var(--space-lg);
+    border-top: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+    font-size: var(--font-size-xs);
+}
 </style>
 {% endblock %}
 
-{% block menu_bar %}
-<div class="win98-menu-bar">
-    <span class="win98-menu-item">File</span>
-    <span class="win98-menu-item">Edit</span>
-    <span class="win98-menu-item">View</span>
-    <span class="win98-menu-item">Insert</span>
-    <span class="win98-menu-item">Format</span>
-    <span class="win98-menu-item">Help</span>
+{% block page_content %}
+<div class="resume-header">
+    <h2>Alex Matthew, CFA</h2>
+    <p class="location">St Louis, Missouri</p>
+    <p class="links">
+        <a href="{{ site.linkedin_url }}" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+        <a href="{{ site.github_url }}" target="_blank" rel="noopener noreferrer">GitHub</a>
+    </p>
 </div>
-<div class="win98-toolbar">
-    <button class="win98-toolbar-btn" title="New">
-        <span style="font-size: 12px;">📄</span>
-    </button>
-    <button class="win98-toolbar-btn" title="Open">
-        <span style="font-size: 12px;">📂</span>
-    </button>
-    <button class="win98-toolbar-btn" title="Save">
-        <span style="font-size: 12px;">💾</span>
-    </button>
-    <div class="win98-toolbar-divider"></div>
-    <button class="win98-toolbar-btn" title="Print" onclick="window.print()">
-        <span style="font-size: 12px;">🖨️</span>
-    </button>
-    <div class="win98-toolbar-divider"></div>
-    <button class="win98-toolbar-btn" title="Bold">
-        <span style="font-weight: bold;">B</span>
-    </button>
-    <button class="win98-toolbar-btn" title="Italic">
-        <span style="font-style: italic;">I</span>
-    </button>
-    <button class="win98-toolbar-btn" title="Underline">
-        <span style="text-decoration: underline;">U</span>
-    </button>
-</div>
-{% endblock %}
 
-{% block window_content %}
-<div class="win98-content-inset" style="background: #808080; padding: 20px; min-height: 500px;">
-    <div class="resume-document">
-        <div class="resume-header">
-            <h1>Alexander</h1>
-            <p>Quant & Curious Generalist</p>
-            <p style="font-size: 10px;">
-                <a href="{{ site.linkedin_url }}" target="_blank" rel="noopener noreferrer" class="win98-link">LinkedIn</a> |
-                <a href="{{ site.github_url }}" target="_blank" rel="noopener noreferrer" class="win98-link">GitHub</a>
-            </p>
-        </div>
-
-        <div class="resume-section">
-            <h2>Experience & Education</h2>
-            {% for item in timeline %}
-            <div class="timeline-entry">
-                <div class="date">{{ item.date }}</div>
-                <div class="title">{{ item.title }}</div>
-                <div class="org">{{ item.org }}{% if item.location %} - {{ item.location }}{% endif %}</div>
-                {% if item.description %}
-                <div class="description">{{ item.description }}</div>
-                {% endif %}
-                {% if item.highlights %}
-                <ul>
-                    {% for highlight in item.highlights %}
-                    <li>{{ highlight }}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-                {% if item.skills %}
-                <div class="skill-tags">
-                    {% for skill in item.skills %}
-                    <span class="skill-tag">{{ skill }}</span>
-                    {% endfor %}
-                </div>
-                {% endif %}
-            </div>
+<div class="resume-section">
+    <h3>Experience</h3>
+    {% for item in timeline if item.type == 'work' %}
+    <div class="timeline-entry">
+        <div class="date">{{ item.date }}</div>
+        <div class="title">{{ item.title }}</div>
+        <div class="org">{{ item.org }}{% if item.location %} &mdash; {{ item.location }}{% endif %}</div>
+        {% if item.description %}
+        <div class="description">{{ item.description }}</div>
+        {% endif %}
+        {% if item.highlights %}
+        <ul>
+            {% for highlight in item.highlights %}
+            <li>{{ highlight }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% if item.skills %}
+        <div class="skill-tags">
+            {% for skill in item.skills %}
+            <span class="tag">{{ skill }}</span>
             {% endfor %}
         </div>
-
-        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ccc;">
-            <p style="color: #666; font-size: 10px;">
-                For full details, please visit my
-                <a href="{{ site.linkedin_url }}" target="_blank" rel="noopener noreferrer" class="win98-link">LinkedIn profile</a>.
-            </p>
-        </div>
+        {% endif %}
     </div>
+    {% endfor %}
 </div>
-{% endblock %}
 
-{% block status_bar %}
-<div class="win98-status-bar">
-    <span class="win98-status-section" style="flex: 1;">Page 1</span>
-    <span class="win98-status-section">{{ timeline|length }} entries</span>
+<div class="resume-section">
+    <h3>Education</h3>
+    {% for item in timeline if item.type == 'education' %}
+    <div class="timeline-entry">
+        <div class="date">{{ item.date }}</div>
+        <div class="title">{{ item.title }}</div>
+        <div class="org">{{ item.org }}{% if item.location %} &mdash; {{ item.location }}{% endif %}</div>
+        {% if item.description %}
+        <div class="description">{{ item.description }}</div>
+        {% endif %}
+        {% if item.highlights %}
+        <ul>
+            {% for highlight in item.highlights %}
+            <li>{{ highlight }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<div class="resume-section">
+    <h3>Licenses & Certifications</h3>
+    {% for item in timeline if item.type == 'certification' %}
+    <div class="timeline-entry">
+        <div class="date">{{ item.date }}</div>
+        <div class="title">{{ item.title }}</div>
+        <div class="org">{{ item.org }}</div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="resume-footer">
+    For full details, please visit my
+    <a href="{{ site.linkedin_url }}" target="_blank" rel="noopener noreferrer">LinkedIn profile</a>.
 </div>
 {% endblock %}
