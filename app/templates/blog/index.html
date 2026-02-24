@@ -2,7 +2,6 @@
 {% extends "palantir_page.html" %}
 
 {% block title %}Blog{% endblock %}
-{% block page_title %}Blog{% endblock %}
 
 {% block head %}
 <style>
@@ -42,18 +41,23 @@
 {% endblock %}
 
 {% block page_content %}
-<p class="page-intro">Thoughts, projects, and things I find interesting.</p>
+<div class="content-panel">
+    <div class="content-panel-header">Blog</div>
+    <div class="content-panel-body">
+        <p class="page-intro">Thoughts, projects, and things I find interesting.</p>
 
-{% if posts %}
-<div class="blog-grid">
-    {% for post in posts %}
-    <a href="{{ url_for('blog.post', slug=post.slug) }}" class="blog-card">
-        <h3>{{ post.title }}</h3>
-        <span class="date">{{ post.date }}</span>
-    </a>
-    {% endfor %}
+        {% if posts %}
+        <div class="blog-grid">
+            {% for post in posts %}
+            <a href="{{ url_for('blog.post', slug=post.slug) }}" class="blog-card">
+                <h3>{{ post.title }}</h3>
+                <span class="date">{{ post.date }}</span>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        {{ empty_state("No blog posts yet. Check back soon.") }}
+        {% endif %}
+    </div>
 </div>
-{% else %}
-{{ empty_state("No blog posts yet. Check back soon.") }}
-{% endif %}
 {% endblock %}

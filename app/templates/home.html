@@ -24,7 +24,6 @@
     inset: 0;
     width: 100%;
     height: 100%;
-    opacity: 0.04;
     pointer-events: none;
 }
 
@@ -140,7 +139,7 @@
 }
 
 .feed-heading::before {
-    content: '// ';
+    content: '\2014\00a0';
     color: var(--text-muted);
 }
 
@@ -249,7 +248,7 @@
 
 {% block main %}
 <div class="hero" id="hero">
-    <canvas class="hero-canvas" id="noise-canvas"></canvas>
+    <canvas class="hero-canvas" id="geo-canvas"></canvas>
     <div class="hero-content">
         <h1 class="hero-name">Alexander</h1>
         <div class="hero-tagline">
@@ -280,112 +279,242 @@
 <script>
 (function() {
     // === Typing Animation ===
-    var texts = ['Quant & Curious Generalist', 'Building things that interest me'];
-    var textIndex = 0;
-    var charIndex = 0;
-    var deleting = false;
     var el = document.getElementById('typing-text');
-    if (!el) return;
+    if (el) {
+        var texts = ['Quant & Curious Generalist', 'Building things that interest me'];
+        var textIndex = 0;
+        var charIndex = 0;
+        var deleting = false;
 
-    function type() {
-        var current = texts[textIndex];
-        if (!deleting) {
-            el.textContent = current.substring(0, charIndex + 1);
-            charIndex++;
-            if (charIndex === current.length) {
-                setTimeout(function() { deleting = true; type(); }, 2000);
-                return;
+        function type() {
+            var current = texts[textIndex];
+            if (!deleting) {
+                el.textContent = current.substring(0, charIndex + 1);
+                charIndex++;
+                if (charIndex === current.length) {
+                    setTimeout(function() { deleting = true; type(); }, 2000);
+                    return;
+                }
+                setTimeout(type, 60);
+            } else {
+                el.textContent = current.substring(0, charIndex - 1);
+                charIndex--;
+                if (charIndex === 0) {
+                    deleting = false;
+                    textIndex = (textIndex + 1) % texts.length;
+                    setTimeout(type, 500);
+                    return;
+                }
+                setTimeout(type, 30);
             }
-            setTimeout(type, 60);
-        } else {
-            el.textContent = current.substring(0, charIndex - 1);
-            charIndex--;
-            if (charIndex === 0) {
-                deleting = false;
-                textIndex = (textIndex + 1) % texts.length;
-                setTimeout(type, 500);
-                return;
-            }
-            setTimeout(type, 30);
         }
-    }
-    type();
-
-    // === ASCII Noise Canvas ===
-    var canvas = document.getElementById('noise-canvas');
-    if (!canvas) return;
-    var ctx = canvas.getContext('2d');
-    var chars = ['.', '\u00b7', ':', '+', '~', '*', '-'];
-    var isMobile = window.innerWidth < 768;
-    var SPEED = 0.3;
-    var particles = [];
-    var heroVisible = true;
-    var lastFrame = 0;
-
-    function resize() {
-        var hero = document.getElementById('hero');
-        canvas.width = hero.offsetWidth;
-        canvas.height = hero.offsetHeight;
-        initParticles();
+        type();
     }
 
-    function initParticles() {
-        var CELL = 20;
-        var cols = Math.floor(canvas.width / CELL);
-        var rows = Math.floor(canvas.height / CELL);
-        var density = isMobile ? 0.5 : 1;
-        var count = Math.floor(cols * rows * 0.08 * density);
-        particles = [];
-        for (var i = 0; i < count; i++) {
-            particles.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                char: chars[Math.floor(Math.random() * chars.length)],
-                dx: (Math.random() - 0.5) * SPEED,
-                dy: (Math.random() - 0.5) * SPEED,
-                life: Math.floor(Math.random() * 200)
+    // === Wireframe Geometry Engine ===
+    var canvas = document.getElementById('geo-canvas');
+    if (canvas) {
+        var ctx = canvas.getContext('2d');
+        var heroVisible = true;
+        var lastFrame = 0;
+        var mx = 0, my = 0;
+
+        // --- Linear algebra primitives ---
+        function mulMV(M, v) {
+            return [
+                M[0][0]*v[0] + M[0][1]*v[1] + M[0][2]*v[2],
+                M[1][0]*v[0] + M[1][1]*v[1] + M[1][2]*v[2],
+                M[2][0]*v[0] + M[2][1]*v[1] + M[2][2]*v[2]
+            ];
+        }
+
+        function mulMM(A, B) {
+            var R = [[0,0,0],[0,0,0],[0,0,0]];
+            for (var i = 0; i < 3; i++)
+                for (var j = 0; j < 3; j++)
+                    for (var k = 0; k < 3; k++)
+                        R[i][j] += A[i][k] * B[k][j];
+            return R;
+        }
+
+        function rotX(a) {
+            var c = Math.cos(a), s = Math.sin(a);
+            return [[1,0,0],[0,c,-s],[0,s,c]];
+        }
+
+        function rotY(a) {
+            var c = Math.cos(a), s = Math.sin(a);
+            return [[c,0,s],[0,1,0],[-s,0,c]];
+        }
+
+        function rotZ(a) {
+            var c = Math.cos(a), s = Math.sin(a);
+            return [[c,-s,0],[s,c,0],[0,0,1]];
+        }
+
+        // --- Icosahedron geometry ---
+        var phi = (1 + Math.sqrt(5)) / 2;
+        var rawVerts = [
+            [-1, phi, 0], [1, phi, 0], [-1,-phi, 0], [1,-phi, 0],
+            [0,-1, phi], [0, 1, phi], [0,-1,-phi], [0, 1,-phi],
+            [phi, 0,-1], [phi, 0, 1], [-phi, 0,-1], [-phi, 0, 1]
+        ];
+        // Normalize to unit sphere
+        var verts = rawVerts.map(function(v) {
+            var len = Math.sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+            return [v[0]/len, v[1]/len, v[2]/len];
+        });
+
+        var edges = [
+            [0,1],[0,5],[0,7],[0,10],[0,11],
+            [1,5],[1,7],[1,8],[1,9],
+            [2,3],[2,4],[2,6],[2,10],[2,11],
+            [3,4],[3,6],[3,8],[3,9],
+            [4,5],[4,9],[4,11],
+            [5,9],[5,11],
+            [6,7],[6,8],[6,10],
+            [7,8],[7,10],
+            [8,9],
+            [10,11]
+        ];
+
+        // --- Orbiting ASCII particles ---
+        var NUM_PARTICLES = 60;
+        var asciiChars = ['.', '\u00b7', ':', '+', '~', '*', '-', 'o', '\u2022'];
+        var orbitParticles = [];
+        for (var i = 0; i < NUM_PARTICLES; i++) {
+            var inc = Math.random() * Math.PI;
+            var asc = Math.random() * Math.PI * 2;
+            orbitParticles.push({
+                Rorbit: mulMM(rotZ(asc), rotX(inc)),
+                r: 1.2 + Math.random() * 1.0,
+                speed: 0.15 + Math.random() * 0.45,
+                phase: Math.random() * Math.PI * 2,
+                size: 9 + Math.random() * 5,
+                char: asciiChars[Math.floor(Math.random() * asciiChars.length)]
             });
         }
-    }
 
-    function animate(ts) {
-        requestAnimationFrame(animate);
-        if (!heroVisible) return;
-        if (ts - lastFrame < 33) return;
-        lastFrame = ts;
+        // --- Mouse parallax (smooth lerp) ---
+        var targetMx = 0, targetMy = 0;
+        var heroEl = document.getElementById('hero');
+        heroEl.addEventListener('mousemove', function(e) {
+            var rect = heroEl.getBoundingClientRect();
+            targetMx = ((e.clientX - rect.left) / rect.width - 0.5) * 0.25;
+            targetMy = ((e.clientY - rect.top) / rect.height - 0.5) * 0.25;
+        });
+        heroEl.addEventListener('mouseleave', function() {
+            targetMx = 0; targetMy = 0;
+        });
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.font = '14px JetBrains Mono, monospace';
-        ctx.fillStyle = '#4da6ff';
-
-        for (var i = 0; i < particles.length; i++) {
-            var p = particles[i];
-            p.x += p.dx;
-            p.y += p.dy;
-            p.life++;
-
-            if (p.x < 0) p.x = canvas.width;
-            if (p.x > canvas.width) p.x = 0;
-            if (p.y < 0) p.y = canvas.height;
-            if (p.y > canvas.height) p.y = 0;
-
-            if (p.life % 120 === 0) {
-                p.char = chars[Math.floor(Math.random() * chars.length)];
-            }
-            ctx.fillText(p.char, p.x, p.y);
+        // --- Canvas resize ---
+        function resize() {
+            canvas.width = heroEl.offsetWidth;
+            canvas.height = heroEl.offsetHeight;
         }
-    }
 
-    resize();
-    requestAnimationFrame(animate);
-    window.addEventListener('resize', resize);
+        // --- Render ---
+        function animate(ts) {
+            requestAnimationFrame(animate);
+            if (!heroVisible) return;
+            if (ts - lastFrame < 16) return;
+            lastFrame = ts;
 
-    // Pause canvas when hero scrolls out of view
-    var heroEl = document.getElementById('hero');
-    if ('IntersectionObserver' in window) {
-        new IntersectionObserver(function(entries) {
-            heroVisible = entries[0].isIntersecting;
-        }, { threshold: 0 }).observe(heroEl);
+            var W = canvas.width, H = canvas.height;
+            var scale = Math.min(W, H) * 0.28;
+            var fov = 4;
+            var t = ts * 0.0004;
+
+            ctx.clearRect(0, 0, W, H);
+
+            // Smooth mouse tracking
+            mx += (targetMx - mx) * 0.08;
+            my += (targetMy - my) * 0.08;
+
+            // Compose rotation: Rz(t) * Rx(t + mouseY) * Ry(t + mouseX)
+            var R = mulMM(rotZ(t * 0.7), mulMM(rotX(t * 0.5 + my), rotY(t * 0.3 + mx)));
+
+            // Transform vertices
+            var transformed = verts.map(function(v) { return mulMV(R, v); });
+
+            // Perspective project
+            function project(v3) {
+                var pScale = fov / (fov + v3[2]);
+                return { x: W/2 + v3[0] * scale * pScale, y: H/2 + v3[1] * scale * pScale, z: v3[2], s: pScale };
+            }
+
+            var projected = transformed.map(project);
+
+            // Sort edges back-to-front by average z
+            var sortedEdges = edges.map(function(e, idx) {
+                var avgZ = (transformed[e[0]][2] + transformed[e[1]][2]) / 2;
+                return { idx: idx, z: avgZ };
+            }).sort(function(a, b) { return a.z - b.z; });
+
+            // Draw edges with depth-based alpha and width
+            sortedEdges.forEach(function(se) {
+                var e = edges[se.idx];
+                var p0 = projected[e[0]], p1 = projected[e[1]];
+                var depthNorm = (se.z + 1) / 2; // 0=far, 1=near
+                var alpha = 0.03 + depthNorm * 0.09;
+                var lw = 0.4 + depthNorm * 1.1;
+
+                ctx.beginPath();
+                ctx.moveTo(p0.x, p0.y);
+                ctx.lineTo(p1.x, p1.y);
+                ctx.strokeStyle = 'rgba(77,166,255,' + alpha + ')';
+                ctx.lineWidth = lw;
+                ctx.stroke();
+            });
+
+            // Draw vertex dots with glow halos
+            projected.forEach(function(p) {
+                var depthNorm = (p.z + 1) / 2;
+                var alpha = 0.06 + depthNorm * 0.14;
+                var dotR = 1.5 + depthNorm * 1.5;
+
+                // Glow halo
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, dotR * 3, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(77,166,255,' + (alpha * 0.3) + ')';
+                ctx.fill();
+
+                // Core dot
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, dotR, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(77,166,255,' + alpha + ')';
+                ctx.fill();
+            });
+
+            // Draw orbiting ASCII particles
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            orbitParticles.forEach(function(op) {
+                var angle = op.speed * t + op.phase;
+                var local = [op.r * Math.cos(angle), op.r * Math.sin(angle), 0];
+                var orbited = mulMV(op.Rorbit, local);
+                var world = mulMV(R, orbited);
+                var pp = project(world);
+                var depthNorm = (world[2] + 2) / 4;
+                var alpha = 0.08 + depthNorm * 0.18;
+                var fontSize = Math.round(op.size * pp.s);
+
+                ctx.font = fontSize + 'px JetBrains Mono, monospace';
+                ctx.fillStyle = 'rgba(77,166,255,' + alpha + ')';
+                ctx.fillText(op.char, pp.x, pp.y);
+            });
+        }
+
+        resize();
+        requestAnimationFrame(animate);
+        window.addEventListener('resize', resize);
+
+        // Pause canvas when hero scrolls out of view
+        if ('IntersectionObserver' in window) {
+            new IntersectionObserver(function(entries) {
+                heroVisible = entries[0].isIntersecting;
+            }, { threshold: 0 }).observe(heroEl);
+        }
     }
 
     // === Scroll Indicator ===

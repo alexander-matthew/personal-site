@@ -2,129 +2,219 @@
 {% extends "palantir_page.html" %}
 
 {% block title %}About{% endblock %}
-{% block page_title %}About{% endblock %}
 
 {% block head %}
 <style>
-.about-grid {
-    display: grid;
-    gap: var(--space-lg);
-}
-
+/* === About Section Headers === */
 .about-section {
-    padding: var(--space-lg);
-    background: var(--bg-surface);
-    border: 1px solid var(--border-default);
-    border-radius: 4px;
+    margin-bottom: var(--space-xl);
 }
 
-.about-section h2 {
-    font-size: var(--font-size-lg);
-    color: var(--accent);
-    margin-bottom: var(--space-md);
-}
-
-.about-section h2::before {
-    content: '// ';
-    color: var(--text-muted);
-}
-
-.about-section p {
-    color: var(--text-secondary);
-    line-height: 1.7;
-    margin-bottom: var(--space-md);
-}
-
-.about-section p:last-child {
+.about-section:last-child {
     margin-bottom: 0;
 }
 
-.interests-list {
+.about-section-label {
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    margin-bottom: var(--space-md);
     display: flex;
-    flex-direction: column;
-    gap: var(--space-xs);
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.about-section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-default);
+}
+
+/* === Bio === */
+.bio-text {
+    font-size: var(--font-size-sm);
+    line-height: 1.8;
+    color: var(--text-secondary);
+    max-width: 680px;
+}
+
+.bio-text p {
+    margin-bottom: var(--space-md);
+}
+
+.bio-text p:last-child {
+    margin-bottom: 0;
+}
+
+/* === Interests === */
+.interests-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: var(--space-sm);
 }
 
 .interest-item {
-    padding: var(--space-xs) var(--space-sm);
-    color: var(--text-secondary);
+    padding: var(--space-sm) var(--space-md);
     font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
     border-left: 2px solid transparent;
-    transition: all var(--transition-fast);
+    border-radius: 3px;
+    transition: all var(--transition-base);
 }
 
 .interest-item.active {
     color: var(--accent);
     border-left-color: var(--accent);
     background: var(--accent-glow);
+    border-color: rgba(77, 166, 255, 0.25);
+    border-left-color: var(--accent);
 }
 
-.skills-grid {
+/* === Skills === */
+.skills-columns {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-lg);
+}
+
+.skill-category h3 {
+    font-size: var(--font-size-xs);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-bottom: var(--space-sm);
+    padding-bottom: var(--space-xs);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.skill-category .tags {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-xs);
 }
 
+/* === Contact === */
+.contact-text {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: var(--space-lg);
+    max-width: 540px;
+}
+
 .contact-links {
     display: flex;
     gap: var(--space-md);
-    margin-top: var(--space-md);
+}
+
+/* === Divider === */
+.about-divider {
+    border: none;
+    border-top: 1px solid var(--border-subtle);
+    margin: var(--space-xl) 0;
+}
+
+/* === Responsive === */
+@media (max-width: 768px) {
+    .skills-columns {
+        grid-template-columns: 1fr;
+        gap: var(--space-md);
+    }
+
+    .interests-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    }
+
+    .contact-links {
+        flex-direction: column;
+        gap: var(--space-sm);
+    }
 }
 </style>
 {% endblock %}
 
 {% block page_content %}
-<div class="about-grid">
-    <div class="about-section">
-        <h2>Bio</h2>
-        <p>
-            Hello! I'm Alexander &mdash; a quant by trade and curious generalist at heart.
-        </p>
-        <p>
-            This site is a project and learning experience in itself &mdash; built from scratch
-            to sharpen my skills while also serving as a place to showcase my other work.
-        </p>
-    </div>
+<div class="content-panel">
+    <div class="content-panel-header">About</div>
+    <div class="content-panel-body">
 
-    <div class="about-section">
-        <h2>Interests</h2>
-        <div class="interests-list" id="interests-list">
-            <div class="interest-item">Machine Learning</div>
-            <div class="interest-item">Artificial Intelligence</div>
-            <div class="interest-item">3D Printing</div>
-            <div class="interest-item">Computer Graphics</div>
-            <div class="interest-item">Electronic Music</div>
-            <div class="interest-item">Weightlifting</div>
-            <div class="interest-item">Snowboarding</div>
-            <div class="interest-item">Fencing</div>
-            <div class="interest-item">Painting</div>
-            <div class="interest-item">Strategy Games</div>
-            <div class="interest-item">World History</div>
-            <div class="interest-item">Finance</div>
-            <div class="interest-item">Functional Programming</div>
+        {# --- Bio --- #}
+        <div class="about-section">
+            <div class="about-section-label">Bio</div>
+            <div class="bio-text">
+                <p>
+                    Hello! I'm Alexander &mdash; a quant by trade and curious generalist at heart.
+                </p>
+                <p>
+                    This site is a project and learning experience in itself &mdash; built from scratch
+                    to sharpen my skills while also serving as a place to showcase my other work.
+                </p>
+            </div>
         </div>
-    </div>
 
-    <div class="about-section">
-        <h2>Skills</h2>
-        <h3 style="font-size: var(--font-size-sm); color: var(--text-secondary); margin-bottom: var(--space-sm);">Languages</h3>
-        {{ tag_list(['Python', 'JavaScript', 'SQL', 'HTML/CSS'], class='skills-grid mb-md') }}
-        <h3 style="font-size: var(--font-size-sm); color: var(--text-secondary); margin-bottom: var(--space-sm);">Frameworks & Tools</h3>
-        {{ tag_list(['FastAPI', 'React', 'Git', 'Docker'], class='skills-grid mb-md') }}
-        <h3 style="font-size: var(--font-size-sm); color: var(--text-secondary); margin-bottom: var(--space-sm);">Specializations</h3>
-        {{ tag_list(['Quantitative Finance', 'Data Analysis', 'Machine Learning'], class='skills-grid') }}
-    </div>
+        <hr class="about-divider">
 
-    <div class="about-section">
-        <h2>Contact</h2>
-        <p>
-            This site is dedicated to my personal projects and side interests.
-            For my professional work, check out my LinkedIn profile.
-        </p>
-        <div class="contact-links">
-            <a href="{{ site.linkedin_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">LinkedIn</a>
-            <a href="{{ site.github_url }}" target="_blank" rel="noopener noreferrer" class="btn">GitHub</a>
+        {# --- Interests --- #}
+        <div class="about-section">
+            <div class="about-section-label">Interests</div>
+            <div class="interests-grid" id="interests-list">
+                <div class="interest-item">Machine Learning</div>
+                <div class="interest-item">Artificial Intelligence</div>
+                <div class="interest-item">3D Printing</div>
+                <div class="interest-item">Computer Graphics</div>
+                <div class="interest-item">Electronic Music</div>
+                <div class="interest-item">Weightlifting</div>
+                <div class="interest-item">Snowboarding</div>
+                <div class="interest-item">Fencing</div>
+                <div class="interest-item">Painting</div>
+                <div class="interest-item">Strategy Games</div>
+                <div class="interest-item">World History</div>
+                <div class="interest-item">Finance</div>
+                <div class="interest-item">Functional Programming</div>
+            </div>
         </div>
+
+        <hr class="about-divider">
+
+        {# --- Skills --- #}
+        <div class="about-section">
+            <div class="about-section-label">Skills</div>
+            <div class="skills-columns">
+                <div class="skill-category">
+                    <h3>Languages</h3>
+                    {{ tag_list(['Python', 'JavaScript', 'SQL', 'HTML/CSS']) }}
+                </div>
+                <div class="skill-category">
+                    <h3>Frameworks & Tools</h3>
+                    {{ tag_list(['FastAPI', 'React', 'Git', 'Docker']) }}
+                </div>
+                <div class="skill-category">
+                    <h3>Specializations</h3>
+                    {{ tag_list(['Quantitative Finance', 'Data Analysis', 'Machine Learning']) }}
+                </div>
+            </div>
+        </div>
+
+        <hr class="about-divider">
+
+        {# --- Contact --- #}
+        <div class="about-section">
+            <div class="about-section-label">Contact</div>
+            <p class="contact-text">
+                This site is dedicated to my personal projects and side interests.
+                For my professional work, check out my LinkedIn profile.
+            </p>
+            <div class="contact-links">
+                <a href="{{ site.linkedin_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">LinkedIn</a>
+                <a href="{{ site.github_url }}" target="_blank" rel="noopener noreferrer" class="btn">GitHub</a>
+            </div>
+        </div>
+
     </div>
 </div>
 {% endblock %}
@@ -132,11 +222,12 @@
 {% block scripts %}
 <script>
 (function() {
-    const items = document.querySelectorAll('.interest-item');
-    let current = 0;
+    // Interests cycling animation
+    var items = document.querySelectorAll('.interest-item');
+    var current = 0;
 
     function cycle() {
-        items.forEach(i => i.classList.remove('active'));
+        items.forEach(function(i) { i.classList.remove('active'); });
         items[current].classList.add('active');
         current = (current + 1) % items.length;
     }

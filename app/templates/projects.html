@@ -2,7 +2,6 @@
 {% extends "palantir_page.html" %}
 
 {% block title %}Projects{% endblock %}
-{% block page_title %}Projects{% endblock %}
 
 {% block head %}
 <style>
@@ -21,11 +20,16 @@
 {% endblock %}
 
 {% block page_content %}
-<p class="page-intro">Personal projects and experiments. Select a project to explore.</p>
+<div class="content-panel">
+    <div class="content-panel-header">Projects</div>
+    <div class="content-panel-body">
+        <p class="page-intro">Personal projects and experiments. Select a project to explore.</p>
 
-<div class="projects-grid">
-    {% for project in projects %}
-    {{ project_card(project) }}
-    {% endfor %}
+        <div class="projects-grid">
+            {% for project in projects %}
+            {{ project_card(project) }}
+            {% endfor %}
+        </div>
+    </div>
 </div>
 {% endblock %}

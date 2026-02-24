@@ -2,7 +2,6 @@
 {% extends "palantir_page.html" %}
 
 {% block title %}Resume{% endblock %}
-{% block page_title %}Resume{% endblock %}
 
 {% block head %}
 <style>
@@ -105,38 +104,43 @@
 {% endblock %}
 
 {% block page_content %}
-<div class="resume-header">
-    <h2>Alex Matthew, CFA</h2>
-    <p class="location">St Louis, Missouri</p>
-    <p class="links">
-        <a href="{{ site.linkedin_url }}" target="_blank" rel="noopener noreferrer">LinkedIn</a>
-        <a href="{{ site.github_url }}" target="_blank" rel="noopener noreferrer">GitHub</a>
-    </p>
-</div>
+<div class="content-panel">
+    <div class="content-panel-header">Resume</div>
+    <div class="content-panel-body">
+        <div class="resume-header">
+            <h2>Alex Matthew, CFA</h2>
+            <p class="location">St Louis, Missouri</p>
+            <p class="links">
+                <a href="{{ site.linkedin_url }}" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+                <a href="{{ site.github_url }}" target="_blank" rel="noopener noreferrer">GitHub</a>
+            </p>
+        </div>
 
-<div class="resume-section">
-    <h3>Experience</h3>
-    {% for item in timeline if item.type == 'work' %}
-    {{ timeline_entry(item, show_skills=true) }}
-    {% endfor %}
-</div>
+        <div class="resume-section">
+            <h3>Experience</h3>
+            {% for item in timeline if item.type == 'work' %}
+            {{ timeline_entry(item, show_skills=true) }}
+            {% endfor %}
+        </div>
 
-<div class="resume-section">
-    <h3>Education</h3>
-    {% for item in timeline if item.type == 'education' %}
-    {{ timeline_entry(item) }}
-    {% endfor %}
-</div>
+        <div class="resume-section">
+            <h3>Education</h3>
+            {% for item in timeline if item.type == 'education' %}
+            {{ timeline_entry(item) }}
+            {% endfor %}
+        </div>
 
-<div class="resume-section">
-    <h3>Licenses & Certifications</h3>
-    {% for item in timeline if item.type == 'certification' %}
-    {{ timeline_entry(item) }}
-    {% endfor %}
-</div>
+        <div class="resume-section">
+            <h3>Licenses & Certifications</h3>
+            {% for item in timeline if item.type == 'certification' %}
+            {{ timeline_entry(item) }}
+            {% endfor %}
+        </div>
 
-<div class="resume-footer">
-    For full details, please visit my
-    <a href="{{ site.linkedin_url }}" target="_blank" rel="noopener noreferrer">LinkedIn profile</a>.
+        <div class="resume-footer">
+            For full details, please visit my
+            <a href="{{ site.linkedin_url }}" target="_blank" rel="noopener noreferrer">LinkedIn profile</a>.
+        </div>
+    </div>
 </div>
 {% endblock %}

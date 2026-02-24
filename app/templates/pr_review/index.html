@@ -1,103 +1,9 @@
 {% extends "palantir_page.html" %}
 
 {% block title %}PR Review Tool{% endblock %}
-{% block page_title %}PR Review Tool{% endblock %}
 
 {% block head %}
 <style>
-.help-container {
-    display: flex;
-    min-height: 500px;
-    gap: 0;
-    border: 1px solid var(--border-default);
-    border-radius: 4px;
-    overflow: hidden;
-}
-
-.help-sidebar {
-    width: 200px;
-    background: var(--bg-surface);
-    border-right: 1px solid var(--border-default);
-    overflow-y: auto;
-    flex-shrink: 0;
-}
-
-.help-sidebar-header {
-    padding: var(--space-sm) var(--space-md);
-    font-size: var(--font-size-xs);
-    font-weight: bold;
-    color: var(--text-secondary);
-    border-bottom: 1px solid var(--border-subtle);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.help-topic {
-    padding: var(--space-xs) var(--space-md);
-    font-size: var(--font-size-sm);
-    cursor: pointer;
-    color: var(--text-secondary);
-    transition: all var(--transition-fast);
-    border-left: 2px solid transparent;
-}
-
-.help-topic:hover {
-    color: var(--text-primary);
-    background: var(--accent-glow);
-}
-
-.help-topic.active {
-    color: var(--accent);
-    background: var(--accent-glow);
-    border-left-color: var(--accent);
-}
-
-.help-topic::before {
-    content: "> ";
-    color: var(--text-muted);
-}
-
-.help-content {
-    flex: 1;
-    background: var(--bg-primary);
-    padding: var(--space-lg);
-    overflow-y: auto;
-}
-
-.help-content h1 {
-    font-size: var(--font-size-lg);
-    color: var(--accent);
-    margin: 0 0 var(--space-md) 0;
-    padding-bottom: var(--space-sm);
-    border-bottom: 1px solid var(--border-default);
-}
-
-.help-content h2 {
-    font-size: var(--font-size-base);
-    color: var(--text-primary);
-    margin: var(--space-lg) 0 var(--space-sm) 0;
-}
-
-.help-content h3 {
-    font-size: var(--font-size-sm);
-    color: var(--text-primary);
-    margin: var(--space-md) 0 var(--space-sm) 0;
-}
-
-.help-content p {
-    font-size: var(--font-size-sm);
-    line-height: 1.7;
-    margin: 0 0 var(--space-md) 0;
-    color: var(--text-secondary);
-}
-
-.help-content code {
-    background: var(--bg-elevated);
-    padding: 1px 6px;
-    border-radius: 3px;
-    font-size: var(--font-size-xs);
-}
-
 .code-block {
     background: #1a1a2e;
     border: 1px solid var(--border-default);
@@ -312,15 +218,6 @@
 }
 
 @media (max-width: 768px) {
-    .help-container {
-        flex-direction: column;
-    }
-    .help-sidebar {
-        width: 100%;
-        border-right: none;
-        border-bottom: 1px solid var(--border-default);
-        max-height: 150px;
-    }
     .value-props, .feature-grid, .before-after {
         grid-template-columns: 1fr;
     }
@@ -329,20 +226,20 @@
 {% endblock %}
 
 {% block page_content %}
-<div class="help-container">
-    <div class="help-sidebar">
-        <div class="help-sidebar-header">Contents</div>
-        <div class="help-topic active" data-section="overview">Overview</div>
-        <div class="help-topic" data-section="standards">Standards File</div>
-        <div class="help-topic" data-section="output">Sample Output</div>
-        <div class="help-topic" data-section="examples">Examples</div>
-        <div class="help-topic" data-section="features">Features</div>
-        <div class="help-topic" data-section="skill">Claude Skill</div>
-        <div class="help-topic" data-section="github">GitHub CLI</div>
-        <div class="help-topic" data-section="commands">Commands</div>
+<div class="doc-container">
+    <div class="doc-sidebar">
+        <div class="doc-sidebar-header">Contents</div>
+        <div class="doc-topic active" data-section="overview">Overview</div>
+        <div class="doc-topic" data-section="standards">Standards File</div>
+        <div class="doc-topic" data-section="output">Sample Output</div>
+        <div class="doc-topic" data-section="examples">Examples</div>
+        <div class="doc-topic" data-section="features">Features</div>
+        <div class="doc-topic" data-section="skill">Claude Skill</div>
+        <div class="doc-topic" data-section="github">GitHub CLI</div>
+        <div class="doc-topic" data-section="commands">Commands</div>
     </div>
 
-    <div class="help-content">
+    <div class="doc-content">
         <section id="overview-section">
             <h1>PR Review Tool</h1>
             <p><strong>Automate code review for firm-specific standards and style guidelines</strong></p>
@@ -616,8 +513,8 @@ gh pr review 42 --approve</pre>
 {% block scripts %}
 <script>
 (function() {
-    const topics = document.querySelectorAll('.help-topic');
-    const sections = document.querySelectorAll('.help-content > section');
+    const topics = document.querySelectorAll('.doc-topic');
+    const sections = document.querySelectorAll('.doc-content > section');
 
     topics.forEach(topic => {
         topic.addEventListener('click', () => {

@@ -167,10 +167,11 @@ img {
 
 .sidebar-label {
     padding: var(--space-md) var(--space-md) var(--space-xs);
-    font-family: var(--font-mono);
     font-size: var(--font-size-xs);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
     color: var(--text-muted);
-    letter-spacing: 0.05em;
     user-select: none;
 }
 
@@ -279,7 +280,7 @@ img {
 
 /* === Page Container (for palantir_page.html) === */
 .page-container {
-    max-width: 900px;
+    max-width: 1100px;
 }
 
 .page-title {
@@ -290,9 +291,120 @@ img {
     border-bottom: 1px solid var(--border-subtle);
 }
 
-.page-title::before {
-    content: '> ';
+/* === Content Panel (bordered container for flat-list pages) === */
+.content-panel {
+    border: 1px solid var(--border-default);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.content-panel-header {
+    padding: var(--space-sm) var(--space-lg);
+    font-size: var(--font-size-sm);
+    font-weight: bold;
+    color: var(--text-secondary);
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border-default);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.content-panel-body {
+    padding: var(--space-lg);
+}
+
+/* === Doc Container (sidebar + content layout) === */
+.doc-container {
+    display: flex;
+    min-height: 70vh;
+    gap: 0;
+    border: 1px solid var(--border-default);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.doc-sidebar {
+    width: 200px;
+    background: var(--bg-surface);
+    border-right: 1px solid var(--border-default);
+    overflow-y: auto;
+    flex-shrink: 0;
+}
+
+.doc-sidebar-header {
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--font-size-xs);
+    font-weight: bold;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-subtle);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.doc-topic {
+    padding: var(--space-xs) var(--space-md);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: all var(--transition-fast);
+    border-left: 2px solid transparent;
+}
+
+.doc-topic:hover {
+    color: var(--text-primary);
+    background: var(--accent-glow);
+}
+
+.doc-topic.active {
     color: var(--accent);
+    background: var(--accent-glow);
+    border-left-color: var(--accent);
+}
+
+.doc-topic::before {
+    content: "> ";
+    color: var(--text-muted);
+}
+
+.doc-content {
+    flex: 1;
+    background: var(--bg-primary);
+    padding: var(--space-lg);
+    overflow-y: auto;
+}
+
+.doc-content h1 {
+    font-size: var(--font-size-lg);
+    color: var(--accent);
+    margin: 0 0 var(--space-md) 0;
+    padding-bottom: var(--space-sm);
+    border-bottom: 1px solid var(--border-default);
+}
+
+.doc-content h2 {
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+    margin: var(--space-lg) 0 var(--space-sm) 0;
+}
+
+.doc-content h3 {
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    margin: var(--space-md) 0 var(--space-sm) 0;
+}
+
+.doc-content p {
+    font-size: var(--font-size-sm);
+    line-height: 1.7;
+    margin: 0 0 var(--space-md) 0;
+    color: var(--text-secondary);
+}
+
+.doc-content code {
+    background: var(--bg-elevated);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: var(--font-size-xs);
 }
 
 /* === Buttons === */
@@ -612,6 +724,17 @@ select {
 
     .page-title {
         font-size: var(--font-size-lg);
+    }
+
+    .doc-container {
+        flex-direction: column;
+    }
+
+    .doc-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--border-default);
+        max-height: 150px;
     }
 }
 

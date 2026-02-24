@@ -2,7 +2,6 @@
 {% extends "palantir_page.html" %}
 
 {% block title %}News{% endblock %}
-{% block page_title %}In the News{% endblock %}
 
 {% block head %}
 <style>
@@ -58,22 +57,27 @@
 {% endblock %}
 
 {% block page_content %}
-<p class="page-intro">Articles, interviews, and press mentions.</p>
+<div class="content-panel">
+    <div class="content-panel-header">In the News</div>
+    <div class="content-panel-body">
+        <p class="page-intro">Articles, interviews, and press mentions.</p>
 
-{% if articles %}
-<div class="news-list">
-    {% for article in articles %}
-    <div class="news-card">
-        <div class="news-card-meta">
-            <span class="source">{{ article.source }}</span> | {{ article.date }}
+        {% if articles %}
+        <div class="news-list">
+            {% for article in articles %}
+            <div class="news-card">
+                <div class="news-card-meta">
+                    <span class="source">{{ article.source }}</span> | {{ article.date }}
+                </div>
+                <h3><a href="{{ article.url }}" target="_blank" rel="noopener noreferrer">{{ article.title }}</a></h3>
+                <p>{{ article.description }}</p>
+                <a href="{{ article.url }}" target="_blank" rel="noopener noreferrer" class="read-more">Read full article &rarr;</a>
+            </div>
+            {% endfor %}
         </div>
-        <h3><a href="{{ article.url }}" target="_blank" rel="noopener noreferrer">{{ article.title }}</a></h3>
-        <p>{{ article.description }}</p>
-        <a href="{{ article.url }}" target="_blank" rel="noopener noreferrer" class="read-more">Read full article &rarr;</a>
+        {% else %}
+        {{ empty_state("No news articles found. Check back soon.") }}
+        {% endif %}
     </div>
-    {% endfor %}
 </div>
-{% else %}
-{{ empty_state("No news articles found. Check back soon.") }}
-{% endif %}
 {% endblock %}

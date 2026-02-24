@@ -2,7 +2,10 @@
 
 {% block main %}
 <div class="page-container">
-    <h1 class="page-title">{% block page_title %}{% endblock %}</h1>
+    {% set _title %}{% block page_title %}{% endblock %}{% endset %}
+    {% if _title | trim %}
+    <h1 class="page-title">{{ _title | trim }}</h1>
+    {% endif %}
     {% block page_content %}{% endblock %}
 </div>
 {% endblock %}
