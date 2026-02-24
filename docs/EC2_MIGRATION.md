@@ -1,53 +1,95 @@
-# EC2 Migration Status
+# EC2 Deployment Runbook
 
-Migration from Heroku to AWS EC2 with Docker Compose + nginx + Let's Encrypt.
+This project has migrated from Heroku to AWS EC2 with Docker Compose, nginx, and Let's Encrypt.
+Use this document as the current deployment checklist.
 
-## Completed
+## Target Architecture
 
-- [x] **Dockerfile** — python:3.11-slim + uv, uvicorn with `--proxy-headers`
-- [x] **.dockerignore** — excludes .venv, .git, tests, infra, etc.
-- [x] **docker-compose.yml** — web + nginx + certbot services
-- [x] **nginx/default.conf.template** — HTTP→HTTPS redirect, reverse proxy to web:8000
-- [x] **init-letsencrypt.sh** — Bootstrap Let's Encrypt certs from .env
-- [x] **infra/main.tf** — EC2 t3.micro, security group, elastic IP, 30GB gp3 volume
-- [x] **infra/variables.tf** — domain, secrets, SSH key path, region, instance type
-- [x] **infra/outputs.tf** — elastic_ip, ssh_command, next_steps
-- [x] **infra/terraform.tfvars.example** — template with all variables
-- [x] **deploy.sh** — reads Terraform outputs, rsyncs to EC2, writes .env, deploys
-- [x] **.github/workflows/deploy.yml** — replaced Heroku push with SSH deploy (appleboy/ssh-action)
-- [x] **.gitignore** — added certbot/, infra state/tfvars entries
-- [x] **Removed Procfile** — Heroku-specific, replaced by Docker CMD
-- [x] **Removed requirements.txt** — Heroku-specific, Docker uses `uv sync --frozen`
-- [x] **Updated CLAUDE.md** — EC2/Docker architecture, removed Heroku references
-- [x] **Updated ARCHITECTURE.md** — new system diagram with nginx/Docker layer
-- [x] **Generated SSH key** — `~/.ssh/personal-site-cert` (ed25519)
-- [x] **Created terraform.tfvars** — with placeholder domain, real secret key
-- [x] **Set GitHub secret** — `EC2_USER=ec2-user`
-
-## In Progress
-
-- [ ] **Terraform apply** — provisioning EC2 instance (waiting for completion)
-
-## Remaining Steps
-
-1. Note the Elastic IP from `terraform output elastic_ip`
-2. Run `./deploy.sh` from WSL to sync files and start Docker on EC2
-3. Set remaining GitHub secrets:
-   ```bash
-   gh secret set EC2_HOST --repo alexander-matthew/personal-site   # paste Elastic IP
-   gh secret set EC2_SSH_KEY --repo alexander-matthew/personal-site < ~/.ssh/personal-site-cert
-   ```
-4. Get a domain and point DNS A record to Elastic IP
-5. Update `infra/terraform.tfvars` with real domain, re-run `./deploy.sh`
-6. Update Spotify redirect URI in Spotify Developer Dashboard to `https://yourdomain.com/projects/spotify/callback`
-7. Add Spotify client ID/secret to `infra/terraform.tfvars`, re-run `./deploy.sh`
-
-## Architecture
-
-```
-Browser → nginx (HTTPS) → uvicorn (FastAPI) → External APIs
-                ↕
-         certbot (Let's Encrypt auto-renewal)
+```text
+Browser -> nginx (HTTPS) -> uvicorn (FastAPI) -> External APIs
+                  |
+                  -> certbot (Let's Encrypt renewals)
 ```
 
-All three services run as Docker Compose on a single EC2 t3.micro (Amazon Linux 2023).
+Services run on a single EC2 instance via `docker-compose.yml`:
+- `web` (FastAPI app)
+- `nginx` (reverse proxy + TLS termination)
+- `certbot` (certificate renewal)
+
+## Prerequisites
+
+- AWS credentials configured locally
+- Terraform installed
+- An SSH key pair (public key path used in Terraform)
+- A domain with DNS control
+
+## 1. Provision Infrastructure
+
+```bash
+cd infra
+terraform init
+cp terraform.tfvars.example terraform.tfvars
+# edit terraform.tfvars with your domain, email, secrets, and ssh_public_key_path
+terraform apply
+```
+
+After apply:
+- Note the Elastic IP: `terraform output -raw elastic_ip`
+- Confirm the generated SSH command: `terraform output -raw ssh_command`
+
+## 2. Point DNS
+
+Create an `A` record for your domain pointing to the Elastic IP.
+
+If using Cloudflare during initial certificate issuance, use DNS-only (no proxy) until certificates are successfully provisioned.
+
+## 3. Deploy the Application
+
+From repo root:
+
+```bash
+./deploy.sh
+```
+
+What `deploy.sh` does:
+- Reads Terraform outputs and `infra/terraform.tfvars`
+- Waits for EC2 bootstrap completion
+- Syncs project files to `~/personal-site` on EC2
+- Writes runtime `.env` on the server
+- Runs first-time HTTPS bootstrap (`init-letsencrypt.sh`) or normal `docker compose up -d --build`
+
+## 4. Configure GitHub Actions Deploy
+
+Set these repository secrets:
+
+```bash
+gh secret set EC2_HOST --repo alexander-matthew/personal-site
+gh secret set EC2_USER --repo alexander-matthew/personal-site
+gh secret set EC2_SSH_KEY --repo alexander-matthew/personal-site < ~/.ssh/your_private_key
+```
+
+Expected values:
+- `EC2_HOST`: Elastic IP or host
+- `EC2_USER`: `ec2-user`
+- `EC2_SSH_KEY`: private key matching the instance's authorized key
+
+On push to `main`, workflow `.github/workflows/deploy.yml` runs:
+- `git pull origin main`
+- `docker compose up -d --build`
+
+## 5. Spotify OAuth Production Settings
+
+In the Spotify Developer Dashboard, set redirect URI to:
+
+```text
+https://<your-domain>/projects/spotify/callback
+```
+
+Ensure `spotify_client_id` and `spotify_client_secret` are set in `infra/terraform.tfvars`, then rerun `./deploy.sh`.
+
+## Operations Notes
+
+- App logs: `docker compose logs -f web`
+- nginx logs: `docker compose logs -f nginx`
+- certbot logs: `docker compose logs -f certbot`
+- Rebuild/restart: `docker compose up -d --build`
