@@ -15,12 +15,18 @@
     <div class="bj-menu-wrap">
         <span class="win98-menu-item" data-menu="game">Game</span>
         <div class="bj-dropdown" id="menu-game">
-            <div class="bj-dropdown-item" data-action="deal">Deal New Hand</div>
+            <div class="bj-dropdown-item" data-action="deal">Deal New Hand<span style="float:right;color:var(--win98-text-disabled)">F2</span></div>
             <div class="bj-dropdown-sep"></div>
             <div class="bj-dropdown-item" data-action="stats">Statistics...</div>
             <div class="bj-dropdown-item" data-action="strategy">Strategy Chart...</div>
             <div class="bj-dropdown-sep"></div>
             <div class="bj-dropdown-item" data-action="reset">Reset Stats</div>
+        </div>
+    </div>
+    <div class="bj-menu-wrap">
+        <span class="win98-menu-item" data-menu="options">Options</span>
+        <div class="bj-dropdown" id="menu-options">
+            <div class="bj-dropdown-item bj-dropdown-check" id="menu-hints" data-action="toggle-hints"><span class="bj-check-mark"></span>Show Hints</div>
         </div>
     </div>
     <div class="bj-menu-wrap">
@@ -33,33 +39,6 @@
 {% endblock %}
 
 {% block window_content %}
-<!-- Toolbar -->
-<div class="bj-toolbar">
-    <div class="bj-toolbar-group">
-        <button class="bj-toolbar-btn" id="hit-btn" disabled>Hit</button>
-        <button class="bj-toolbar-btn" id="stand-btn" disabled>Stand</button>
-        <button class="bj-toolbar-btn" id="double-btn" disabled>Dbl</button>
-        <button class="bj-toolbar-btn" id="split-btn" disabled>Split</button>
-        <button class="bj-toolbar-btn" id="insurance-btn" disabled>Ins</button>
-    </div>
-    <div class="bj-toolbar-sep"></div>
-    <div class="bj-toolbar-group">
-        <button class="bj-chip-btn" data-value="5"><span class="bj-chip-dot" style="background:#c00"></span>$5</button>
-        <button class="bj-chip-btn" data-value="25"><span class="bj-chip-dot" style="background:#0a0"></span>$25</button>
-        <button class="bj-chip-btn" data-value="100"><span class="bj-chip-dot" style="background:#222"></span>$100</button>
-        <button class="bj-chip-btn" data-value="500"><span class="bj-chip-dot" style="background:#808"></span>$500</button>
-    </div>
-    <div class="bj-toolbar-sep"></div>
-    <div class="bj-toolbar-group">
-        <button class="bj-toolbar-btn" id="clear-bet">Clear</button>
-        <button class="bj-toolbar-btn" id="deal-btn" disabled>Deal</button>
-    </div>
-    <div class="bj-toolbar-spacer"></div>
-    <label class="bj-toolbar-check">
-        <input type="checkbox" id="hint-mode"> Hints
-    </label>
-</div>
-
 <!-- Green Felt -->
 <div class="bj-felt">
     <!-- Dealer -->
@@ -89,6 +68,30 @@
                 <div class="bj-hand-total" id="player-total-0"></div>
             </div>
         </div>
+    </div>
+
+    <!-- Betting Area (shown when not playing) -->
+    <div class="bj-betting-area" id="betting-area">
+        <div class="bj-felt-chips">
+            <button class="bj-felt-chip" data-value="5" style="--chip-color:#c00" title="$5">5</button>
+            <button class="bj-felt-chip" data-value="25" style="--chip-color:#0a0" title="$25">25</button>
+            <button class="bj-felt-chip" data-value="100" style="--chip-color:#222" title="$100">100</button>
+            <button class="bj-felt-chip" data-value="500" style="--chip-color:#808" title="$500">500</button>
+        </div>
+        <div class="bj-bet-display" id="bet-display">$0</div>
+        <div class="bj-bet-buttons">
+            <button class="win98-btn" id="clear-bet">Clear</button>
+            <button class="win98-btn" id="deal-btn" disabled>Deal</button>
+        </div>
+    </div>
+
+    <!-- Action Bar (shown during play) -->
+    <div class="bj-action-bar hidden" id="action-bar">
+        <button class="win98-btn" id="hit-btn" disabled>Hit</button>
+        <button class="win98-btn" id="stand-btn" disabled>Stand</button>
+        <button class="win98-btn" id="double-btn" disabled>Double</button>
+        <button class="win98-btn" id="split-btn" disabled>Split</button>
+        <button class="win98-btn" id="insurance-btn" disabled>Insurance</button>
     </div>
 </div>
 
