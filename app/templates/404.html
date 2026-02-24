@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Windows</title>
+    <title>404 - Not Found</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            background-color: #0000AA;
-            color: #FFFFFF;
-            font-family: 'Lucida Console', 'Courier New', monospace;
-            font-size: 16px;
-            line-height: 1.4;
+            background: #0a0a0f;
+            color: #e0e0e0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 15px;
+            line-height: 1.6;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -24,119 +24,131 @@
             align-items: center;
             padding: 40px 20px;
             cursor: default;
-            user-select: none;
         }
 
-        .bsod-container {
-            max-width: 800px;
+        .terminal {
+            max-width: 640px;
             width: 100%;
+            background: #141419;
+            border: 1px solid #2a2a3a;
+            border-radius: 6px;
+            overflow: hidden;
         }
 
-        .bsod-header {
-            background-color: #AAAAAA;
-            color: #0000AA;
-            padding: 2px 8px;
-            display: inline-block;
-            margin-bottom: 24px;
+        .terminal-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: #1a1a22;
+            border-bottom: 1px solid #2a2a3a;
+            font-size: 12px;
+            color: #888;
         }
 
-        .bsod-content {
-            margin-bottom: 24px;
+        .terminal-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #3a3a4a;
         }
 
-        .bsod-content p {
-            margin-bottom: 16px;
+        .terminal-body {
+            padding: 24px;
         }
 
-        .bsod-error {
-            margin: 24px 0;
+        .prompt { color: #4da6ff; }
+        .error-code { color: #f87171; font-weight: 700; }
+        .muted { color: #555; }
+        .accent { color: #4da6ff; }
+
+        .output {
+            margin: 16px 0;
+            padding-left: 16px;
+            border-left: 2px solid #2a2a3a;
         }
 
-        .bsod-error-code {
-            font-weight: bold;
+        .output p { margin-bottom: 8px; color: #888; }
+
+        .suggestions {
+            margin: 20px 0;
         }
 
-        .bsod-list {
-            margin: 16px 0 16px 24px;
+        .suggestions li {
+            list-style: none;
+            margin-bottom: 4px;
+            color: #888;
         }
 
-        .bsod-list li {
-            margin-bottom: 8px;
+        .suggestions li::before {
+            content: '  - ';
+            color: #555;
         }
 
-        .bsod-footer {
+        .links {
             margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid #1e1e2e;
+            display: flex;
+            gap: 20px;
         }
 
-        .bsod-prompt {
-            margin-top: 32px;
+        .links a {
+            color: #4da6ff;
+            text-decoration: none;
+            font-size: 13px;
         }
 
-        .bsod-links {
-            margin-top: 16px;
-        }
-
-        .bsod-links a {
-            color: #FFFF00;
+        .links a:hover {
+            color: #6ab8ff;
             text-decoration: underline;
-            margin-right: 24px;
         }
 
-        .bsod-links a:hover {
-            color: #FFFFFF;
-        }
-
-        .blink {
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 15px;
+            background: #4da6ff;
             animation: blink 1s step-start infinite;
+            vertical-align: middle;
+            margin-left: 4px;
         }
 
-        @keyframes blink {
-            50% {
-                opacity: 0;
-            }
-        }
+        @keyframes blink { 50% { opacity: 0; } }
 
         @media (max-width: 640px) {
-            body {
-                font-size: 12px;
-                padding: 20px 10px;
-            }
+            body { font-size: 13px; padding: 20px 12px; }
+            .terminal-body { padding: 16px; }
         }
     </style>
 </head>
 <body>
-    <div class="bsod-container">
-        <div class="bsod-header">Windows</div>
-
-        <div class="bsod-content">
-            <p>A fatal exception 0E has occurred at 0028:C0011E36 in VXD VMM(01) +
-            00010E36. The current application will be terminated.</p>
-
-            <div class="bsod-error">
-                <p><span class="bsod-error-code">PAGE_NOT_FOUND</span></p>
-                <p>Error code: 0x00000404</p>
+    <div class="terminal">
+        <div class="terminal-header">
+            <span class="terminal-dot"></span>
+            <span>terminal</span>
+        </div>
+        <div class="terminal-body">
+            <p><span class="prompt">$</span> GET <span class="muted">/requested-page</span></p>
+            <div class="output">
+                <p><span class="error-code">ERROR 404</span> <span class="muted">&mdash;</span> Page not found</p>
+                <p>The requested resource does not exist or has been moved.</p>
             </div>
 
-            <p>The page you requested does not exist or has been moved to another
-            location on this server.</p>
-
-            <ul class="bsod-list">
-                <li>*  Check the URL for typing errors</li>
-                <li>*  The page may have been moved or deleted</li>
-                <li>*  Try navigating from the home page</li>
+            <ul class="suggestions">
+                <li>Check the URL for typos</li>
+                <li>The page may have been moved or deleted</li>
+                <li>Try navigating from the home page</li>
             </ul>
 
-            <p>If this problem persists, contact the system administrator.</p>
-        </div>
+            <div class="links">
+                <a href="/">~ Home</a>
+                <a href="/projects">~/projects</a>
+                <a href="/about">~/about</a>
+            </div>
 
-        <div class="bsod-footer">
-            <p>Press any key to continue <span class="blink">_</span></p>
-        </div>
-
-        <div class="bsod-prompt">
-            <p class="bsod-links">
-                <a href="/">Return to Desktop</a>
-                <a href="/projects">View Projects</a>
+            <p style="margin-top: 20px;">
+                <span class="prompt">$</span> <span class="cursor"></span>
             </p>
         </div>
     </div>
@@ -147,7 +159,6 @@
         });
 
         document.body.addEventListener('click', function(e) {
-            // Don't redirect if clicking a link
             if (e.target.closest('a')) return;
             window.location.href = '/';
         });

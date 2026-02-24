@@ -9,21 +9,19 @@ SCREENSHOTS_DIR = Path(__file__).parent / "screenshots"
 
 class TestHomePage:
 
-    def test_home_loads_with_desktop_icons(self, page: Page, base_url: str):
+    def test_home_loads_with_project_cards(self, page: Page, base_url: str):
         page.goto(base_url)
         expect(page).to_have_title(re.compile("Alexander"))
-        # Win98 desktop should have clickable icons
-        icons = page.locator(".win98-icon")
-        expect(icons.first).to_be_visible()
+        # Should have project cards on the home page
+        cards = page.locator(".project-card")
+        expect(cards.first).to_be_visible()
 
 
 class TestNavigation:
 
     def test_navigate_to_about(self, page: Page, base_url: str):
         page.goto(base_url + "/about")
-        expect(page).to_have_title(re.compile("System Properties"))
-        # Win98 window chrome should be visible
-        expect(page.locator(".win98-title-bar")).to_be_visible()
+        expect(page).to_have_title(re.compile("About"))
 
     def test_navigate_to_projects(self, page: Page, base_url: str):
         page.goto(base_url + "/projects")
@@ -41,10 +39,9 @@ class TestSpotifyAuth:
 
 class TestWeatherPage:
 
-    def test_weather_loads_with_window(self, page: Page, base_url: str):
+    def test_weather_loads(self, page: Page, base_url: str):
         page.goto(base_url + "/projects/weather/")
         expect(page).to_have_title(re.compile("Weather"))
-        expect(page.locator(".win98-title-bar")).to_be_visible()
 
 
 class TestBlackjackPage:
