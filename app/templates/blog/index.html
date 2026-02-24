@@ -1,3 +1,4 @@
+{% from "components/macros.html" import empty_state %}
 {% extends "palantir_page.html" %}
 
 {% block title %}Blog{% endblock %}
@@ -5,12 +6,6 @@
 
 {% block head %}
 <style>
-.blog-intro {
-    color: var(--text-secondary);
-    margin-bottom: var(--space-lg);
-    font-size: var(--font-size-sm);
-}
-
 .blog-grid {
     display: grid;
     gap: var(--space-md);
@@ -43,16 +38,11 @@
     color: var(--text-muted);
 }
 
-.empty-state {
-    text-align: center;
-    padding: var(--space-2xl);
-    color: var(--text-muted);
-}
 </style>
 {% endblock %}
 
 {% block page_content %}
-<p class="blog-intro">Thoughts, projects, and things I find interesting.</p>
+<p class="page-intro">Thoughts, projects, and things I find interesting.</p>
 
 {% if posts %}
 <div class="blog-grid">
@@ -64,8 +54,6 @@
     {% endfor %}
 </div>
 {% else %}
-<div class="empty-state">
-    <p>No blog posts yet. Check back soon.</p>
-</div>
+{{ empty_state("No blog posts yet. Check back soon.") }}
 {% endif %}
 {% endblock %}

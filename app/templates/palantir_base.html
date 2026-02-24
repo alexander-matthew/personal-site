@@ -7,7 +7,7 @@
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/palantir.css') }}">
     {% block head %}{% endblock %}
 </head>
@@ -24,49 +24,25 @@
     <div class="site-layout">
         <!-- Sidebar Navigation -->
         <nav class="sidebar" id="sidebar">
-            <div class="sidebar-logo">
-                <pre>
- _____  __    ____  _  _
-(  _  )(  )  ( ___) \ \/ )
- )(_)(  )(__  )__)   )  (
-(_____)(____)(____)  (_/\_)</pre>
-                <div class="logo-subtitle">{{ site.name }}</div>
-            </div>
+            <a href="{{ url_for('main.home') }}" class="sidebar-logo">
+                <span class="logo-text">Alexander</span>
+            </a>
 
             <div class="sidebar-nav">
-                <a href="{{ url_for('main.about') }}" data-path="/about">
-                    <i class="nav-icon">&gt;</i> About
-                </a>
-                <a href="{{ url_for('main.projects') }}" data-path="/projects">
-                    <i class="nav-icon">&gt;</i> Projects
-                </a>
-                <a href="{{ url_for('blog.index') }}" data-path="/blog">
-                    <i class="nav-icon">&gt;</i> Blog
-                </a>
-                <a href="{{ url_for('resume.index') }}" data-path="/resume">
-                    <i class="nav-icon">&gt;</i> Resume
-                </a>
+                <div class="sidebar-label">// pages</div>
+                <a href="{{ url_for('main.about') }}" data-path="/about">About</a>
+                <a href="{{ url_for('main.projects') }}" data-path="/projects">Projects</a>
+                <a href="{{ url_for('blog.index') }}" data-path="/blog">Blog</a>
+                <a href="{{ url_for('resume.index') }}" data-path="/resume">Resume</a>
 
-                <div class="sidebar-divider"></div>
+                <div class="sidebar-label">// apps</div>
+                <a href="{{ url_for('spotify.index') }}" data-path="/projects/spotify">Spotify</a>
+                <a href="{{ url_for('blackjack.index') }}" data-path="/projects/blackjack">Blackjack</a>
+                <a href="{{ url_for('sudoku.index') }}" data-path="/projects/sudoku">Sudoku</a>
+                <a href="{{ url_for('weather.index') }}" data-path="/projects/weather">Weather</a>
 
-                <a href="{{ url_for('spotify.index') }}" data-path="/projects/spotify">
-                    <i class="nav-icon">#</i> Spotify
-                </a>
-                <a href="{{ url_for('blackjack.index') }}" data-path="/projects/blackjack">
-                    <i class="nav-icon">#</i> Blackjack
-                </a>
-                <a href="{{ url_for('sudoku.index') }}" data-path="/projects/sudoku">
-                    <i class="nav-icon">#</i> Sudoku
-                </a>
-                <a href="{{ url_for('weather.index') }}" data-path="/projects/weather">
-                    <i class="nav-icon">#</i> Weather
-                </a>
-
-                <div class="sidebar-divider"></div>
-
-                <a href="{{ url_for('news.index') }}" data-path="/news">
-                    <i class="nav-icon">~</i> News
-                </a>
+                <div class="sidebar-label">// more</div>
+                <a href="{{ url_for('news.index') }}" data-path="/news">News</a>
             </div>
 
             <div class="sidebar-footer">

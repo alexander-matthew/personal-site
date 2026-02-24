@@ -1,6 +1,6 @@
 /* ============================================================
    Palantir Design System
-   Dark, modern aesthetic with monospace typography
+   Dark, modern aesthetic with Inter + JetBrains Mono typography
    ============================================================ */
 
 /* === CSS Custom Properties === */
@@ -21,9 +21,9 @@
     --accent-glow: rgba(77, 166, 255, 0.15);
 
     /* Text */
-    --text-primary: #e0e0e0;
-    --text-secondary: #888;
-    --text-muted: #555;
+    --text-primary: #b8bcc4;
+    --text-secondary: #7a7f8a;
+    --text-muted: #4e5360;
 
     /* Semantic */
     --color-success: #4ade80;
@@ -70,7 +70,7 @@ html {
 }
 
 body {
-    font-family: var(--font-mono);
+    font-family: var(--font-sans);
     background: var(--bg-primary);
     color: var(--text-primary);
     line-height: 1.6;
@@ -140,39 +140,47 @@ img {
 }
 
 .sidebar-logo {
+    display: block;
     padding: var(--space-lg) var(--space-md);
     border-bottom: 1px solid var(--border-subtle);
+    text-decoration: none;
 }
 
-.sidebar-logo pre {
+.sidebar-logo .logo-text {
     font-family: var(--font-mono);
-    font-size: 10px;
-    line-height: 1.2;
-    color: var(--accent);
-    white-space: pre;
-    user-select: none;
+    font-weight: 300;
+    font-size: var(--font-size-base);
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--text-primary);
+    transition: color var(--transition-fast);
 }
 
-.sidebar-logo .logo-subtitle {
-    font-size: var(--font-size-xs);
-    color: var(--text-muted);
-    margin-top: var(--space-xs);
-    letter-spacing: 0.5px;
+.sidebar-logo:hover .logo-text {
+    color: var(--accent);
 }
 
 .sidebar-nav {
     flex: 1;
-    padding: var(--space-md) 0;
+    padding: var(--space-sm) 0;
+}
+
+.sidebar-label {
+    padding: var(--space-md) var(--space-md) var(--space-xs);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+    user-select: none;
 }
 
 .sidebar-nav a {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
+    display: block;
     padding: var(--space-sm) var(--space-md);
     color: var(--text-secondary);
     font-size: var(--font-size-sm);
-    transition: all var(--transition-fast);
+    text-decoration: none;
+    transition: color var(--transition-fast), background var(--transition-fast), border-left-color var(--transition-fast);
     border-left: 2px solid transparent;
 }
 
@@ -186,24 +194,6 @@ img {
     color: var(--accent);
     background: var(--accent-glow);
     border-left-color: var(--accent);
-}
-
-.sidebar-nav .nav-icon {
-    width: 16px;
-    text-align: center;
-    font-style: normal;
-    opacity: 0.6;
-}
-
-.sidebar-nav a:hover .nav-icon,
-.sidebar-nav a.active .nav-icon {
-    opacity: 1;
-}
-
-.sidebar-divider {
-    height: 1px;
-    background: var(--border-subtle);
-    margin: var(--space-sm) var(--space-md);
 }
 
 .sidebar-footer {
@@ -311,7 +301,6 @@ img {
     align-items: center;
     gap: var(--space-xs);
     padding: var(--space-sm) var(--space-md);
-    font-family: var(--font-mono);
     font-size: var(--font-size-sm);
     border: 1px solid var(--border-default);
     border-radius: 3px;
@@ -353,7 +342,6 @@ img {
 
 /* === Form Inputs === */
 input, select, textarea {
-    font-family: var(--font-mono);
     font-size: var(--font-size-sm);
     background: var(--bg-primary);
     color: var(--text-primary);
@@ -383,7 +371,6 @@ select {
 
 .tab-btn {
     padding: var(--space-sm) var(--space-md);
-    font-family: var(--font-mono);
     font-size: var(--font-size-sm);
     color: var(--text-secondary);
     background: none;
@@ -547,6 +534,20 @@ select {
     color: var(--accent);
     user-select: none;
     overflow: hidden;
+}
+
+/* === Page Intro === */
+.page-intro {
+    color: var(--text-secondary);
+    margin-bottom: var(--space-lg);
+    font-size: var(--font-size-sm);
+}
+
+/* === Empty State === */
+.empty-state {
+    text-align: center;
+    padding: var(--space-2xl);
+    color: var(--text-muted);
 }
 
 /* === Utility Classes === */

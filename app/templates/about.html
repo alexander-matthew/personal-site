@@ -1,3 +1,4 @@
+{% from "components/macros.html" import tag_list %}
 {% extends "palantir_page.html" %}
 
 {% block title %}About{% endblock %}
@@ -107,25 +108,11 @@
     <div class="about-section">
         <h2>Skills</h2>
         <h3 style="font-size: var(--font-size-sm); color: var(--text-secondary); margin-bottom: var(--space-sm);">Languages</h3>
-        <div class="skills-grid" style="margin-bottom: var(--space-md);">
-            <span class="tag">Python</span>
-            <span class="tag">JavaScript</span>
-            <span class="tag">SQL</span>
-            <span class="tag">HTML/CSS</span>
-        </div>
+        {{ tag_list(['Python', 'JavaScript', 'SQL', 'HTML/CSS'], class='skills-grid mb-md') }}
         <h3 style="font-size: var(--font-size-sm); color: var(--text-secondary); margin-bottom: var(--space-sm);">Frameworks & Tools</h3>
-        <div class="skills-grid" style="margin-bottom: var(--space-md);">
-            <span class="tag">FastAPI</span>
-            <span class="tag">React</span>
-            <span class="tag">Git</span>
-            <span class="tag">Docker</span>
-        </div>
+        {{ tag_list(['FastAPI', 'React', 'Git', 'Docker'], class='skills-grid mb-md') }}
         <h3 style="font-size: var(--font-size-sm); color: var(--text-secondary); margin-bottom: var(--space-sm);">Specializations</h3>
-        <div class="skills-grid">
-            <span class="tag">Quantitative Finance</span>
-            <span class="tag">Data Analysis</span>
-            <span class="tag">Machine Learning</span>
-        </div>
+        {{ tag_list(['Quantitative Finance', 'Data Analysis', 'Machine Learning'], class='skills-grid') }}
     </div>
 
     <div class="about-section">

@@ -1,3 +1,4 @@
+{% from "components/macros.html" import empty_state %}
 {% extends "palantir_page.html" %}
 
 {% block title %}News{% endblock %}
@@ -5,12 +6,6 @@
 
 {% block head %}
 <style>
-.news-intro {
-    color: var(--text-secondary);
-    margin-bottom: var(--space-lg);
-    font-size: var(--font-size-sm);
-}
-
 .news-list {
     display: grid;
     gap: var(--space-md);
@@ -59,16 +54,11 @@
     font-size: var(--font-size-xs);
 }
 
-.empty-state {
-    text-align: center;
-    padding: var(--space-2xl);
-    color: var(--text-muted);
-}
 </style>
 {% endblock %}
 
 {% block page_content %}
-<p class="news-intro">Articles, interviews, and press mentions.</p>
+<p class="page-intro">Articles, interviews, and press mentions.</p>
 
 {% if articles %}
 <div class="news-list">
@@ -84,8 +74,6 @@
     {% endfor %}
 </div>
 {% else %}
-<div class="empty-state">
-    <p>No news articles found. Check back soon.</p>
-</div>
+{{ empty_state("No news articles found. Check back soon.") }}
 {% endif %}
 {% endblock %}

@@ -1,3 +1,4 @@
+{% from "components/macros.html" import project_card %}
 {% extends "palantir_page.html" %}
 
 {% block title %}Projects{% endblock %}
@@ -11,12 +12,6 @@
     gap: var(--space-md);
 }
 
-.projects-intro {
-    color: var(--text-secondary);
-    margin-bottom: var(--space-lg);
-    font-size: var(--font-size-sm);
-}
-
 @media (max-width: 768px) {
     .projects-grid {
         grid-template-columns: 1fr;
@@ -26,19 +21,11 @@
 {% endblock %}
 
 {% block page_content %}
-<p class="projects-intro">Personal projects and experiments. Select a project to explore.</p>
+<p class="page-intro">Personal projects and experiments. Select a project to explore.</p>
 
 <div class="projects-grid">
     {% for project in projects %}
-    <a href="{{ project.link }}" class="project-card">
-        <h3>{{ project.title }}</h3>
-        <p>{{ project.description }}</p>
-        <div class="tags">
-            {% for tag in project.tags %}
-            <span class="tag">{{ tag }}</span>
-            {% endfor %}
-        </div>
-    </a>
+    {{ project_card(project) }}
     {% endfor %}
 </div>
 {% endblock %}

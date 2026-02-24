@@ -1,30 +1,58 @@
+{% from "components/macros.html" import project_feed_item %}
 {% extends "palantir_base.html" %}
 
 {% block title %}{{ site.name }}{% endblock %}
 
 {% block head %}
 <style>
+/* === Hero === */
 .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     text-align: center;
-    padding: var(--space-2xl) 0;
-    margin-bottom: var(--space-xl);
+    margin: calc(-1 * var(--space-xl)) calc(-1 * var(--space-2xl)) 0;
+    padding: var(--space-xl) var(--space-2xl);
+    overflow: hidden;
 }
 
-.hero-ascii {
+.hero-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.04;
+    pointer-events: none;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 1;
+}
+
+.hero-name {
     font-family: var(--font-mono);
-    font-size: 10px;
-    line-height: 1.15;
-    color: var(--accent);
-    white-space: pre;
-    display: inline-block;
-    user-select: none;
-    margin-bottom: var(--space-lg);
+    font-weight: 300;
+    font-size: clamp(36px, 8vw, 72px);
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+    color: var(--text-primary);
+    opacity: 0;
+    animation: hero-fade-in 0.8s ease forwards;
+    animation-delay: 0.3s;
 }
 
 .hero-tagline {
     font-size: var(--font-size-lg);
     color: var(--text-secondary);
     min-height: 1.6em;
+    margin-top: var(--space-lg);
+    opacity: 0;
+    animation: hero-fade-in 0.8s ease forwards;
+    animation-delay: 0.9s;
 }
 
 .hero-tagline .cursor {
@@ -36,67 +64,213 @@
     50% { opacity: 0; }
 }
 
-.projects-section {
+.hero-nav {
+    display: flex;
+    gap: var(--space-md);
     margin-top: var(--space-xl);
+    opacity: 0;
+    animation: hero-fade-in 0.8s ease forwards;
+    animation-delay: 1.4s;
 }
 
-.projects-section h2 {
+.hero-nav .btn-ghost {
+    border: 1px solid var(--border-default);
+    padding: var(--space-sm) var(--space-lg);
+    font-size: var(--font-size-sm);
+    letter-spacing: 0.05em;
+}
+
+.hero-nav .btn-ghost:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 12px var(--accent-glow);
+}
+
+.scroll-indicator {
+    position: absolute;
+    bottom: var(--space-xl);
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    color: var(--text-muted);
+    font-size: var(--font-size-xs);
+    letter-spacing: 0.2em;
+    text-transform: lowercase;
+    opacity: 0;
+    animation: hero-fade-in 0.8s ease forwards;
+    animation-delay: 2.0s;
+    transition: opacity 0.5s ease;
+}
+
+.scroll-indicator.hidden {
+    opacity: 0 !important;
+}
+
+.scroll-indicator .arrow {
+    display: block;
+    margin-top: var(--space-xs);
+    animation: bounce 2s ease infinite;
+}
+
+@keyframes hero-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(6px); }
+    60% { transform: translateY(3px); }
+}
+
+/* === Project Feed === */
+.feed-section {
+    padding-top: var(--space-2xl);
+}
+
+.feed-heading {
     font-size: var(--font-size-lg);
     color: var(--text-secondary);
     margin-bottom: var(--space-lg);
 }
 
-.projects-section h2::before {
+.feed-heading::before {
     content: '// ';
     color: var(--text-muted);
 }
 
-.projects-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+.feed-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.feed-item {
+    display: block;
+    padding: var(--space-lg) var(--space-md);
+    border-left: 2px solid transparent;
+    border-bottom: 1px solid var(--border-subtle);
+    text-decoration: none;
+    color: inherit;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.6s ease var(--stagger, 0s),
+                transform 0.6s ease var(--stagger, 0s),
+                border-left-color var(--transition-base),
+                background var(--transition-base);
+}
+
+.feed-item.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.feed-item:first-child {
+    border-top: 1px solid var(--border-subtle);
+}
+
+.feed-item:hover {
+    border-left-color: var(--accent);
+    background: var(--accent-glow);
+    color: inherit;
+}
+
+.feed-item-header {
+    display: flex;
+    align-items: center;
     gap: var(--space-md);
+    flex-wrap: wrap;
+}
+
+.feed-item-title {
+    font-size: var(--font-size-base);
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.feed-item:hover .feed-item-title {
+    color: var(--accent);
+}
+
+.feed-item-tags {
+    display: flex;
+    gap: var(--space-xs);
+    flex-wrap: wrap;
+}
+
+.feed-item-desc {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin-top: var(--space-xs);
+    line-height: 1.5;
+}
+
+/* === Responsive === */
+@media (max-width: 1200px) {
+    .hero {
+        margin: calc(-1 * var(--space-lg)) calc(-1 * var(--space-lg)) 0;
+        padding: var(--space-lg);
+    }
 }
 
 @media (max-width: 768px) {
-    .hero-ascii {
-        font-size: 6px;
+    .hero {
+        min-height: 85vh;
+        margin: calc(-1 * (48px + var(--space-md))) calc(-1 * var(--space-md)) 0;
+        padding: calc(48px + var(--space-md)) var(--space-md) var(--space-md);
     }
-    .hero-tagline {
-        font-size: var(--font-size-base);
+
+    .hero-name {
+        letter-spacing: 0.15em;
     }
-    .projects-grid {
-        grid-template-columns: 1fr;
+
+    .hero-nav {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .scroll-indicator {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero {
+        margin: calc(-1 * (48px + var(--space-sm))) calc(-1 * var(--space-sm)) 0;
+        padding: calc(48px + var(--space-sm)) var(--space-sm) var(--space-sm);
     }
 }
 </style>
 {% endblock %}
 
 {% block main %}
-<div class="hero">
-    <div class="hero-ascii">
-    _    _    ____ __  __    _    _   _ ____  _____ ____
-   / \  | |  | ___| \/ \  / \  | \ | |  _ \| ____|  _ \
-  / _ \ | |  |  _| \/\/ / / _ \ |  \| | | | |  _| | |_) |
- / ___ \| |__| |__|   / / ___ \| |\  | |_| | |___| _ <
-/_/   \_\____|_____|  /_/   \_\_| \_|____/|_____|_| \_\</div>
-    <div class="hero-tagline">
-        <span id="typing-text"></span><span class="cursor">|</span>
+<div class="hero" id="hero">
+    <canvas class="hero-canvas" id="noise-canvas"></canvas>
+    <div class="hero-content">
+        <h1 class="hero-name">Alexander</h1>
+        <div class="hero-tagline">
+            <span id="typing-text"></span><span class="cursor">|</span>
+        </div>
+        <nav class="hero-nav">
+            <a href="{{ url_for('main.about') }}" class="btn btn-ghost">About</a>
+            <a href="{{ url_for('main.projects') }}" class="btn btn-ghost">Projects</a>
+            <a href="{{ url_for('resume.index') }}" class="btn btn-ghost">Resume</a>
+        </nav>
+    </div>
+    <div class="scroll-indicator" id="scroll-indicator">
+        scroll<span class="arrow">&darr;</span>
     </div>
 </div>
 
-<div class="projects-section">
-    <h2>Projects</h2>
-    <div class="projects-grid">
+<div class="feed-section">
+    <h2 class="feed-heading">Projects</h2>
+    <div class="feed-list" id="feed-list">
         {% for project in projects %}
-        <a href="{{ project.link }}" class="project-card">
-            <h3>{{ project.title }}</h3>
-            <p>{{ project.description }}</p>
-            <div class="tags">
-                {% for tag in project.tags %}
-                <span class="tag">{{ tag }}</span>
-                {% endfor %}
-            </div>
-        </a>
+        {{ project_feed_item(project, stagger=loop.index0) }}
         {% endfor %}
     </div>
 </div>
@@ -105,20 +279,21 @@
 {% block scripts %}
 <script>
 (function() {
-    const texts = ['Quant & Curious Generalist', 'Building things that interest me'];
-    let textIndex = 0;
-    let charIndex = 0;
-    let deleting = false;
-    const el = document.getElementById('typing-text');
+    // === Typing Animation ===
+    var texts = ['Quant & Curious Generalist', 'Building things that interest me'];
+    var textIndex = 0;
+    var charIndex = 0;
+    var deleting = false;
+    var el = document.getElementById('typing-text');
     if (!el) return;
 
     function type() {
-        const current = texts[textIndex];
+        var current = texts[textIndex];
         if (!deleting) {
             el.textContent = current.substring(0, charIndex + 1);
             charIndex++;
             if (charIndex === current.length) {
-                setTimeout(() => { deleting = true; type(); }, 2000);
+                setTimeout(function() { deleting = true; type(); }, 2000);
                 return;
             }
             setTimeout(type, 60);
@@ -134,8 +309,115 @@
             setTimeout(type, 30);
         }
     }
-
     type();
+
+    // === ASCII Noise Canvas ===
+    var canvas = document.getElementById('noise-canvas');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var chars = ['.', '\u00b7', ':', '+', '~', '*', '-'];
+    var isMobile = window.innerWidth < 768;
+    var SPEED = 0.3;
+    var particles = [];
+    var heroVisible = true;
+    var lastFrame = 0;
+
+    function resize() {
+        var hero = document.getElementById('hero');
+        canvas.width = hero.offsetWidth;
+        canvas.height = hero.offsetHeight;
+        initParticles();
+    }
+
+    function initParticles() {
+        var CELL = 20;
+        var cols = Math.floor(canvas.width / CELL);
+        var rows = Math.floor(canvas.height / CELL);
+        var density = isMobile ? 0.5 : 1;
+        var count = Math.floor(cols * rows * 0.08 * density);
+        particles = [];
+        for (var i = 0; i < count; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                char: chars[Math.floor(Math.random() * chars.length)],
+                dx: (Math.random() - 0.5) * SPEED,
+                dy: (Math.random() - 0.5) * SPEED,
+                life: Math.floor(Math.random() * 200)
+            });
+        }
+    }
+
+    function animate(ts) {
+        requestAnimationFrame(animate);
+        if (!heroVisible) return;
+        if (ts - lastFrame < 33) return;
+        lastFrame = ts;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.font = '14px JetBrains Mono, monospace';
+        ctx.fillStyle = '#4da6ff';
+
+        for (var i = 0; i < particles.length; i++) {
+            var p = particles[i];
+            p.x += p.dx;
+            p.y += p.dy;
+            p.life++;
+
+            if (p.x < 0) p.x = canvas.width;
+            if (p.x > canvas.width) p.x = 0;
+            if (p.y < 0) p.y = canvas.height;
+            if (p.y > canvas.height) p.y = 0;
+
+            if (p.life % 120 === 0) {
+                p.char = chars[Math.floor(Math.random() * chars.length)];
+            }
+            ctx.fillText(p.char, p.x, p.y);
+        }
+    }
+
+    resize();
+    requestAnimationFrame(animate);
+    window.addEventListener('resize', resize);
+
+    // Pause canvas when hero scrolls out of view
+    var heroEl = document.getElementById('hero');
+    if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function(entries) {
+            heroVisible = entries[0].isIntersecting;
+        }, { threshold: 0 }).observe(heroEl);
+    }
+
+    // === Scroll Indicator ===
+    var scrollHint = document.getElementById('scroll-indicator');
+    if (scrollHint) {
+        var hidden = false;
+        window.addEventListener('scroll', function() {
+            if (!hidden && window.scrollY > 80) {
+                scrollHint.classList.add('hidden');
+                hidden = true;
+            }
+        }, { passive: true });
+    }
+
+    // === Feed Item Reveal ===
+    var feedItems = document.querySelectorAll('.feed-item');
+    if ('IntersectionObserver' in window && feedItems.length) {
+        var observer = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
+
+        feedItems.forEach(function(item) {
+            observer.observe(item);
+        });
+    } else {
+        feedItems.forEach(function(item) { item.classList.add('visible'); });
+    }
 })();
 </script>
 {% endblock %}

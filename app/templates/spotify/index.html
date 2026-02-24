@@ -1,3 +1,4 @@
+{% from "components/macros.html" import stat_card, section_card, time_selector %}
 {% extends "palantir_page.html" %}
 
 {% block title %}Spotify Dashboard{% endblock %}
@@ -812,39 +813,20 @@
 
         {% else %}
         <div class="stats-row">
-            <div class="stat-card">
-                <div class="stat-card__label">Recent Tracks</div>
-                <div class="stat-card__value" id="stat-tracks">--</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-card__label">Unique Artists</div>
-                <div class="stat-card__value" id="stat-artists">--</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-card__label">Top Artist</div>
-                <div class="stat-card__value stat-card__value--text" id="stat-top-artist">--</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-card__label">Most Played</div>
-                <div class="stat-card__value stat-card__value--text" id="stat-top-track">--</div>
-            </div>
+            {{ stat_card("Recent Tracks", "stat-tracks") }}
+            {{ stat_card("Unique Artists", "stat-artists") }}
+            {{ stat_card("Top Artist", "stat-top-artist", text_variant=true) }}
+            {{ stat_card("Most Played", "stat-top-track", text_variant=true) }}
         </div>
 
         <!-- Row 1: Taste Evolution | Top Tracks -->
         <div class="dashboard-grid">
-            <div class="section-card">
-                <span class="section-card__title">Taste Evolution</span>
-                <div class="section-card__content" id="evolution-container">
-                    <div class="loading">Loading...</div>
-                </div>
-            </div>
+            {% call section_card("Taste Evolution", content_id="evolution-container") %}
+                <div class="loading">Loading...</div>
+            {% endcall %}
             <div class="section-card" id="tracks-section">
-                <div class="time-selector">
-                    <button class="time-btn active" data-range="short_term">4 Weeks</button>
-                    <button class="time-btn" data-range="medium_term">6 Months</button>
-                    <button class="time-btn" data-range="long_term">All Time</button>
-                </div>
-                <span class="section-card__title" style="top: -8px;">Top Tracks</span>
+                {{ time_selector([{"range": "short_term", "label": "4 Weeks"}, {"range": "medium_term", "label": "6 Months"}, {"range": "long_term", "label": "All Time"}]) }}
+                <span class="section-card__title">Top Tracks</span>
                 <div class="section-card__content" id="tracks-container">
                     <div class="loading">Loading...</div>
                 </div>
@@ -854,45 +836,30 @@
         <!-- Row 2: Top Artists | Genre Analysis -->
         <div class="dashboard-grid">
             <div class="section-card" id="artists-section">
-                <div class="time-selector">
-                    <button class="time-btn active" data-range="short_term">4 Weeks</button>
-                    <button class="time-btn" data-range="medium_term">6 Months</button>
-                    <button class="time-btn" data-range="long_term">All Time</button>
-                </div>
-                <span class="section-card__title" style="top: -8px;">Top Artists</span>
+                {{ time_selector([{"range": "short_term", "label": "4 Weeks"}, {"range": "medium_term", "label": "6 Months"}, {"range": "long_term", "label": "All Time"}]) }}
+                <span class="section-card__title">Top Artists</span>
                 <div class="section-card__content" id="artists-container">
                     <div class="loading">Loading...</div>
                 </div>
             </div>
-            <div class="section-card">
-                <span class="section-card__title">Genre Analysis</span>
-                <div class="section-card__content" id="genre-container">
-                    <div class="loading">Loading...</div>
-                </div>
-            </div>
+            {% call section_card("Genre Analysis", content_id="genre-container") %}
+                <div class="loading">Loading...</div>
+            {% endcall %}
         </div>
 
         <!-- Row 3: Recently Played | Listening Patterns -->
         <div class="dashboard-grid">
-            <div class="section-card">
-                <span class="section-card__title">Recently Played</span>
-                <div class="section-card__content" id="recent-container">
-                    <div class="loading">Loading...</div>
-                </div>
-            </div>
-            <div class="section-card">
-                <span class="section-card__title">Listening Patterns</span>
-                <div class="section-card__content" id="patterns-container">
-                    <div class="loading">Loading...</div>
-                </div>
-            </div>
+            {% call section_card("Recently Played", content_id="recent-container") %}
+                <div class="loading">Loading...</div>
+            {% endcall %}
+            {% call section_card("Listening Patterns", content_id="patterns-container") %}
+                <div class="loading">Loading...</div>
+            {% endcall %}
         </div>
 
         <!-- Row 4: Playlist Generator | Hourly Activity -->
         <div class="dashboard-grid">
-            <div class="section-card" id="playlist-section">
-                <span class="section-card__title">Playlist Generator</span>
-                <div class="section-card__content">
+            {% call section_card("Playlist Generator", id="playlist-section") %}
                     <div class="playlist-controls">
                         <select id="playlist-range" class="win98-select">
                             <option value="short_term">4 Weeks</option>
@@ -907,14 +874,10 @@
                         <button id="playlist-create" class="time-btn">Create Playlist</button>
                     </div>
                     <div id="playlist-result" class="playlist-result"></div>
-                </div>
-            </div>
-            <div class="section-card">
-                <span class="section-card__title">Hourly Activity</span>
-                <div class="section-card__content" id="activity-container">
-                    <div class="loading">Loading...</div>
-                </div>
-            </div>
+            {% endcall %}
+            {% call section_card("Hourly Activity", content_id="activity-container") %}
+                <div class="loading">Loading...</div>
+            {% endcall %}
         </div>
 
         <a href="{{ url_for('spotify.logout') }}" class="disconnect-btn">Disconnect</a>

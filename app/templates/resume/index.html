@@ -1,3 +1,4 @@
+{% from "components/macros.html" import timeline_entry %}
 {% extends "palantir_page.html" %}
 
 {% block title %}Resume{% endblock %}
@@ -116,60 +117,21 @@
 <div class="resume-section">
     <h3>Experience</h3>
     {% for item in timeline if item.type == 'work' %}
-    <div class="timeline-entry">
-        <div class="date">{{ item.date }}</div>
-        <div class="title">{{ item.title }}</div>
-        <div class="org">{{ item.org }}{% if item.location %} &mdash; {{ item.location }}{% endif %}</div>
-        {% if item.description %}
-        <div class="description">{{ item.description }}</div>
-        {% endif %}
-        {% if item.highlights %}
-        <ul>
-            {% for highlight in item.highlights %}
-            <li>{{ highlight }}</li>
-            {% endfor %}
-        </ul>
-        {% endif %}
-        {% if item.skills %}
-        <div class="skill-tags">
-            {% for skill in item.skills %}
-            <span class="tag">{{ skill }}</span>
-            {% endfor %}
-        </div>
-        {% endif %}
-    </div>
+    {{ timeline_entry(item, show_skills=true) }}
     {% endfor %}
 </div>
 
 <div class="resume-section">
     <h3>Education</h3>
     {% for item in timeline if item.type == 'education' %}
-    <div class="timeline-entry">
-        <div class="date">{{ item.date }}</div>
-        <div class="title">{{ item.title }}</div>
-        <div class="org">{{ item.org }}{% if item.location %} &mdash; {{ item.location }}{% endif %}</div>
-        {% if item.description %}
-        <div class="description">{{ item.description }}</div>
-        {% endif %}
-        {% if item.highlights %}
-        <ul>
-            {% for highlight in item.highlights %}
-            <li>{{ highlight }}</li>
-            {% endfor %}
-        </ul>
-        {% endif %}
-    </div>
+    {{ timeline_entry(item) }}
     {% endfor %}
 </div>
 
 <div class="resume-section">
     <h3>Licenses & Certifications</h3>
     {% for item in timeline if item.type == 'certification' %}
-    <div class="timeline-entry">
-        <div class="date">{{ item.date }}</div>
-        <div class="title">{{ item.title }}</div>
-        <div class="org">{{ item.org }}</div>
-    </div>
+    {{ timeline_entry(item) }}
     {% endfor %}
 </div>
 
