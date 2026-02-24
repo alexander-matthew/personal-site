@@ -1,86 +1,141 @@
-{% extends "win98_base.html" %}
+{% extends "palantir_base.html" %}
 
-{% block title %}{{ site.name }} - Desktop{% endblock %}
+{% block title %}{{ site.name }}{% endblock %}
+
+{% block head %}
+<style>
+.hero {
+    text-align: center;
+    padding: var(--space-2xl) 0;
+    margin-bottom: var(--space-xl);
+}
+
+.hero-ascii {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    line-height: 1.15;
+    color: var(--accent);
+    white-space: pre;
+    display: inline-block;
+    user-select: none;
+    margin-bottom: var(--space-lg);
+}
+
+.hero-tagline {
+    font-size: var(--font-size-lg);
+    color: var(--text-secondary);
+    min-height: 1.6em;
+}
+
+.hero-tagline .cursor {
+    color: var(--accent);
+    animation: blink 1s step-start infinite;
+}
+
+@keyframes blink {
+    50% { opacity: 0; }
+}
+
+.projects-section {
+    margin-top: var(--space-xl);
+}
+
+.projects-section h2 {
+    font-size: var(--font-size-lg);
+    color: var(--text-secondary);
+    margin-bottom: var(--space-lg);
+}
+
+.projects-section h2::before {
+    content: '// ';
+    color: var(--text-muted);
+}
+
+.projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--space-md);
+}
+
+@media (max-width: 768px) {
+    .hero-ascii {
+        font-size: 6px;
+    }
+    .hero-tagline {
+        font-size: var(--font-size-base);
+    }
+    .projects-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
 
 {% block main %}
-<div class="win98-desktop-area">
-    <div class="win98-icons-grid">
-        <!-- My Computer (About) -->
-        <a href="{{ url_for('main.about') }}" class="win98-icon">
-            <img src="{{ url_for('static', filename='icons/computer.svg') }}" alt="" class="win98-icon-img">
-            <span class="win98-icon-label">My Computer</span>
-        </a>
-
-        <!-- My Documents (Blog) -->
-        <a href="{{ url_for('blog.index') }}" class="win98-icon">
-            <img src="{{ url_for('static', filename='icons/notepad.svg') }}" alt="" class="win98-icon-img">
-            <span class="win98-icon-label">My Documents</span>
-        </a>
-
-        <!-- Projects Folder -->
-        <a href="{{ url_for('main.projects') }}" class="win98-icon">
-            <img src="{{ url_for('static', filename='icons/folder.svg') }}" alt="" class="win98-icon-img">
-            <span class="win98-icon-label">Projects</span>
-        </a>
-
-        <!-- Resume -->
-        <a href="{{ url_for('resume.index') }}" class="win98-icon">
-            <img src="{{ url_for('static', filename='icons/document.svg') }}" alt="" class="win98-icon-img">
-            <span class="win98-icon-label">Resume</span>
-        </a>
-
-        <!-- Spotify -->
-        <a href="{{ url_for('spotify.index') }}" class="win98-icon">
-            <img src="{{ url_for('static', filename='icons/cd.svg') }}" alt="" class="win98-icon-img">
-            <span class="win98-icon-label">Spotify</span>
-        </a>
-
-        <!-- Blackjack -->
-        <a href="{{ url_for('blackjack.index') }}" class="win98-icon">
-            <img src="{{ url_for('static', filename='icons/cards.svg') }}" alt="" class="win98-icon-img">
-            <span class="win98-icon-label">Blackjack</span>
-        </a>
-
-        <!-- Sudoku -->
-        <a href="{{ url_for('sudoku.index') }}" class="win98-icon">
-            <img src="{{ url_for('static', filename='icons/game.svg') }}" alt="" class="win98-icon-img">
-            <span class="win98-icon-label">Sudoku</span>
-        </a>
-
-        <!-- Weather -->
-        <a href="{{ url_for('weather.index') }}" class="win98-icon">
-            <img src="{{ url_for('static', filename='icons/weather.svg') }}" alt="" class="win98-icon-img">
-            <span class="win98-icon-label">Weather</span>
-        </a>
-
-        <!-- PR Review -->
-        <a href="{{ url_for('pr_review.index') }}" class="win98-icon">
-            <img src="{{ url_for('static', filename='icons/pr-review.svg') }}" alt="" class="win98-icon-img">
-            <span class="win98-icon-label">PR Review</span>
-        </a>
-
-        <!-- News -->
-        <a href="{{ url_for('news.index') }}" class="win98-icon">
-            <img src="{{ url_for('static', filename='icons/newspaper.svg') }}" alt="" class="win98-icon-img">
-            <span class="win98-icon-label">News</span>
-        </a>
-
-        <!-- Internet Explorer (External Links) -->
-        <a href="{{ site.github_url }}" target="_blank" rel="noopener noreferrer" class="win98-icon">
-            <img src="{{ url_for('static', filename='icons/internet.svg') }}" alt="" class="win98-icon-img">
-            <span class="win98-icon-label">GitHub</span>
-        </a>
-
-        <a href="{{ site.linkedin_url }}" target="_blank" rel="noopener noreferrer" class="win98-icon">
-            <img src="{{ url_for('static', filename='icons/internet.svg') }}" alt="" class="win98-icon-img">
-            <span class="win98-icon-label">LinkedIn</span>
-        </a>
-
-        <!-- Recycle Bin (decorative) -->
-        <a href="#" class="win98-icon" onclick="win98Alert('The Recycle Bin is empty.', 'Recycle Bin'); return false;">
-            <img src="{{ url_for('static', filename='icons/recycle.svg') }}" alt="" class="win98-icon-img">
-            <span class="win98-icon-label">Recycle Bin</span>
-        </a>
+<div class="hero">
+    <div class="hero-ascii">
+    _    _    ____ __  __    _    _   _ ____  _____ ____
+   / \  | |  | ___| \/ \  / \  | \ | |  _ \| ____|  _ \
+  / _ \ | |  |  _| \/\/ / / _ \ |  \| | | | |  _| | |_) |
+ / ___ \| |__| |__|   / / ___ \| |\  | |_| | |___| _ <
+/_/   \_\____|_____|  /_/   \_\_| \_|____/|_____|_| \_\</div>
+    <div class="hero-tagline">
+        <span id="typing-text"></span><span class="cursor">|</span>
     </div>
 </div>
+
+<div class="projects-section">
+    <h2>Projects</h2>
+    <div class="projects-grid">
+        {% for project in projects %}
+        <a href="{{ project.link }}" class="project-card">
+            <h3>{{ project.title }}</h3>
+            <p>{{ project.description }}</p>
+            <div class="tags">
+                {% for tag in project.tags %}
+                <span class="tag">{{ tag }}</span>
+                {% endfor %}
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    const texts = ['Quant & Curious Generalist', 'Building things that interest me'];
+    let textIndex = 0;
+    let charIndex = 0;
+    let deleting = false;
+    const el = document.getElementById('typing-text');
+    if (!el) return;
+
+    function type() {
+        const current = texts[textIndex];
+        if (!deleting) {
+            el.textContent = current.substring(0, charIndex + 1);
+            charIndex++;
+            if (charIndex === current.length) {
+                setTimeout(() => { deleting = true; type(); }, 2000);
+                return;
+            }
+            setTimeout(type, 60);
+        } else {
+            el.textContent = current.substring(0, charIndex - 1);
+            charIndex--;
+            if (charIndex === 0) {
+                deleting = false;
+                textIndex = (textIndex + 1) % texts.length;
+                setTimeout(type, 500);
+                return;
+            }
+            setTimeout(type, 30);
+        }
+    }
+
+    type();
+})();
+</script>
 {% endblock %}
