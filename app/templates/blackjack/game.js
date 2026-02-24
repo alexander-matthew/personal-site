@@ -247,10 +247,10 @@
     function showFeedback(correct, optimalAction) {
         if (feedbackTimer) clearTimeout(feedbackTimer);
         statusFeedback.textContent = correct ? 'Optimal play!' : 'Optimal: ' + optimalAction.toUpperCase();
-        statusFeedback.className = 'win98-status-section bj-status-feedback ' + (correct ? 'correct' : 'incorrect');
+        statusFeedback.className = 'bj-status-feedback ' + (correct ? 'correct' : 'incorrect');
         feedbackTimer = setTimeout(() => {
             statusFeedback.textContent = '';
-            statusFeedback.className = 'win98-status-section bj-status-feedback';
+            statusFeedback.className = 'bj-status-feedback';
         }, 3000);
     }
 

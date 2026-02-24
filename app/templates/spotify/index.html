@@ -1,16 +1,13 @@
-{% extends "win98_window.html" %}
+{% extends "palantir_page.html" %}
 
 {% block title %}Spotify Dashboard{% endblock %}
-{% block window_title %}Spotify Dashboard - Windows Media Player{% endblock %}
-{% block taskbar_title %}Media Player{% endblock %}
-
-{% set window_icon = 'cd.svg' %}
+{% block page_title %}Spotify Dashboard{% endblock %}
 
 {% block head %}
 <style>
 /* === Page Container === */
 .spotify-page {
-    background: var(--win98-gray);
+    background: var(--bg-primary);
     padding: 0;
     min-height: 100%;
 }
@@ -26,79 +23,83 @@
 
 /* === Auth Box === */
 .auth-box {
-    background: var(--win98-gray);
-    border: 2px solid;
-    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
-    padding: 20px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: 4px;
+    padding: var(--space-lg);
     text-align: center;
     max-width: 400px;
     margin: 40px auto;
 }
 
 .auth-box__title {
-    font-family: var(--win98-font);
-    font-size: 14px;
-    font-weight: bold;
+    font-family: var(--font-mono);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
     margin-bottom: 12px;
-    color: var(--win98-title-blue);
+    color: var(--accent);
+    letter-spacing: 0.05em;
 }
 
 .auth-box__message {
-    font-family: var(--win98-font);
-    font-size: 11px;
-    margin-bottom: 16px;
-    line-height: 1.5;
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    margin-bottom: var(--space-md);
+    line-height: 1.6;
+    color: var(--text-secondary);
 }
 
 .auth-btn {
     display: inline-block;
-    padding: 4px 16px;
-    background: var(--win98-gray);
-    border: 2px solid;
-    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
-    box-shadow: inset -1px -1px 0 var(--win98-btn-shadow), inset 1px 1px 0 var(--win98-btn-light);
-    font-family: var(--win98-font);
-    font-size: 11px;
+    padding: var(--space-sm) var(--space-md);
+    background: var(--accent);
+    border: none;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
     text-decoration: none;
-    color: black;
+    color: var(--bg-primary);
     cursor: pointer;
+    font-weight: 600;
+    transition: background var(--transition-fast);
 }
 
-.auth-btn:active {
-    border-color: var(--win98-btn-dark-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-dark-shadow);
-    box-shadow: inset 1px 1px 0 var(--win98-btn-shadow);
+.auth-btn:hover {
+    background: var(--accent-hover);
 }
 
 /* === Stats Row === */
 .stats-row {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-    margin-bottom: 16px;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
 }
 
 .stat-card {
-    background: white;
-    border: 2px solid;
-    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
-    padding: 8px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: 4px;
+    padding: var(--space-sm);
     text-align: center;
 }
 
 .stat-card__label {
-    font-size: 10px;
-    color: var(--win98-dark-gray);
-    margin-bottom: 4px;
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    margin-bottom: var(--space-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .stat-card__value {
-    font-size: 18px;
-    font-weight: bold;
-    color: var(--win98-title-blue);
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--accent);
 }
 
 .stat-card__value--text {
-    font-size: 11px;
+    font-size: var(--font-size-xs);
     word-break: break-word;
 }
 
@@ -106,17 +107,17 @@
 .dashboard-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-bottom: 16px;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
 }
 
-/* === Section Cards (Groupboxes) === */
+/* === Section Cards === */
 .section-card {
-    border: 2px solid;
-    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
-    padding: 16px 8px 8px;
+    border: 1px solid var(--border-default);
+    border-radius: 4px;
+    padding: var(--space-md) var(--space-sm) var(--space-sm);
     position: relative;
-    background: var(--win98-gray);
+    background: var(--bg-surface);
     display: flex;
     flex-direction: column;
 }
@@ -124,20 +125,22 @@
 .section-card__title {
     position: absolute;
     top: -8px;
-    left: 8px;
-    background: var(--win98-gray);
-    padding: 0 4px;
-    font-size: 11px;
-    font-weight: bold;
-    color: var(--win98-title-blue);
+    left: var(--space-sm);
+    background: var(--bg-surface);
+    padding: 0 var(--space-xs);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    color: var(--accent);
     margin: 0;
     border: none;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
 }
 
 .section-card__content {
-    background: white;
-    border: 2px solid;
-    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
     padding: 6px;
     overflow-x: auto;
     flex: 1;
@@ -150,80 +153,85 @@
 /* === Time Selector === */
 .time-selector {
     display: flex;
-    gap: 4px;
-    margin-bottom: 8px;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-sm);
 }
 
 .time-btn {
-    padding: 2px 8px;
-    background: var(--win98-gray);
-    border: 2px solid;
-    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
-    box-shadow: inset -1px -1px 0 var(--win98-btn-shadow), inset 1px 1px 0 var(--win98-btn-light);
-    font-family: var(--win98-font);
-    font-size: 10px;
+    padding: 2px var(--space-sm);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-default);
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
     cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.time-btn:hover {
+    border-color: var(--accent);
+    color: var(--text-primary);
 }
 
 .time-btn:active, .time-btn.active {
-    border-color: var(--win98-btn-dark-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-dark-shadow);
-    box-shadow: inset 1px 1px 0 var(--win98-btn-shadow);
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg-primary);
+    font-weight: 600;
 }
 
 /* === Loading / Empty === */
 .loading {
     text-align: center;
-    padding: 20px;
-    font-size: 11px;
-    color: var(--win98-dark-gray);
+    padding: var(--space-lg);
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
 }
 
 .empty-state {
     text-align: center;
     padding: 12px;
-    font-size: 11px;
-    color: var(--win98-dark-gray);
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
 }
 
 /* === Disconnect Button === */
 .disconnect-btn {
     display: table;
-    margin: 0 auto 8px;
-    padding: 4px 16px;
-    background: var(--win98-gray);
-    border: 2px solid;
-    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
-    box-shadow: inset -1px -1px 0 var(--win98-btn-shadow), inset 1px 1px 0 var(--win98-btn-light);
-    font-family: var(--win98-font);
-    font-size: 11px;
+    margin: 0 auto var(--space-sm);
+    padding: var(--space-xs) var(--space-md);
+    background: transparent;
+    border: 1px solid var(--border-default);
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
     text-decoration: none;
-    color: black;
+    color: var(--text-secondary);
     cursor: pointer;
+    transition: all var(--transition-fast);
 }
 
-.disconnect-btn:active {
-    border-color: var(--win98-btn-dark-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-dark-shadow);
-    box-shadow: inset 1px 1px 0 var(--win98-btn-shadow);
+.disconnect-btn:hover {
+    border-color: var(--color-error);
+    color: var(--color-error);
 }
 
-/* === Win98 Progress Bar === */
+/* === Win98 Progress Bar (restyled for dark theme) === */
 .w98-progress {
     flex: 1;
     height: 14px;
-    background: white;
-    border: 2px solid;
-    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 2px;
+    overflow: hidden;
 }
 
 .w98-progress__fill {
     height: 100%;
-    background: repeating-linear-gradient(
-        90deg,
-        var(--win98-title-blue) 0px,
-        var(--win98-title-blue) 8px,
-        transparent 8px,
-        transparent 10px
-    );
+    background: var(--accent);
+    border-radius: 1px;
+    transition: width var(--transition-fast);
 }
 
 /* === Bar List (genres, audio profile, day bars) === */
@@ -241,62 +249,66 @@
 }
 
 .w98-bar-row__label {
-    font-size: 11px;
+    font-size: var(--font-size-xs);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    color: var(--text-primary);
 }
 
 .w98-bar-row__value {
-    font-size: 10px;
+    font-size: var(--font-size-xs);
     text-align: right;
-    font-family: monospace;
-    color: var(--win98-dark-gray);
+    font-family: var(--font-mono);
+    color: var(--text-muted);
 }
 
 /* === Listview === */
 .w98-listview {
-    background: white;
-    border: 2px solid;
-    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
 }
 
 .w98-listview__item {
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 3px 4px;
-    font-size: 11px;
+    padding: 3px var(--space-xs);
+    font-size: var(--font-size-xs);
     cursor: default;
+    border-radius: 2px;
+    transition: background var(--transition-fast);
 }
 
 .w98-listview__item:hover {
-    background: var(--win98-title-blue);
-    color: white;
+    background: var(--accent-glow);
 }
 
 .w98-listview__rank {
-    font-family: monospace;
-    font-size: 10px;
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
     min-width: 20px;
-    color: var(--win98-dark-gray);
+    color: var(--text-muted);
 }
 
 .w98-listview__item:hover .w98-listview__rank {
-    color: white;
+    color: var(--accent);
 }
 
 .w98-listview__art {
     width: 32px;
     height: 32px;
-    border: 1px solid var(--win98-btn-shadow);
+    border: 1px solid var(--border-subtle);
+    border-radius: 2px;
     flex-shrink: 0;
 }
 
 .w98-listview__artist-img {
     width: 48px;
     height: 48px;
-    border: 1px solid var(--win98-btn-shadow);
+    border: 1px solid var(--border-subtle);
+    border-radius: 2px;
     flex-shrink: 0;
 }
 
@@ -306,32 +318,33 @@
 }
 
 .w98-listview__name {
-    font-size: 11px;
+    font-size: var(--font-size-xs);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    color: var(--text-primary);
 }
 
 .w98-listview__sub {
-    font-size: 10px;
-    color: var(--win98-dark-gray);
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .w98-listview__item:hover .w98-listview__sub {
-    color: #ccc;
+    color: var(--text-secondary);
 }
 
 .w98-listview__duration {
-    font-family: monospace;
-    font-size: 10px;
-    color: var(--win98-dark-gray);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
 }
 
 .w98-listview__item:hover .w98-listview__duration {
-    color: white;
+    color: var(--text-secondary);
 }
 
 .track-item--playable {
@@ -348,9 +361,9 @@
     align-items: flex-end;
     gap: 2px;
     height: 100px;
-    border: 2px solid;
-    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
-    background: white;
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
+    background: var(--bg-primary);
     padding: 4px 2px 16px;
     position: relative;
 }
@@ -373,19 +386,20 @@
 
 .w98-activity__bar-fill {
     width: 100%;
-    background: repeating-linear-gradient(
-        0deg,
-        var(--win98-title-blue) 0px,
-        var(--win98-title-blue) 6px,
-        transparent 6px,
-        transparent 8px
-    );
+    background: var(--accent);
     min-height: 1px;
+    border-radius: 1px 1px 0 0;
+    opacity: 0.8;
+    transition: opacity var(--transition-fast);
+}
+
+.w98-activity__col:hover .w98-activity__bar-fill {
+    opacity: 1;
 }
 
 .w98-activity__label {
     font-size: 9px;
-    color: var(--win98-dark-gray);
+    color: var(--text-muted);
     position: absolute;
     bottom: 2px;
 }
@@ -394,14 +408,14 @@
 .w98-patterns {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    gap: var(--space-sm);
 }
 
 /* === Taste Evolution === */
 .w98-evolution {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+    gap: var(--space-sm);
 }
 
 .w98-evolution__period {
@@ -412,72 +426,101 @@
 .w98-evolution .win98-groupbox {
     margin: 0;
     padding: 14px 6px 6px;
+    border: 1px solid var(--border-default);
+    border-radius: 4px;
+    position: relative;
+    background: var(--bg-surface);
+}
+
+.w98-evolution .win98-groupbox-label {
+    position: absolute;
+    top: -8px;
+    left: 8px;
+    background: var(--bg-surface);
+    padding: 0 var(--space-xs);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.05em;
 }
 
 .w98-evolution .w98-listview {
     border: none;
+    background: transparent;
 }
 
 /* === Playlist Generator === */
 .playlist-controls {
     display: flex;
-    gap: 4px;
+    gap: var(--space-xs);
     align-items: center;
-    margin-bottom: 8px;
+    margin-bottom: var(--space-sm);
     flex-wrap: wrap;
 }
 
 .win98-select {
-    padding: 2px 4px;
-    background: white;
-    border: 2px solid;
-    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
-    font-family: var(--win98-font);
-    font-size: 10px;
+    padding: 2px var(--space-xs);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-default);
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.win98-select:focus {
+    outline: none;
+    border-color: var(--accent);
 }
 
 .playlist-result {
-    font-size: 11px;
-    padding: 8px;
+    font-size: var(--font-size-xs);
+    padding: var(--space-sm);
+    color: var(--text-primary);
 }
 
 .playlist-result a {
-    color: var(--win98-title-blue);
+    color: var(--accent);
+}
+
+.playlist-result a:hover {
+    color: var(--accent-hover);
 }
 
 .playlist-result--error {
-    color: #cc0000;
+    color: var(--color-error);
 }
 
 /* === Player Bar === */
 .player-bar {
     position: sticky;
     bottom: 0;
-    background: var(--win98-gray);
-    border-top: 2px solid;
-    border-color: var(--win98-btn-highlight);
-    padding: 4px 8px;
+    background: var(--bg-surface);
+    border-top: 1px solid var(--border-default);
+    padding: var(--space-xs) var(--space-sm);
     z-index: 100;
 }
 
 .player-connect-message {
     text-align: center;
-    font-size: 11px;
-    color: var(--win98-dark-gray);
-    padding: 4px;
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    padding: var(--space-xs);
 }
 
 .player-content {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-sm);
     flex-wrap: wrap;
 }
 
 .player-album-art {
     width: 40px;
     height: 40px;
-    border: 1px solid var(--win98-btn-shadow);
+    border: 1px solid var(--border-subtle);
+    border-radius: 2px;
     flex-shrink: 0;
 }
 
@@ -487,16 +530,17 @@
 }
 
 .player-track-name {
-    font-size: 11px;
-    font-weight: bold;
+    font-size: var(--font-size-xs);
+    font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    color: var(--text-primary);
 }
 
 .player-artist-name, .player-album-name {
-    font-size: 10px;
-    color: var(--win98-dark-gray);
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -513,120 +557,123 @@
 }
 
 .player-btn {
-    width: 24px;
-    height: 24px;
-    background: var(--win98-gray);
-    border: 2px solid;
-    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
-    box-shadow: inset -1px -1px 0 var(--win98-btn-shadow), inset 1px 1px 0 var(--win98-btn-light);
-    font-size: 10px;
+    width: 28px;
+    height: 28px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-default);
+    border-radius: 4px;
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 0;
     font-family: inherit;
+    transition: all var(--transition-fast);
+}
+
+.player-btn:hover {
+    border-color: var(--accent);
+    color: var(--text-primary);
 }
 
 .player-btn:active {
-    border-color: var(--win98-btn-dark-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-dark-shadow);
-    box-shadow: inset 1px 1px 0 var(--win98-btn-shadow);
+    background: var(--accent-glow);
 }
 
 .player-btn.active {
-    border-color: var(--win98-btn-dark-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-dark-shadow);
-    box-shadow: inset 1px 1px 0 var(--win98-btn-shadow);
-    background: var(--win98-light-gray);
+    background: var(--accent-glow);
+    border-color: var(--accent);
+    color: var(--accent);
 }
 
 .player-btn--play {
-    width: 28px;
-    height: 28px;
-    font-size: 12px;
+    width: 32px;
+    height: 32px;
+    font-size: var(--font-size-sm);
 }
 
 .player-btn--small {
-    width: 22px;
-    height: 22px;
-    font-size: 10px;
+    width: 24px;
+    height: 24px;
+    font-size: var(--font-size-xs);
 }
 
 .player-progress {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: var(--space-xs);
     flex: 1;
     min-width: 150px;
 }
 
 .player-time {
-    font-size: 10px;
-    font-family: monospace;
+    font-size: var(--font-size-xs);
+    font-family: var(--font-mono);
     min-width: 30px;
+    color: var(--text-muted);
 }
 
 .player-progress-bar {
     flex: 1;
-    height: 14px;
-    background: white;
-    border: 2px solid;
-    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
+    height: 6px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 3px;
     cursor: pointer;
+    overflow: hidden;
 }
 
 .player-progress-fill {
     height: 100%;
-    background: repeating-linear-gradient(
-        90deg,
-        var(--win98-title-blue) 0px,
-        var(--win98-title-blue) 8px,
-        transparent 8px,
-        transparent 10px
-    );
+    background: var(--accent);
     width: 0%;
+    border-radius: 2px;
+    transition: width 100ms linear;
 }
 
 .player-volume {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: var(--space-xs);
 }
 
 .player-volume-slider {
     width: 60px;
-    height: 14px;
+    height: 6px;
     -webkit-appearance: none;
     appearance: none;
-    background: white;
-    border: 2px solid;
-    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 3px;
     cursor: pointer;
 }
 
 .player-volume-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 10px;
-    height: 14px;
-    background: var(--win98-gray);
-    border: 2px solid;
-    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
+    width: 12px;
+    height: 12px;
+    background: var(--accent);
+    border: none;
+    border-radius: 50%;
     cursor: pointer;
 }
 
 .player-volume-slider::-moz-range-thumb {
-    width: 10px;
-    height: 14px;
-    background: var(--win98-gray);
-    border: 2px solid;
-    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
+    width: 12px;
+    height: 12px;
+    background: var(--accent);
+    border: none;
+    border-radius: 50%;
     cursor: pointer;
-    border-radius: 0;
 }
 
 .player-volume-value {
-    font-size: 10px;
+    font-size: var(--font-size-xs);
     min-width: 28px;
+    color: var(--text-muted);
 }
 
 .player-devices {
@@ -638,11 +685,12 @@
     position: absolute;
     bottom: 100%;
     right: 0;
-    background: white;
-    border: 2px solid;
-    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: 4px;
     min-width: 200px;
-    margin-bottom: 4px;
+    margin-bottom: var(--space-xs);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .player-devices-dropdown.active {
@@ -650,11 +698,14 @@
 }
 
 .player-devices-header {
-    background: var(--win98-title-blue);
-    color: white;
-    padding: 2px 8px;
-    font-size: 11px;
-    font-weight: bold;
+    background: var(--bg-elevated);
+    color: var(--accent);
+    padding: 2px var(--space-sm);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    border-bottom: 1px solid var(--border-default);
+    border-radius: 4px 4px 0 0;
+    letter-spacing: 0.05em;
 }
 
 .player-devices-list {
@@ -667,22 +718,25 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 2px 4px;
+    padding: 2px var(--space-xs);
     cursor: pointer;
-    font-size: 11px;
+    font-size: var(--font-size-xs);
+    border-radius: 2px;
+    color: var(--text-primary);
+    transition: background var(--transition-fast);
 }
 
 .device-item:hover {
-    background: var(--win98-title-blue);
-    color: white;
+    background: var(--accent-glow);
 }
 
 .device-item.active {
-    font-weight: bold;
+    font-weight: 600;
 }
 
 .device-indicator {
     font-size: 8px;
+    color: var(--color-success);
 }
 
 .device-name {
@@ -690,12 +744,12 @@
 }
 
 .device-type {
-    font-size: 10px;
-    color: var(--win98-dark-gray);
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
 }
 
 .device-item:hover .device-type {
-    color: #ccc;
+    color: var(--text-secondary);
 }
 
 /* === Responsive === */
@@ -734,16 +788,7 @@
 </style>
 {% endblock %}
 
-{% block menu_bar %}
-<div class="win98-menu-bar">
-    <span class="win98-menu-item">File</span>
-    <span class="win98-menu-item">View</span>
-    <span class="win98-menu-item">Play</span>
-    <span class="win98-menu-item">Help</span>
-</div>
-{% endblock %}
-
-{% block window_content %}
+{% block page_content %}
 <div class="spotify-page">
     <div class="container">
         {% if not is_configured %}
@@ -925,13 +970,6 @@
         </div>
         {% endif %}
     </div>
-</div>
-{% endblock %}
-
-{% block status_bar %}
-<div class="win98-status-bar">
-    <span class="win98-status-section" style="flex: 1;">{% if is_authenticated %}Connected to Spotify{% else %}Not connected{% endif %}</span>
-    <span class="win98-status-section">Windows Media Player</span>
 </div>
 {% endblock %}
 

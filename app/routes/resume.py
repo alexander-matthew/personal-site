@@ -3,55 +3,77 @@ from app.templating import templates
 
 router = APIRouter(prefix='/resume')
 
-# Timeline entries - fill in your actual experience!
-# Each entry has: type, title, org, location (optional), date, description, skills (optional), highlights (optional)
 TIMELINE = [
     {
         'type': 'work',
-        'title': 'Software Engineer',
-        'org': 'Your Current Company',
-        'location': 'San Francisco, CA',
-        'date': '2023 - Present',
-        'description': 'Building products that matter. Replace this with what you actually do.',
-        'skills': ['Python', 'FastAPI', 'AWS', 'React'],
+        'title': 'Manager, Investment Strategies',
+        'org': 'NISA Investment Advisors, LLC',
+        'location': 'St Louis, MO',
+        'date': 'Dec 2024 - Present',
+        'description': 'Institutional Derivatives Solutions with a focus on:',
         'highlights': [
-            'Led development of key feature X',
-            'Improved system performance by Y%',
-        ]
+            'Alpha Strategies',
+            'Alternative Risk Premia',
+            'Duration Overlay',
+            'Tail Risk Hedging',
+        ],
     },
     {
         'type': 'work',
-        'title': 'Software Engineer',
-        'org': 'Previous Company',
-        'location': 'New York, NY',
-        'date': '2021 - 2023',
-        'description': 'Worked on interesting problems. What did you build here?',
-        'skills': ['JavaScript', 'Node.js', 'PostgreSQL'],
-        'highlights': [
-            'Shipped feature that impacted N users',
-            'Mentored junior developers',
-        ]
+        'title': 'Senior Analyst, Investment Strategies',
+        'org': 'NISA Investment Advisors, LLC',
+        'location': 'St Louis, MO',
+        'date': 'Jan 2023 - Dec 2024',
     },
     {
         'type': 'work',
-        'title': 'Junior Developer',
-        'org': 'First Job Inc',
-        'location': 'Boston, MA',
-        'date': '2019 - 2021',
-        'description': 'Where you got your start. What did you learn?',
-        'skills': ['Python', 'Django', 'MySQL'],
+        'title': 'Analyst, Investment Strategies',
+        'org': 'NISA Investment Advisors, LLC',
+        'location': 'St Louis, MO',
+        'date': 'Jun 2020 - Jan 2023',
+    },
+    {
+        'type': 'work',
+        'title': 'Intern, Investment Strategies',
+        'org': 'NISA Investment Advisors, LLC',
+        'date': 'Jun 2019 - Aug 2019',
+    },
+    {
+        'type': 'work',
+        'title': 'Financial Planning Intern',
+        'org': 'Paschall & Associates',
+        'location': 'Gastonia, NC',
+        'date': 'May 2018 - Aug 2018',
+    },
+    {
+        'type': 'work',
+        'title': 'Process Improvement Intern',
+        'org': 'Dixon Quick Coupling',
+        'location': 'Dallas, NC',
+        'date': 'Oct 2015 - Dec 2015',
     },
     {
         'type': 'education',
-        'title': 'B.S. Computer Science',
-        'org': 'University Name',
-        'location': 'City, State',
-        'date': '2015 - 2019',
-        'description': 'Studied computer science with focus on software engineering.',
+        'title': "Bachelor's Degree, Statistics",
+        'org': 'The University of North Carolina at Chapel Hill',
+        'date': '2016 - 2020',
         'highlights': [
-            'Relevant coursework: Data Structures, Algorithms, Databases',
-            'Senior project: Something cool you built',
-        ]
+            'Division I Fencing Team',
+            'Sigma Nu Fraternity',
+            'Richard A. Baddour Leadership Academy',
+        ],
+    },
+    {
+        'type': 'certification',
+        'title': 'Chartered Financial Analyst (CFA)',
+        'org': 'CFA Institute',
+        'date': 'March 2023',
+    },
+    {
+        'type': 'certification',
+        'title': 'Series 3 - National Commodities Futures Exam',
+        'org': 'FINRA',
+        'date': 'February 2022',
     },
 ]
 

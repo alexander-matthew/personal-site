@@ -1,56 +1,50 @@
-{% extends "win98_window.html" %}
+{% extends "palantir_page.html" %}
 
 {% block title %}Weather{% endblock %}
-{% block window_title %}Weather - The Weather Channel{% endblock %}
-{% block taskbar_title %}Weather{% endblock %}
-
-{% set window_icon = 'weather.svg' %}
+{% block page_title %}Weather{% endblock %}
 
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/weather.css') }}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-/* Win98 Weather Overrides */
 .weather-dashboard {
-    background: var(--win98-gray);
-    padding: 8px;
     min-height: 400px;
 }
 
 .weather-tabs {
     display: flex;
     gap: 0;
-    margin-bottom: 8px;
-    border-bottom: none;
+    border-bottom: 1px solid var(--border-default);
+    margin-bottom: var(--space-md);
 }
 
-.tab-btn {
-    padding: 4px 12px;
-    background: var(--win98-gray);
-    border: 2px solid;
-    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
-    font-family: var(--win98-font);
-    font-size: 11px;
+.weather-tabs .wtab-btn {
+    padding: var(--space-sm) var(--space-md);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
     cursor: pointer;
-    position: relative;
-    bottom: -2px;
+    transition: all var(--transition-fast);
 }
 
-.tab-btn.active {
-    border-bottom-color: var(--win98-gray);
-    z-index: 1;
+.weather-tabs .wtab-btn:hover {
+    color: var(--text-primary);
 }
 
-.tab-btn i {
-    margin-right: 4px;
+.weather-tabs .wtab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+
+.weather-tabs .wtab-btn i {
+    margin-right: var(--space-xs);
 }
 
 .tab-content {
     display: none;
-    background: white;
-    border: 2px solid;
-    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
-    padding: 8px;
 }
 
 .tab-content.active {
@@ -60,20 +54,26 @@
 .location-bar {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 12px;
-    padding: 4px;
-    background: var(--win98-gray);
-    border: 2px solid;
-    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+    padding: var(--space-sm);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: 4px;
 }
 
 .location-current {
     display: flex;
     align-items: center;
-    gap: 4px;
-    font-size: 11px;
-    font-weight: bold;
+    gap: var(--space-xs);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+.location-current i {
+    color: var(--accent);
 }
 
 .location-search {
@@ -84,25 +84,42 @@
 
 .location-search input {
     flex: 1;
-    padding: 2px 4px;
-    border: 2px solid;
-    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
-    font-family: var(--win98-font);
-    font-size: 11px;
+    padding: var(--space-xs) var(--space-sm);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-default);
+    border-radius: 3px 0 0 3px;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-sm);
+}
+
+.location-search input:focus {
+    border-color: var(--accent);
+    outline: none;
 }
 
 .location-search button, .geo-btn {
-    padding: 2px 8px;
-    background: var(--win98-gray);
-    border: 2px solid;
-    border-color: var(--win98-btn-highlight) var(--win98-btn-dark-shadow) var(--win98-btn-dark-shadow) var(--win98-btn-highlight);
-    font-family: var(--win98-font);
-    font-size: 11px;
+    padding: var(--space-xs) var(--space-sm);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-default);
+    color: var(--text-secondary);
     cursor: pointer;
+    font-size: var(--font-size-sm);
+    transition: all var(--transition-fast);
 }
 
-.location-search button:active, .geo-btn:active {
-    border-color: var(--win98-btn-dark-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-dark-shadow);
+.location-search button {
+    border-radius: 0 3px 3px 0;
+    border-left: none;
+}
+
+.geo-btn {
+    border-radius: 3px;
+}
+
+.location-search button:hover, .geo-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent);
 }
 
 .search-results {
@@ -110,9 +127,9 @@
     top: 100%;
     left: 0;
     right: 0;
-    background: white;
-    border: 2px solid;
-    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-default);
+    border-radius: 0 0 4px 4px;
     z-index: 100;
     display: none;
     max-height: 200px;
@@ -120,56 +137,68 @@
 }
 
 .search-item {
-    padding: 4px 8px;
-    font-size: 11px;
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
     cursor: pointer;
+    transition: background var(--transition-fast);
 }
 
 .search-item:hover {
-    background: var(--win98-title-blue);
-    color: white;
+    background: var(--accent);
+    color: #000;
+}
+
+.search-item i {
+    margin-right: var(--space-xs);
+    color: var(--text-muted);
+}
+
+.search-item:hover i {
+    color: #000;
 }
 
 .current-weather-card {
-    background: white;
-    border: 2px solid;
-    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
-    padding: 12px;
-    margin-bottom: 12px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: 4px;
+    padding: var(--space-md);
+    margin-bottom: var(--space-md);
 }
 
 .weather-loading {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: 20px;
-    font-size: 11px;
+    gap: var(--space-sm);
+    padding: var(--space-xl);
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
 }
 
 .weather-content {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: var(--space-md);
 }
 
 .weather-main {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: var(--space-md);
 }
 
 .weather-icon-large {
     font-size: 48px;
-    color: #f59e0b;
+    color: var(--color-warning);
 }
 
-.weather-icon-large.sunny { color: #f59e0b; }
-.weather-icon-large.cloudy { color: #6b7280; }
-.weather-icon-large.rainy { color: #3b82f6; }
-.weather-icon-large.stormy { color: #1f2937; }
-.weather-icon-large.snowy { color: #60a5fa; }
-.weather-icon-large.foggy { color: #9ca3af; }
+.weather-icon-large.sunny { color: var(--color-warning); }
+.weather-icon-large.cloudy { color: var(--text-secondary); }
+.weather-icon-large.rainy { color: var(--accent); }
+.weather-icon-large.stormy { color: var(--text-muted); }
+.weather-icon-large.snowy { color: var(--accent-hover); }
+.weather-icon-large.foggy { color: var(--text-secondary); }
 
 .weather-temp {
     display: flex;
@@ -180,131 +209,140 @@
     font-size: 48px;
     font-weight: bold;
     line-height: 1;
+    color: var(--text-primary);
 }
 
 .temp-unit {
-    font-size: 18px;
-    margin-top: 8px;
+    font-size: var(--font-size-lg);
+    margin-top: var(--space-sm);
+    color: var(--text-secondary);
 }
 
 .weather-condition {
-    font-size: 14px;
+    font-size: var(--font-size-base);
     font-weight: bold;
+    color: var(--text-primary);
 }
 
 .weather-details {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
+    gap: var(--space-sm);
 }
 
 .detail-item {
-    background: var(--win98-gray);
-    border: 2px solid;
-    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
-    padding: 8px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
+    padding: var(--space-sm);
     text-align: center;
 }
 
 .detail-item i {
     display: block;
     font-size: 16px;
-    margin-bottom: 4px;
-    color: var(--win98-title-blue);
+    margin-bottom: var(--space-xs);
+    color: var(--accent);
 }
 
 .detail-label {
     display: block;
-    font-size: 10px;
-    color: #666;
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
 }
 
 .detail-value {
     display: block;
-    font-size: 12px;
+    font-size: var(--font-size-sm);
     font-weight: bold;
+    color: var(--text-primary);
 }
 
 .forecast-section {
-    background: white;
-    border: 2px solid;
-    border-color: var(--win98-btn-shadow) var(--win98-btn-highlight) var(--win98-btn-highlight) var(--win98-btn-shadow);
-    padding: 12px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: 4px;
+    padding: var(--space-md);
 }
 
 .forecast-section h3 {
-    font-size: 12px;
-    margin: 0 0 8px 0;
-    padding-bottom: 4px;
-    border-bottom: 1px solid #ccc;
+    font-size: var(--font-size-sm);
+    margin: 0 0 var(--space-sm) 0;
+    padding-bottom: var(--space-xs);
+    border-bottom: 1px solid var(--border-subtle);
+    color: var(--text-primary);
 }
 
 .forecast-section h3 i {
-    margin-right: 4px;
+    margin-right: var(--space-xs);
+    color: var(--accent);
 }
 
 .forecast-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 4px;
+    gap: var(--space-xs);
 }
 
 .forecast-day {
     text-align: center;
-    padding: 8px 4px;
-    background: var(--win98-gray);
-    border: 1px solid;
-    border-color: var(--win98-btn-highlight) var(--win98-btn-shadow) var(--win98-btn-shadow) var(--win98-btn-highlight);
+    padding: var(--space-sm) var(--space-xs);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
 }
 
 .forecast-day-name {
-    font-size: 10px;
+    font-size: var(--font-size-xs);
     font-weight: bold;
-    margin-bottom: 4px;
+    margin-bottom: var(--space-xs);
+    color: var(--text-primary);
 }
 
 .forecast-icon {
     font-size: 20px;
-    margin: 4px 0;
+    margin: var(--space-xs) 0;
+    color: var(--text-secondary);
 }
 
 .forecast-temps {
-    font-size: 11px;
+    font-size: var(--font-size-xs);
 }
 
 .temp-high {
     font-weight: bold;
+    color: var(--text-primary);
 }
 
 .temp-low {
-    color: #666;
-    margin-left: 4px;
+    color: var(--text-muted);
+    margin-left: var(--space-xs);
 }
 
 .forecast-precip {
     font-size: 9px;
-    color: #3b82f6;
-    margin-top: 4px;
+    color: var(--accent);
+    margin-top: var(--space-xs);
 }
 
 .coming-soon-placeholder {
     text-align: center;
-    padding: 40px;
-    color: #808080;
+    padding: var(--space-2xl);
+    color: var(--text-muted);
 }
 
 .coming-soon-placeholder i {
     font-size: 32px;
-    margin-bottom: 8px;
+    margin-bottom: var(--space-sm);
 }
 
 .coming-soon-placeholder h3 {
-    font-size: 14px;
-    margin: 8px 0;
+    font-size: var(--font-size-base);
+    margin: var(--space-sm) 0;
 }
 
 .coming-soon-placeholder p {
-    font-size: 11px;
+    font-size: var(--font-size-sm);
 }
 
 @media (max-width: 640px) {
@@ -317,27 +355,21 @@
     .forecast-day:nth-child(n+5) {
         display: none;
     }
+    .location-bar {
+        flex-wrap: wrap;
+    }
 }
 </style>
 {% endblock %}
 
-{% block menu_bar %}
-<div class="win98-menu-bar">
-    <span class="win98-menu-item">File</span>
-    <span class="win98-menu-item">View</span>
-    <span class="win98-menu-item">Options</span>
-    <span class="win98-menu-item">Help</span>
-</div>
-{% endblock %}
-
-{% block window_content %}
+{% block page_content %}
 <div class="weather-dashboard" id="weatherDashboard">
     <div class="weather-tabs">
-        <button class="tab-btn active" data-tab="current">
+        <button class="wtab-btn active" data-tab="current">
             <i class="fas fa-cloud-sun"></i>
             Current Weather
         </button>
-        <button class="tab-btn" data-tab="coming-soon">
+        <button class="wtab-btn" data-tab="coming-soon">
             <i class="fas fa-chart-line"></i>
             Coming Soon
         </button>
@@ -371,7 +403,7 @@
                     </div>
                     <div class="weather-temp">
                         <span class="temp-value" id="tempValue">--</span>
-                        <span class="temp-unit">°C</span>
+                        <span class="temp-unit">&deg;C</span>
                     </div>
                     <div class="weather-condition" id="weatherCondition">--</div>
                 </div>
@@ -379,7 +411,7 @@
                     <div class="detail-item">
                         <i class="fas fa-temperature-half"></i>
                         <span class="detail-label">Feels Like</span>
-                        <span class="detail-value" id="feelsLike">--°C</span>
+                        <span class="detail-value" id="feelsLike">--&deg;C</span>
                     </div>
                     <div class="detail-item">
                         <i class="fas fa-droplet"></i>
@@ -420,13 +452,6 @@
 </div>
 {% endblock %}
 
-{% block status_bar %}
-<div class="win98-status-bar">
-    <span class="win98-status-section" style="flex: 1;">Ready</span>
-    <span class="win98-status-section">Open-Meteo API</span>
-</div>
-{% endblock %}
-
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/weather-engine.js') }}"></script>
 <script>
@@ -437,7 +462,7 @@
     let currentLon = null;
     let currentWeatherTheme = 'sunny';
 
-    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabBtns = document.querySelectorAll('.wtab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
     const locationName = document.getElementById('locationName');
     const citySearch = document.getElementById('citySearch');
@@ -493,10 +518,10 @@
         tempsDiv.className = 'forecast-temps';
         const highSpan = document.createElement('span');
         highSpan.className = 'temp-high';
-        highSpan.textContent = Math.round(day.temp_max) + '°';
+        highSpan.textContent = Math.round(day.temp_max) + '\u00B0';
         const lowSpan = document.createElement('span');
         lowSpan.className = 'temp-low';
-        lowSpan.textContent = Math.round(day.temp_min) + '°';
+        lowSpan.textContent = Math.round(day.temp_min) + '\u00B0';
         tempsDiv.appendChild(highSpan);
         tempsDiv.appendChild(lowSpan);
         div.appendChild(tempsDiv);
@@ -532,7 +557,7 @@
             iconEl.className = 'fas fa-' + data.weather_icon;
             weatherIconLarge.appendChild(iconEl);
 
-            feelsLike.textContent = Math.round(data.feels_like) + '°C';
+            feelsLike.textContent = Math.round(data.feels_like) + '\u00B0C';
             humidity.textContent = data.humidity + '%';
             windSpeed.textContent = Math.round(data.wind_speed) + ' km/h';
             precipitation.textContent = data.precipitation + ' mm';
