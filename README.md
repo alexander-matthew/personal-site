@@ -84,3 +84,15 @@ npm run test:watch
 - CI deploy: `.github/workflows/deploy.yml`
 
 See `docs/ARCHITECTURE.md` and `docs/EC2_MIGRATION.md` for deployment details.
+
+## Autonomous engineering loop
+
+The site has a **Claude + Codex agent loop** that ships PRs against itself
+overnight. Claude implements approved issues; Codex reviews; they iterate
+until convergence; a merge-gate auto-merges on approval + green CI. The
+public-facing view of the loop is the `/lab` page.
+
+- Full runbook: [`agents/README.md`](agents/README.md)
+- Control CLI: `agents/scripts/loop status | tick | halt | resume | journal`
+- Daemon: `personal-site-loop.service` (timer at 23:00 CDT nightly)
+- Kill switches: `loop halt` engages all three (systemctl stop + `agents/STOP` + `agent:halt` label)

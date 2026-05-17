@@ -1,0 +1,72 @@
+# Canonical labels for the agent loop. Mirrors agents/scripts/lib/config.py.
+# Synced by .github/workflows/sync-labels.yml on push to main.
+
+# --- Loop-state labels (the orchestrator reads/writes these) ---
+- name: "agent:approved"
+  color: "0e8a16"
+  description: "Issue is approved for the agent loop to work on"
+
+- name: "agent:in-progress"
+  color: "fbca04"
+  description: "Issue is claimed by an in-flight agent run"
+
+- name: "agent:proposal"
+  color: "c5def5"
+  description: "Filed by the proposer agent; awaiting human triage"
+
+- name: "agent:halt"
+  color: "b60205"
+  description: "Kill switch — orchestrator exits on next tick"
+
+- name: "agent:veto"
+  color: "b60205"
+  description: "Per-PR veto — merge gate skips this PR"
+
+- name: "agent:needs-human"
+  color: "d93f0b"
+  description: "Loop has exhausted its options on this issue/PR"
+
+- name: "agent:protected-violation"
+  color: "d93f0b"
+  description: "PR diff touches a protected path"
+
+- name: "agent:too-large"
+  color: "d93f0b"
+  description: "PR diff exceeds the 400 LOC cap"
+
+- name: "agent:authored-by-claude"
+  color: "5319e7"
+  description: "PR authored by the Claude worker"
+
+# --- Task taxonomy (consumed by the proposer) ---
+- name: "type:content"
+  color: "0052cc"
+  description: "Blog post, news entry, or other generated content"
+- name: "type:feature"
+  color: "0052cc"
+  description: "New user-facing capability"
+- name: "type:refactor"
+  color: "0052cc"
+  description: "Internal cleanup or architecture work"
+- name: "type:bug"
+  color: "ee0701"
+  description: "Visible defect"
+- name: "type:polish"
+  color: "bfd4f2"
+  description: "UI polish or copy"
+- name: "type:docs"
+  color: "1d76db"
+  description: "Documentation only"
+- name: "type:ops"
+  color: "5319e7"
+  description: "Operational maturity — health, logging, metrics"
+
+- name: "effort:s"
+  color: "c2e0c6"
+  description: "≤200 LOC change, ≤30min worker run"
+- name: "effort:m"
+  color: "fef2c0"
+  description: "200-400 LOC change, ≤45min worker run"
+- name: "effort:l"
+  color: "f9d0c4"
+  description: "Avoid — loop rejects diffs over 400 LOC"

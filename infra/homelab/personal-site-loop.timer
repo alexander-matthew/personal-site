@@ -1,0 +1,15 @@
+[Unit]
+Description=Start the personal-site agent loop nightly at 11pm CDT
+Documentation=https://github.com/alexander-matthew/personal-site/blob/main/agents/README.md
+
+[Timer]
+# 23:00 local time, every day. RandomizedDelaySec adds 0-10min jitter so two
+# adjacent agent runs don't pile up if the previous night ran long.
+OnCalendar=*-*-* 23:00:00
+RandomizedDelaySec=600
+AccuracySec=1m
+Persistent=true
+Unit=personal-site-loop.service
+
+[Install]
+WantedBy=timers.target

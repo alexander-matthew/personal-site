@@ -1,0 +1,23 @@
+[Unit]
+Description=personal-site agent loop daemon (Claude+Codex autonomous engineering)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=alex-matthew
+Group=alex-matthew
+WorkingDirectory=/home/alex-matthew/code/personal-site
+Environment=PATH=/home/alex-matthew/.local/bin:/home/alex-matthew/.npm-global/bin:/usr/local/bin:/usr/bin:/bin
+Environment=HOME=/home/alex-matthew
+ExecStart=/usr/bin/python3 /home/alex-matthew/code/personal-site/agents/scripts/orchestrator.py
+# Graceful: SIGTERM the cgroup; agent subprocesses also get SIGTERM and exit.
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=90
+# Don't auto-restart — the timer fires it once per night, and an error mid-loop
+# should be visible in journalctl rather than retried silently.
+Restart=no
+
+[Install]
+WantedBy=multi-user.target
