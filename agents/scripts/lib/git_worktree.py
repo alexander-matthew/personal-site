@@ -33,8 +33,25 @@ def create(branch: str, *, base: str = "origin/main") -> Path:
     return path
 
 
-def cleanup(path: Path) -> None:
-    """Remove a worktree (force) and prune git's bookkeeping."""
+def cleanup(path: Path, *, delete_branch: bool = False) -> None:
+    """Remove a worktree (force) and prune git's bookkeeping.
+
+    `delete_branch=True` also force-deletes the local branch reference, which
+    is what reviewer/responder scratch worktrees want (their branches aren't
+    pushed). The worker leaves `delete_branch=False` because its branch IS
+    the PR's remote-tracking branch and the local ref isn't load-bearing
+    anyway (it gets force-reset on next `worktree add -B`).
+    """
+    # Read the branch name from the worktree before we tear it down.
+    branch = None
+    if delete_branch:
+        proc = subprocess.run(
+            ["git", "-C", str(path), "symbolic-ref", "--short", "HEAD"],
+            capture_output=True, text=True,
+        )
+        if proc.returncode == 0:
+            branch = proc.stdout.strip()
+
     subprocess.run(
         ["git", "worktree", "remove", "--force", str(path)],
         cwd=REPO_ROOT, capture_output=True, text=True,
@@ -43,6 +60,11 @@ def cleanup(path: Path) -> None:
         ["git", "worktree", "prune"],
         cwd=REPO_ROOT, capture_output=True, text=True,
     )
+    if branch:
+        subprocess.run(
+            ["git", "branch", "-D", branch],
+            cwd=REPO_ROOT, capture_output=True, text=True,
+        )
 
 
 def push(path: Path, branch: str) -> None:

@@ -219,7 +219,7 @@ def review(pr_number: int) -> int:
         return 2
     finally:
         if worktree is not None:
-            git_worktree.cleanup(worktree)
+            git_worktree.cleanup(worktree, delete_branch=True)
 
 
 if __name__ == "__main__":
