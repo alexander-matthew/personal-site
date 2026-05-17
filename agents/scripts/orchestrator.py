@@ -60,6 +60,9 @@ signal.signal(signal.SIGINT, _on_sigterm)
 
 
 def _is_off_hours() -> bool:
+    import os
+    if os.environ.get("LOOP_FORCE_OFF_HOURS") == "1":
+        return True
     h = dt.datetime.now().hour
     if OFF_HOURS_START < OFF_HOURS_END:
         return OFF_HOURS_START <= h < OFF_HOURS_END
@@ -80,24 +83,22 @@ def _proposer_ran_today() -> bool:
 
 
 def _latest_codex_verdict(pr: dict) -> str | None:
-    reviews = [r for r in (pr.get("reviews") or [])
-               if "##VERDICT:" in (r.get("body") or "")]
-    if not reviews:
+    posts = gh.marker_posts(pr)
+    if not posts:
         return None
-    m = re.search(r"##VERDICT:\s*(\S+)", reviews[-1].get("body", ""))
+    m = re.search(r"##VERDICT:\s*(\S+)", posts[-1]["body"])
     return m.group(1) if m else None
 
 
 def _commits_since_review(pr: dict) -> bool:
-    reviews = [r for r in (pr.get("reviews") or [])
-               if "##VERDICT:" in (r.get("body") or "")]
-    if not reviews:
+    posts = gh.marker_posts(pr)
+    if not posts:
         return True  # No review yet → "since" is trivially true
-    last_review_ts = reviews[-1].get("submittedAt") or ""
+    last_ts = posts[-1]["ts"]
     commits = pr.get("commits") or []
     if not commits:
         return False
-    return (commits[-1].get("committedDate") or "") > last_review_ts
+    return (commits[-1].get("committedDate") or "") > last_ts
 
 
 def _is_agent_pr(pr: dict) -> bool:
@@ -115,9 +116,12 @@ def _is_stalled(pr: dict) -> bool:
 
 def _dispatch() -> tuple[str, int | None]:
     """Decide and run one phase. Returns (phase_name, target_id)."""
+    # list_prs is cheap but only returns surface fields; we need reviews+comments
+    # to classify state, so we re-fetch each candidate via get_pr (rarely >1-2 PRs).
     open_prs = gh.list_prs(state="open", limit=50)
-    agent_prs = [p for p in open_prs if _is_agent_pr(p) and not _is_stalled(p)]
-    agent_prs.sort(key=lambda p: p["createdAt"])
+    candidates = [p for p in open_prs if _is_agent_pr(p) and not _is_stalled(p)]
+    candidates.sort(key=lambda p: p["createdAt"])
+    agent_prs = [gh.get_pr(p["number"]) for p in candidates]
 
     for pr in agent_prs:
         verdict = _latest_codex_verdict(pr)

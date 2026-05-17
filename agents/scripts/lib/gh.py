@@ -53,8 +53,36 @@ def get_pr(number: int) -> dict:
         "--json", "number,title,body,headRefName,baseRefName,labels,"
                   "isDraft,mergeable,reviewDecision,statusCheckRollup,"
                   "createdAt,updatedAt,additions,deletions,changedFiles,"
-                  "files,commits,reviews,author",
+                  "files,commits,reviews,comments,author",
     ]) or {}
+
+
+def marker_posts(pr: dict, marker: str = "##VERDICT:") -> list[dict]:
+    """Reviews + timeline comments containing `marker`, oldest first.
+
+    Each entry: {source: 'review'|'comment', body, ts, author}. Used by the
+    loop's verdict-tracking helpers so both formal reviews (when the reviewer
+    runs under a separate identity) and self-PR-fallback comments are picked up.
+    """
+    posts: list[dict] = []
+    for r in (pr.get("reviews") or []):
+        body = r.get("body") or ""
+        if marker in body:
+            posts.append({
+                "source": "review", "body": body,
+                "ts": r.get("submittedAt") or "",
+                "author": (r.get("author") or {}).get("login", ""),
+            })
+    for c in (pr.get("comments") or []):
+        body = c.get("body") or ""
+        if marker in body:
+            posts.append({
+                "source": "comment", "body": body,
+                "ts": c.get("createdAt") or "",
+                "author": (c.get("author") or {}).get("login", ""),
+            })
+    posts.sort(key=lambda p: p["ts"])
+    return posts
 
 
 def get_issue(number: int) -> dict:
@@ -98,13 +126,40 @@ def comment(*, kind: str, number: int, body: str) -> None:
 
 
 def review(*, pr_number: int, verdict: str, body: str) -> None:
-    """verdict ∈ {'approve','request-changes','comment'}."""
+    """Post the review. verdict ∈ {'approve','request-changes','comment'}.
+
+    Tries the formal `gh pr review` API first. GitHub blocks reviewing your
+    own PRs, so when the worker + reviewer share auth we fall back to
+    `gh pr comment` and prefix the verdict into the body so the readers (which
+    grep for ##VERDICT:) still find it. Promote the reviewer to a dedicated
+    bot identity to recover formal-review semantics.
+    """
     flag = {
         "approve": "--approve",
         "request-changes": "--request-changes",
         "comment": "--comment",
     }[verdict]
-    _run(["pr", "review", str(pr_number), flag, "--body", body])
+    proc = subprocess.run(
+        ["gh", "pr", "review", str(pr_number), flag, "--body", body],
+        capture_output=True, text=True,
+    )
+    if proc.returncode == 0:
+        return
+    err = proc.stderr.lower()
+    if "your own pull request" in err or "cannot be reviewed" in err:
+        # Fall back to a plain comment. Body already contains ##VERDICT: markers.
+        comment(kind="pr", number=pr_number,
+                body=f"_(reviewer agent — posted as comment because GitHub blocks self-review)_\n\n{body}")
+        return
+    raise GhError(f"gh pr review: {proc.stderr.strip()}")
+
+
+def list_pr_comments(pr_number: int) -> list[dict]:
+    """Issue comments (timeline comments) on a PR, oldest first."""
+    return _run_json([
+        "pr", "view", str(pr_number),
+        "--json", "comments",
+    ]).get("comments", []) or []
 
 
 def create_pr(*, head: str, base: str, title: str, body: str, labels: list[str]) -> int:

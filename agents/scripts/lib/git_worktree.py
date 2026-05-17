@@ -17,14 +17,19 @@ def _git(*args: str, cwd: Path | str | None = None) -> str:
 
 
 def create(branch: str, *, base: str = "origin/main") -> Path:
-    """Create a fresh worktree on `branch` based on `base`. Path is returned."""
+    """Create a fresh worktree on `branch` based on `base`. Path is returned.
+
+    Uses `worktree add -B` so a leftover local branch from a previous failed
+    run is force-reset to `base` rather than colliding. Review/respond branches
+    are scratch and per-round, so reset-on-create is safe; the worker uses
+    distinct `agent/N-...` names that don't recur.
+    """
     ensure_state_dir()
     path = WORKTREES_DIR / branch.replace("/", "_")
     if path.exists():
         cleanup(path)
-    # Ensure base is up to date.
     _git("fetch", "origin", "main", "--quiet")
-    _git("worktree", "add", "-b", branch, str(path), base)
+    _git("worktree", "add", "-B", branch, str(path), base)
     return path
 
 

@@ -51,32 +51,24 @@ def _parse_review(text: str) -> dict | None:
 
 
 def _round_number(pr_number: int) -> int:
-    """How many Codex reviews are already on this PR (1-indexed for the next one)."""
+    """How many marker posts are already on this PR (1-indexed for the next)."""
     pr = gh.get_pr(pr_number)
-    reviews = pr.get("reviews") or []
-    codex_reviews = [r for r in reviews
-                     if (r.get("author") or {}).get("login", "").lower().startswith("alexander")]
-    # Codex posts via the user's gh auth, so reviews show up as the user.
-    # We disambiguate by the structured marker in the body.
-    codex_reviews = [r for r in codex_reviews if "##VERDICT:" in (r.get("body") or "")]
-    return len(codex_reviews) + 1
+    return len(gh.marker_posts(pr)) + 1
 
 
 def _needs_review(pr: dict) -> bool:
-    """True if PR has no Codex review since its last commit."""
+    """True if PR has no marker post since its last commit."""
     if pr.get("isDraft"):
         return False
-    reviews = [r for r in (pr.get("reviews") or [])
-               if "##VERDICT:" in (r.get("body") or "")]
-    if not reviews:
+    posts = gh.marker_posts(pr)
+    if not posts:
         return True
-    last_review = reviews[-1]
-    last_review_ts = last_review.get("submittedAt") or ""
+    last_ts = posts[-1]["ts"]
     commits = pr.get("commits") or []
     if not commits:
         return False
     last_commit_ts = commits[-1].get("committedDate") or ""
-    return last_commit_ts > last_review_ts
+    return last_commit_ts > last_ts
 
 
 # ---- main -----------------------------------------------------------------
@@ -168,7 +160,10 @@ def review(pr_number: int) -> int:
             db.append(phase="review", action="error", agent="codex",
                       pr_number=pr_number, duration_s=time.time() - started,
                       outcome="parse_failed",
-                      notes={"stdout_tail": proc.stdout[-500:]})
+                      exit_code=proc.returncode,
+                      notes={"stdout_tail": proc.stdout[-1500:],
+                             "stderr_tail": proc.stderr[-1500:],
+                             "last_msg_len": len(final_msg)})
             return 2
 
         # Wrapper-enforced overrides (Codex cannot approve if these fail).

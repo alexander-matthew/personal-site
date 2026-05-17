@@ -18,10 +18,13 @@ from lib.paths import PROMPTS_DIR  # noqa: E402
 
 
 def _latest_codex_review(pr: dict) -> dict | None:
-    """The most recent review carrying the structured marker."""
-    reviews = [r for r in (pr.get("reviews") or [])
-               if "##VERDICT:" in (r.get("body") or "")]
-    return reviews[-1] if reviews else None
+    """The most recent review-or-comment carrying the structured marker."""
+    posts = gh.marker_posts(pr)
+    if not posts:
+        return None
+    p = posts[-1]
+    # Keep the response shape stable for callers that read .get('body') and 'submittedAt'.
+    return {"body": p["body"], "submittedAt": p["ts"]}
 
 
 def _parse_review_body(body: str) -> dict:

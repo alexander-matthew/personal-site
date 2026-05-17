@@ -41,12 +41,11 @@ def _ci_state(pr: dict) -> str:
 
 
 def _latest_codex_verdict(pr: dict) -> str | None:
-    """Latest review with our structured marker → 'APPROVE' | 'REQUEST_CHANGES' | 'COMMENT'."""
-    reviews = [r for r in (pr.get("reviews") or [])
-               if "##VERDICT:" in (r.get("body") or "")]
-    if not reviews:
+    """Latest review/comment with our structured marker → APPROVE | REQUEST_CHANGES | COMMENT."""
+    posts = gh.marker_posts(pr)
+    if not posts:
         return None
-    m = re.search(r"##VERDICT:\s*(\S+)", reviews[-1].get("body", ""))
+    m = re.search(r"##VERDICT:\s*(\S+)", posts[-1]["body"])
     return m.group(1) if m else None
 
 
