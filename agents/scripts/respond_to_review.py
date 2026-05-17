@@ -9,12 +9,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from lib import agent_run, db, gh, git_worktree, kill_switch, protected  # noqa: E402
+from lib import agent_run, db, gh, git_worktree, kill_switch, protected, quota  # noqa: E402
 from lib.config import (  # noqa: E402
     LABEL_NEEDS_HUMAN, LABEL_PROTECTED_VIOLATION, LABEL_TOO_LARGE,
-    MAX_DIFF_LOC, MAX_REVIEW_ROUNDS, TIMEOUT_RESPOND_MIN,
+    MAX_DIFF_LOC, MAX_REVIEW_ROUNDS,
 )
-from lib.paths import PROMPTS_DIR  # noqa: E402
+from lib.persona import Persona  # noqa: E402
 
 
 def _latest_codex_review(pr: dict) -> dict | None:
@@ -45,22 +45,31 @@ def _round_number_from_body(body: str) -> int:
     return int(m.group(1)) if m else 1
 
 
-def _build_prompt(pr: dict, review_parsed: dict, round_n: int) -> str:
-    template = (PROMPTS_DIR / "respond.md").read_text()
+def _build_prompt(persona: Persona, pr: dict, review_parsed: dict, round_n: int) -> str:
     issue_ref = re.search(r"Closes\s+#(\d+)", pr.get("body") or "")
-    return (template
-            .replace("{PR_NUMBER}", str(pr["number"]))
-            .replace("{PR_TITLE}", pr["title"])
-            .replace("{ISSUE_NUMBER}", issue_ref.group(1) if issue_ref else "?")
-            .replace("{REVIEW_SUMMARY}", review_parsed["summary"])
-            .replace("{REVIEW_CHECKLIST}", review_parsed["checklist"])
-            .replace("{REVIEW_NOTES}", review_parsed["notes"])
-            .replace("{ROUND_NUMBER}", str(round_n)))
+    return persona.render(
+        PR_NUMBER=pr["number"],
+        PR_TITLE=pr["title"],
+        ISSUE_NUMBER=issue_ref.group(1) if issue_ref else "?",
+        REVIEW_SUMMARY=review_parsed["summary"],
+        REVIEW_CHECKLIST=review_parsed["checklist"],
+        REVIEW_NOTES=review_parsed["notes"],
+        ROUND_NUMBER=round_n,
+    )
 
 
 def respond(pr_number: int) -> int:
     """Returns 0 on success (commits pushed), 1 on no-op, 2 on failure."""
     kill_switch.check(reason="respond_to_review start")
+    persona = Persona.load("responder")
+
+    blocked, retry_after = quota.is_blocked(persona.cli)
+    if blocked:
+        db.append(phase="respond", action="skip", agent=persona.cli,
+                  pr_number=pr_number, outcome="rate_limited",
+                  notes={"retry_after_ts": retry_after})
+        return 1
+
     pr = gh.get_pr(pr_number)
     if pr.get("isDraft"):
         return 1
@@ -88,9 +97,8 @@ def respond(pr_number: int) -> int:
                   outcome="escalated_max_rounds", notes={"round": round_n})
         return 1
 
-    started = time.time()
-    db.append(phase="respond", action="start", agent="claude",
-              pr_number=pr_number, notes={"round": round_n})
+    db.append(phase="respond", action="start", agent=persona.cli,
+              pr_number=pr_number, notes={"round": round_n, "persona": persona.name})
 
     branch = pr.get("headRefName", "")
     worktree: Path | None = None
@@ -101,13 +109,24 @@ def respond(pr_number: int) -> int:
         subprocess.run(["git", "checkout", branch],
                        cwd=worktree, check=True, capture_output=True)
 
-        prompt = _build_prompt(pr, parsed, round_n + 1)
-        proc = agent_run.run_claude(
-            prompt=prompt,
-            cwd=worktree,
-            timeout_min=TIMEOUT_RESPOND_MIN,
-        )
-        duration = time.time() - started
+        prompt = _build_prompt(persona, pr, parsed, round_n + 1)
+        run_ = agent_run.run_persona(persona, prompt=prompt, cwd=worktree)
+        duration = run_.duration_s
+
+        if run_.rate_limited:
+            db.append(phase="respond", action="error", agent=persona.cli,
+                      pr_number=pr_number, duration_s=duration,
+                      outcome="rate_limited",
+                      notes={"retry_after_ts": run_.retry_after_ts,
+                             "round": round_n})
+            return 1
+
+        if run_.timed_out:
+            db.append(phase="respond", action="error", agent=persona.cli,
+                      pr_number=pr_number, duration_s=duration,
+                      exit_code=run_.returncode, outcome="timed_out",
+                      notes={"round": round_n})
+            return 2
 
         # Did the agent add new commits beyond what was already on the branch?
         new_log = subprocess.run(
@@ -116,12 +135,12 @@ def respond(pr_number: int) -> int:
         ).stdout.strip()
         added_commits = int(new_log or "0")
 
-        if proc.returncode != 0 or added_commits == 0:
-            db.append(phase="respond", action="error", agent="claude",
+        if run_.returncode != 0 or added_commits == 0:
+            db.append(phase="respond", action="error", agent=persona.cli,
                       pr_number=pr_number, duration_s=duration,
-                      exit_code=proc.returncode, outcome="no_commits",
-                      notes={"stderr": proc.stderr[-1500:],
-                             "stdout_tail": proc.stdout[-500:]})
+                      exit_code=run_.returncode, outcome="no_commits",
+                      notes={"stderr": run_.stderr[-1500:],
+                             "stdout_tail": run_.stdout[-500:]})
             return 2
 
         # Re-check guardrails after the new commits.
@@ -148,7 +167,7 @@ def respond(pr_number: int) -> int:
             gh.add_label(kind="pr", number=pr_number, label=LABEL_TOO_LARGE)
         gh.comment(kind="pr", number=pr_number, body="\n".join(comment_lines))
 
-        db.append(phase="respond", action="finish", agent="claude",
+        db.append(phase="respond", action="finish", agent=persona.cli,
                   pr_number=pr_number, duration_s=duration,
                   outcome="commits_pushed",
                   notes={"added_commits": added_commits, "adds": adds, "dels": dels,
@@ -157,12 +176,12 @@ def respond(pr_number: int) -> int:
         return 0
 
     except kill_switch.HaltRequested as e:
-        db.append(phase="respond", action="halted", agent="claude",
+        db.append(phase="respond", action="halted", agent=persona.cli,
                   pr_number=pr_number, notes={"reason": str(e)})
         return 2
     except Exception as e:
-        db.append(phase="respond", action="error", agent="claude",
-                  pr_number=pr_number, duration_s=time.time() - started,
+        db.append(phase="respond", action="error", agent=persona.cli,
+                  pr_number=pr_number,
                   notes={"error": repr(e)})
         return 2
     finally:

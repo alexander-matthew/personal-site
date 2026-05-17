@@ -12,14 +12,14 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from lib import agent_run, db, gh, git_worktree, kill_switch  # noqa: E402
+from lib import agent_run, db, gh, git_worktree, kill_switch, quota  # noqa: E402
 from lib import protected  # noqa: E402
 from lib.config import (  # noqa: E402
     LABEL_APPROVED, LABEL_IN_PROGRESS, LABEL_NEEDS_HUMAN,
     LABEL_PROTECTED_VIOLATION, LABEL_TOO_LARGE,
-    MAX_DIFF_LOC, TIMEOUT_WORK_MIN,
+    MAX_DIFF_LOC,
 )
-from lib.paths import PROMPTS_DIR  # noqa: E402
+from lib.persona import Persona  # noqa: E402
 
 
 def _slug(title: str) -> str:
@@ -40,17 +40,18 @@ def _pick_issue() -> dict | None:
     return fresh[0]
 
 
-def _build_prompt(issue: dict) -> str:
-    template = (PROMPTS_DIR / "work.md").read_text()
-    return (template
-            .replace("{ISSUE_NUMBER}", str(issue["number"]))
-            .replace("{ISSUE_TITLE}", issue["title"])
-            .replace("{ISSUE_BODY}", issue.get("body") or ""))
-
-
 def run() -> int:
     """Returns 0 on success (PR opened), 1 on no-op, 2 on failure."""
     kill_switch.check(reason="work_issue start")
+
+    persona = Persona.load("worker")
+
+    blocked, retry_after = quota.is_blocked(persona.cli)
+    if blocked:
+        db.append(phase="work", action="skip", agent=persona.cli,
+                  outcome="rate_limited",
+                  notes={"retry_after_ts": retry_after})
+        return 1
 
     issue = _pick_issue()
     if not issue:
@@ -60,37 +61,45 @@ def run() -> int:
     n = issue["number"]
     title = issue["title"]
     branch = f"agent/{n}-{_slug(title)}"
-    db.append(phase="work", action="start", agent="claude", issue_number=n,
-              notes={"branch": branch, "title": title})
+    db.append(phase="work", action="start", agent=persona.cli, issue_number=n,
+              notes={"branch": branch, "title": title, "persona": persona.name})
 
     gh.add_label(kind="issue", number=n, label=LABEL_IN_PROGRESS)
-    started = time.time()
     worktree: Path | None = None
     try:
         worktree = git_worktree.create(branch, base="origin/main")
-        prompt = _build_prompt(issue)
-
-        proc = agent_run.run_claude(
-            prompt=prompt,
-            cwd=worktree,
-            timeout_min=TIMEOUT_WORK_MIN,
+        prompt = persona.render(
+            ISSUE_NUMBER=n,
+            ISSUE_TITLE=title,
+            ISSUE_BODY=issue.get("body") or "",
         )
-        duration = time.time() - started
 
-        if proc.returncode != 0:
-            db.append(phase="work", action="error", agent="claude",
-                      issue_number=n, exit_code=proc.returncode,
+        run_ = agent_run.run_persona(persona, prompt=prompt, cwd=worktree)
+        duration = run_.duration_s
+
+        if run_.rate_limited:
+            db.append(phase="work", action="error", agent=persona.cli,
+                      issue_number=n, duration_s=duration,
+                      outcome="rate_limited",
+                      notes={"retry_after_ts": run_.retry_after_ts})
+            gh.remove_label(kind="issue", number=n, label=LABEL_IN_PROGRESS)
+            return 1
+
+        if run_.timed_out or run_.returncode != 0:
+            db.append(phase="work", action="error", agent=persona.cli,
+                      issue_number=n, exit_code=run_.returncode,
                       duration_s=duration,
-                      notes={"stderr": proc.stderr[-2000:]})
+                      outcome="timed_out" if run_.timed_out else "nonzero_exit",
+                      notes={"stderr": run_.stderr[-2000:]})
             gh.remove_label(kind="issue", number=n, label=LABEL_IN_PROGRESS)
             return 2
 
         # Did the agent actually commit anything?
         if not git_worktree.has_commits_since_base(worktree):
-            db.append(phase="work", action="error", agent="claude",
+            db.append(phase="work", action="error", agent=persona.cli,
                       issue_number=n, duration_s=duration,
                       outcome="no_commits",
-                      notes={"stdout_tail": proc.stdout[-500:]})
+                      notes={"stdout_tail": run_.stdout[-500:]})
             gh.remove_label(kind="issue", number=n, label=LABEL_IN_PROGRESS)
             return 2
 
@@ -108,7 +117,7 @@ def run() -> int:
         body_lines = [
             f"Closes #{n}",
             "",
-            "Authored by the agent loop (Claude worker).",
+            f"Authored by the agent loop ({persona.name} persona, cli={persona.cli}).",
             "",
             f"Diff: +{adds}/-{dels} across {len(changed)} files.",
         ]
@@ -140,7 +149,7 @@ def run() -> int:
         elif too_large:
             outcome = "opened_too_large"
 
-        db.append(phase="work", action="finish", agent="claude",
+        db.append(phase="work", action="finish", agent=persona.cli,
                   issue_number=n, pr_number=pr_number, outcome=outcome,
                   duration_s=duration,
                   notes={"adds": adds, "dels": dels,
@@ -149,13 +158,13 @@ def run() -> int:
         return 0
 
     except kill_switch.HaltRequested as e:
-        db.append(phase="work", action="halted", agent="claude",
+        db.append(phase="work", action="halted", agent=persona.cli,
                   issue_number=n, notes={"reason": str(e)})
         gh.remove_label(kind="issue", number=n, label=LABEL_IN_PROGRESS)
         return 2
     except Exception as e:
-        db.append(phase="work", action="error", agent="claude",
-                  issue_number=n, duration_s=time.time() - started,
+        db.append(phase="work", action="error", agent=persona.cli,
+                  issue_number=n,
                   notes={"error": repr(e)})
         gh.remove_label(kind="issue", number=n, label=LABEL_IN_PROGRESS)
         return 2

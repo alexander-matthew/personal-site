@@ -6,6 +6,10 @@ Both CLIs auth via the user's subscription. The wrappers normalize:
 - timeout (hard SIGKILL)
 - tool / sandbox restrictions
 - structured stdout capture (final agent message goes to a file)
+- quota detection (rate-limit signals in stderr → record + skip)
+
+Phase scripts should prefer `run_persona(persona, prompt, cwd)`; the
+`run_claude` / `run_codex` primitives are kept for ad-hoc invocations.
 """
 from __future__ import annotations
 
@@ -13,12 +17,44 @@ import os
 import shutil
 import subprocess
 import tempfile
+import time
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
+
+from . import quota
+
+if TYPE_CHECKING:  # avoid cycle at import time
+    from .persona import Persona
 
 
 class AgentRunError(RuntimeError):
     pass
+
+
+@dataclass
+class PersonaRun:
+    """Return value of `run_persona`. Phase scripts consult these fields."""
+    persona_name: str
+    cli: str
+    proc: subprocess.CompletedProcess
+    final_message: str       # last-agent-message (codex) or stdout (claude)
+    duration_s: float
+    rate_limited: bool
+    retry_after_ts: Optional[float]
+    timed_out: bool
+
+    @property
+    def stdout(self) -> str:
+        return self.proc.stdout
+
+    @property
+    def stderr(self) -> str:
+        return self.proc.stderr
+
+    @property
+    def returncode(self) -> int:
+        return self.proc.returncode
 
 
 _CLAUDE_CANDIDATES = (
@@ -142,3 +178,62 @@ def run_codex(
     finally:
         if last_msg_path.exists():
             last_msg_path.unlink(missing_ok=True)
+
+
+def run_persona(persona: "Persona", *, prompt: str, cwd: Path) -> PersonaRun:
+    """Dispatch a persona's prompt to its configured CLI.
+
+    All of {timeout, sandbox/permission, tool list, max_turns} comes from
+    the persona — phase scripts don't pass any of this. Detects subscription
+    rate-limit errors and surfaces them as `rate_limited=True` on the result;
+    if the persona's `on_rate_limit == 'skip_until_reset'` the wrapper also
+    persists the gate so subsequent ticks skip until the quota resets.
+    """
+    started = time.time()
+    timed_out = False
+    try:
+        if persona.cli == "claude":
+            proc = run_claude(
+                prompt=prompt,
+                cwd=cwd,
+                timeout_min=persona.timeout_min,
+                permission_mode=persona.permission_mode or "bypassPermissions",
+                allowed_tools=list(persona.allowed_tools) if persona.allowed_tools else None,
+                disallowed_tools=list(persona.disallowed_tools) if persona.disallowed_tools else None,
+                max_turns=persona.max_turns or 80,
+            )
+            final_message = proc.stdout
+        elif persona.cli == "codex":
+            proc, final_message = run_codex(
+                prompt=prompt,
+                cwd=cwd,
+                timeout_min=persona.timeout_min,
+                sandbox=persona.sandbox or "read-only",
+            )
+        else:
+            raise AgentRunError(f"persona {persona.name!r} has unknown cli {persona.cli!r}")
+    except subprocess.TimeoutExpired as e:
+        # Synthesize a proc-like object so callers don't need to special-case.
+        proc = subprocess.CompletedProcess(
+            args=e.cmd, returncode=124,
+            stdout=(e.stdout or b"").decode("utf-8", "replace") if isinstance(e.stdout, (bytes, bytearray)) else (e.stdout or ""),
+            stderr=(e.stderr or b"").decode("utf-8", "replace") if isinstance(e.stderr, (bytes, bytearray)) else (e.stderr or ""),
+        )
+        final_message = ""
+        timed_out = True
+
+    duration = time.time() - started
+    rl = quota.detect(proc.stderr, cli=persona.cli)
+    if rl is not None and persona.on_rate_limit == "skip_until_reset":
+        quota.record(rl)
+
+    return PersonaRun(
+        persona_name=persona.name,
+        cli=persona.cli,
+        proc=proc,
+        final_message=final_message,
+        duration_s=duration,
+        rate_limited=rl is not None,
+        retry_after_ts=rl.retry_after_ts if rl else None,
+        timed_out=timed_out,
+    )

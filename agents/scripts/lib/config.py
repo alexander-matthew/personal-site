@@ -8,11 +8,7 @@ OFF_HOURS_END = 6  # 6am
 # Daemon polls GitHub state every TICK_SECONDS while it's up.
 TICK_SECONDS = 60
 
-# Hard timeouts per phase, in minutes.
-TIMEOUT_WORK_MIN = 45
-TIMEOUT_RESPOND_MIN = 30
-TIMEOUT_REVIEW_MIN = 15
-TIMEOUT_PROPOSE_MIN = 15
+# Per-phase timeouts live in the persona file (agents/personas/<name>.md).
 
 # Max review rounds per PR before escalating to a human.
 MAX_REVIEW_ROUNDS = 3
@@ -36,7 +32,7 @@ PROTECTED_PATHS = (
     ".github/workflows/",
     "infra/",
     "agents/scripts/",
-    "agents/prompts/",
+    "agents/personas/",
     "agents/config.py",
     "Dockerfile",
     "docker-compose.yml",

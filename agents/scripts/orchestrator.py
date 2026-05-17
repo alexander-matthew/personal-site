@@ -28,11 +28,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from lib import db, gh, kill_switch  # noqa: E402
+from lib import db, gh, kill_switch, quota  # noqa: E402
 from lib.config import (  # noqa: E402
     LABEL_APPROVED, LABEL_NEEDS_HUMAN, LABEL_PROTECTED_VIOLATION, LABEL_VETO,
     OFF_HOURS_END, OFF_HOURS_START, TICK_SECONDS,
 )
+from lib.persona import Persona  # noqa: E402
 from lib.paths import LOCK_PATH, ensure_state_dir  # noqa: E402
 
 import work_issue  # noqa: E402
@@ -114,6 +115,13 @@ def _is_stalled(pr: dict) -> bool:
 # ---- the state machine ----------------------------------------------------
 
 
+def _persona_blocked(persona_name: str) -> bool:
+    """True if the CLI behind this persona is currently rate-limited."""
+    persona = Persona.load(persona_name)
+    blocked, _ = quota.is_blocked(persona.cli)
+    return blocked
+
+
 def _dispatch() -> tuple[str, int | None]:
     """Decide and run one phase. Returns (phase_name, target_id)."""
     # list_prs is cheap but only returns surface fields; we need reviews+comments
@@ -126,30 +134,37 @@ def _dispatch() -> tuple[str, int | None]:
     for pr in agent_prs:
         verdict = _latest_codex_verdict(pr)
 
-        # PR is approved + no new commits → try to merge.
+        # PR is approved + no new commits → try to merge. (merge-gate is pure
+        # logic; no quota concern.)
         if verdict == "APPROVE" and not _commits_since_review(pr):
             rc = merge_gate.evaluate(pr["number"])
             return ("merge", pr["number"]) if rc == 0 else ("merge.skip", pr["number"])
 
-        # PR has unaddressed change-requests → respond.
+        # PR has unaddressed change-requests → respond (Claude).
         if verdict == "REQUEST_CHANGES" and not _commits_since_review(pr):
+            if _persona_blocked("responder"):
+                continue  # skip this PR; another may be reviewable
             rc = respond_to_review.respond(pr["number"])
             return ("respond", pr["number"]) if rc == 0 else ("respond.skip", pr["number"])
 
-        # PR has no review yet, OR new commits since last review → review.
+        # PR has no review yet, OR new commits since last review → review (Codex).
         if verdict is None or _commits_since_review(pr):
+            if _persona_blocked("reviewer"):
+                continue
             rc = review_pr.review(pr["number"])
             return ("review", pr["number"]) if rc == 0 else ("review.skip", pr["number"])
 
     # No PR work pending. Consider worker (off-hours only).
-    if _is_off_hours():
+    if _is_off_hours() and not _persona_blocked("worker"):
         approved = gh.list_issues(labels=[LABEL_APPROVED], state="open", limit=5)
         if approved:
             rc = work_issue.run()
             return ("work", None) if rc == 0 else ("work.skip", None)
 
     # Consider proposer (once per day, off-hours only).
-    if _is_off_hours() and not _proposer_ran_today():
+    if (_is_off_hours()
+            and not _proposer_ran_today()
+            and not _persona_blocked("proposer")):
         rc = propose_issues.run()
         return ("propose", None) if rc == 0 else ("propose.skip", None)
 

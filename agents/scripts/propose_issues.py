@@ -8,9 +8,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from lib import agent_run, db, gh, git_worktree, kill_switch  # noqa: E402
-from lib.config import LABEL_PROPOSAL, TIMEOUT_PROPOSE_MIN  # noqa: E402
-from lib.paths import PROMPTS_DIR  # noqa: E402
+from lib import agent_run, db, gh, git_worktree, kill_switch, quota  # noqa: E402
+from lib.config import LABEL_PROPOSAL  # noqa: E402
+from lib.persona import Persona  # noqa: E402
 
 
 _BLOCK = re.compile(
@@ -37,33 +37,43 @@ def _parse_proposals(text: str) -> list[dict]:
 def run() -> int:
     """Returns 0 on success (proposals filed), 1 on no-op, 2 on failure."""
     kill_switch.check(reason="propose_issues start")
+    persona = Persona.load("proposer")
+
+    blocked, retry_after = quota.is_blocked(persona.cli)
+    if blocked:
+        db.append(phase="propose", action="skip", agent=persona.cli,
+                  outcome="rate_limited", notes={"retry_after_ts": retry_after})
+        return 1
 
     started = time.time()
-    db.append(phase="propose", action="start", agent="claude")
+    db.append(phase="propose", action="start", agent=persona.cli,
+              notes={"persona": persona.name})
 
     worktree: Path | None = None
     try:
         worktree = git_worktree.create(f"propose-{int(started)}", base="origin/main")
-        prompt = (PROMPTS_DIR / "propose.md").read_text()
-        proc = agent_run.run_claude(
-            prompt=prompt,
-            cwd=worktree,
-            timeout_min=TIMEOUT_PROPOSE_MIN,
-            max_turns=40,
-        )
-        duration = time.time() - started
+        prompt = persona.render()
+        run_ = agent_run.run_persona(persona, prompt=prompt, cwd=worktree)
+        duration = run_.duration_s
 
-        if proc.returncode != 0:
-            db.append(phase="propose", action="error", agent="claude",
-                      exit_code=proc.returncode, duration_s=duration,
-                      notes={"stderr": proc.stderr[-1500:]})
+        if run_.rate_limited:
+            db.append(phase="propose", action="error", agent=persona.cli,
+                      duration_s=duration, outcome="rate_limited",
+                      notes={"retry_after_ts": run_.retry_after_ts})
+            return 1
+
+        if run_.timed_out or run_.returncode != 0:
+            db.append(phase="propose", action="error", agent=persona.cli,
+                      exit_code=run_.returncode, duration_s=duration,
+                      outcome="timed_out" if run_.timed_out else "nonzero_exit",
+                      notes={"stderr": run_.stderr[-1500:]})
             return 2
 
-        proposals = _parse_proposals(proc.stdout)
+        proposals = _parse_proposals(run_.stdout)
         if not proposals:
-            db.append(phase="propose", action="skip", agent="claude",
+            db.append(phase="propose", action="skip", agent=persona.cli,
                       duration_s=duration, outcome="no_proposals",
-                      notes={"stdout_tail": proc.stdout[-500:]})
+                      notes={"stdout_tail": run_.stdout[-500:]})
             return 1
 
         filed = []
@@ -81,21 +91,20 @@ def run() -> int:
                 num = int(out.strip().rsplit("/", 1)[-1])
                 filed.append(num)
             except Exception as e:
-                db.append(phase="propose", action="error", agent="claude",
+                db.append(phase="propose", action="error", agent=persona.cli,
                           notes={"error": repr(e), "title": p["title"]})
 
-        db.append(phase="propose", action="finish", agent="claude",
+        db.append(phase="propose", action="finish", agent=persona.cli,
                   duration_s=duration, outcome="filed",
                   notes={"issues": filed, "count": len(filed)})
         return 0 if filed else 1
 
     except kill_switch.HaltRequested as e:
-        db.append(phase="propose", action="halted", agent="claude",
+        db.append(phase="propose", action="halted", agent=persona.cli,
                   notes={"reason": str(e)})
         return 2
     except Exception as e:
-        db.append(phase="propose", action="error", agent="claude",
-                  duration_s=time.time() - started,
+        db.append(phase="propose", action="error", agent=persona.cli,
                   notes={"error": repr(e)})
         return 2
     finally:

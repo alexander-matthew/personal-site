@@ -6,7 +6,6 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[3]
 AGENTS_DIR = REPO_ROOT / "agents"
 SCRIPTS_DIR = AGENTS_DIR / "scripts"
-PROMPTS_DIR = AGENTS_DIR / "prompts"
 
 STATE_DIR = AGENTS_DIR / "state"
 DB_PATH = STATE_DIR / "runs.sqlite"

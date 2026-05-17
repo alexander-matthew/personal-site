@@ -15,12 +15,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from lib import agent_run, db, gh, git_worktree, kill_switch, protected  # noqa: E402
+from lib import agent_run, db, gh, git_worktree, kill_switch, protected, quota  # noqa: E402
 from lib.config import (  # noqa: E402
     LABEL_NEEDS_HUMAN, LABEL_PROTECTED_VIOLATION, LABEL_TOO_LARGE,
-    MAX_DIFF_LOC, MAX_REVIEW_ROUNDS, TIMEOUT_REVIEW_MIN,
+    MAX_DIFF_LOC, MAX_REVIEW_ROUNDS,
 )
-from lib.paths import PROMPTS_DIR  # noqa: E402
+from lib.persona import Persona  # noqa: E402
 
 
 # ---- structured-output parsing --------------------------------------------
@@ -74,17 +74,17 @@ def _needs_review(pr: dict) -> bool:
 # ---- main -----------------------------------------------------------------
 
 
-def _build_prompt(pr: dict, issue_body: str) -> str:
-    template = (PROMPTS_DIR / "review.md").read_text()
-    return (template
-            .replace("{PR_NUMBER}", str(pr["number"]))
-            .replace("{PR_TITLE}", pr["title"])
-            .replace("{ISSUE_NUMBER}", str(_extract_issue_ref(pr.get("body") or "")))
-            .replace("{ADDITIONS}", str(pr.get("additions", 0)))
-            .replace("{DELETIONS}", str(pr.get("deletions", 0)))
-            .replace("{CHANGED_FILES}", str(pr.get("changedFiles", 0)))
-            .replace("{PR_BODY}", pr.get("body") or "")
-            .replace("{ISSUE_BODY}", issue_body))
+def _build_prompt(persona: Persona, pr: dict, issue_body: str) -> str:
+    return persona.render(
+        PR_NUMBER=pr["number"],
+        PR_TITLE=pr["title"],
+        ISSUE_NUMBER=_extract_issue_ref(pr.get("body") or "") or "?",
+        ADDITIONS=pr.get("additions", 0),
+        DELETIONS=pr.get("deletions", 0),
+        CHANGED_FILES=pr.get("changedFiles", 0),
+        PR_BODY=pr.get("body") or "",
+        ISSUE_BODY=issue_body,
+    )
 
 
 def _extract_issue_ref(pr_body: str) -> int | None:
@@ -95,6 +95,15 @@ def _extract_issue_ref(pr_body: str) -> int | None:
 def review(pr_number: int) -> int:
     """Returns 0 on success, 1 on skip, 2 on failure."""
     kill_switch.check(reason="review_pr start")
+
+    persona = Persona.load("reviewer")
+
+    blocked, retry_after = quota.is_blocked(persona.cli)
+    if blocked:
+        db.append(phase="review", action="skip", agent=persona.cli,
+                  pr_number=pr_number, outcome="rate_limited",
+                  notes={"retry_after_ts": retry_after})
+        return 1
 
     pr = gh.get_pr(pr_number)
     if not _needs_review(pr):
@@ -117,9 +126,8 @@ def review(pr_number: int) -> int:
     changed = [f.get("path") for f in (pr.get("files") or [])]
     bad_paths = protected.violations([p for p in changed if p])
 
-    started = time.time()
-    db.append(phase="review", action="start", agent="codex",
-              pr_number=pr_number, notes={"round": round_n})
+    db.append(phase="review", action="start", agent=persona.cli,
+              pr_number=pr_number, notes={"round": round_n, "persona": persona.name})
 
     # Build worktree at the PR head for Codex to inspect.
     branch = pr.get("headRefName", "")
@@ -141,29 +149,41 @@ def review(pr_number: int) -> int:
             except Exception:
                 pass
 
-        prompt = _build_prompt(pr, issue_body)
-        proc, final_msg = agent_run.run_codex(
-            prompt=prompt,
-            cwd=worktree,
-            timeout_min=TIMEOUT_REVIEW_MIN,
-            sandbox="read-only",
-        )
+        prompt = _build_prompt(persona, pr, issue_body)
+        run_ = agent_run.run_persona(persona, prompt=prompt, cwd=worktree)
 
-        parsed = _parse_review(final_msg)
+        if run_.rate_limited:
+            db.append(phase="review", action="error", agent=persona.cli,
+                      pr_number=pr_number, duration_s=run_.duration_s,
+                      outcome="rate_limited",
+                      notes={"retry_after_ts": run_.retry_after_ts,
+                             "round": round_n})
+            return 1
+
+        if run_.timed_out:
+            db.append(phase="review", action="error", agent=persona.cli,
+                      pr_number=pr_number, duration_s=run_.duration_s,
+                      exit_code=run_.returncode, outcome="timed_out",
+                      notes={"round": round_n})
+            return 2
+
+        parsed = _parse_review(run_.final_message)
         # If structured parse failed, fall back to a comment so the run isn't wasted.
         if not parsed:
-            gh.comment(
-                kind="pr", number=pr_number,
-                body=("⚠️ Reviewer agent produced unparseable output. Raw last message:\n\n"
-                      f"```\n{final_msg[:3000]}\n```"),
-            )
-            db.append(phase="review", action="error", agent="codex",
-                      pr_number=pr_number, duration_s=time.time() - started,
+            if persona.on_parse_fail == "comment_and_retry":
+                gh.comment(
+                    kind="pr", number=pr_number,
+                    body=("⚠️ Reviewer agent produced unparseable output. Raw last message:\n\n"
+                          f"```\n{run_.final_message[:3000]}\n```"),
+                )
+            db.append(phase="review", action="error", agent=persona.cli,
+                      pr_number=pr_number, duration_s=run_.duration_s,
                       outcome="parse_failed",
-                      exit_code=proc.returncode,
-                      notes={"stdout_tail": proc.stdout[-1500:],
-                             "stderr_tail": proc.stderr[-1500:],
-                             "last_msg_len": len(final_msg)})
+                      exit_code=run_.returncode,
+                      notes={"stdout_tail": run_.stdout[-1500:],
+                             "stderr_tail": run_.stderr[-1500:],
+                             "last_msg_len": len(run_.final_message),
+                             "round": round_n})
             return 2
 
         # Wrapper-enforced overrides (Codex cannot approve if these fail).
@@ -198,23 +218,24 @@ def review(pr_number: int) -> int:
                   verdict=verdict_to_flag[enforced_verdict],
                   body=review_body)
 
-        db.append(phase="review", action="finish", agent="codex",
-                  pr_number=pr_number, duration_s=time.time() - started,
+        db.append(phase="review", action="finish", agent=persona.cli,
+                  pr_number=pr_number, duration_s=run_.duration_s,
                   outcome=enforced_verdict.lower(),
                   notes={"round": round_n,
                          "model_verdict": parsed["verdict"],
                          "enforced_verdict": enforced_verdict,
                          "protected_violations": bad_paths,
-                         "too_large": too_large})
+                         "too_large": too_large,
+                         "persona": persona.name})
         return 0
 
     except kill_switch.HaltRequested as e:
-        db.append(phase="review", action="halted", agent="codex",
+        db.append(phase="review", action="halted", agent=persona.cli,
                   pr_number=pr_number, notes={"reason": str(e)})
         return 2
     except Exception as e:
-        db.append(phase="review", action="error", agent="codex",
-                  pr_number=pr_number, duration_s=time.time() - started,
+        db.append(phase="review", action="error", agent=persona.cli,
+                  pr_number=pr_number,
                   notes={"error": repr(e)})
         return 2
     finally:
