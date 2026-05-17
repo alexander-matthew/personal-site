@@ -119,6 +119,9 @@ def create_app() -> FastAPI:
     from app.routes.tools import router as tools_router
     app.include_router(tools_router)
 
+    from app.routes import version
+    app.include_router(version.router)
+
     # Error handlers
     @app.exception_handler(StarletteHTTPException)
     async def http_exception_handler(request: Request, exc):
