@@ -58,12 +58,16 @@ def get_pr(number: int) -> dict:
 
 
 def marker_posts(pr: dict, marker: str = "##VERDICT:") -> list[dict]:
-    """Reviews + timeline comments containing `marker`, oldest first.
+    """Reviews + timeline comments containing `marker`, oldest first, **trusted only**.
 
-    Each entry: {source: 'review'|'comment', body, ts, author}. Used by the
-    loop's verdict-tracking helpers so both formal reviews (when the reviewer
-    runs under a separate identity) and self-PR-fallback comments are picked up.
+    Each entry: {source: 'review'|'comment', body, ts, author}.
+
+    Public-repo guardrail: posts not authored by a trusted user are dropped
+    here. Without this, a stranger could leave a PR comment containing
+    `##VERDICT: APPROVE` and the merge-gate would honor it as a real review.
     """
+    from . import trust
+
     posts: list[dict] = []
     for r in (pr.get("reviews") or []):
         body = r.get("body") or ""
@@ -81,6 +85,7 @@ def marker_posts(pr: dict, marker: str = "##VERDICT:") -> list[dict]:
                 "ts": c.get("createdAt") or "",
                 "author": (c.get("author") or {}).get("login", ""),
             })
+    posts = trust.filter_trusted_marker_posts(posts)
     posts.sort(key=lambda p: p["ts"])
     return posts
 

@@ -65,6 +65,10 @@ _CODEX_CANDIDATES = (
     "/home/alex-matthew/.npm-global/bin/codex",
     "/home/alex-matthew/.local/bin/codex",
 )
+_GEMINI_CANDIDATES = (
+    "/home/alex-matthew/.npm-global/bin/gemini",
+    "/home/alex-matthew/.local/bin/gemini",
+)
 
 
 def _resolve(name: str, candidates: tuple[str, ...]) -> str:
@@ -180,6 +184,45 @@ def run_codex(
             last_msg_path.unlink(missing_ok=True)
 
 
+def run_gemini(
+    *,
+    prompt: str,
+    cwd: Path,
+    timeout_min: int,
+    approval_mode: str = "plan",
+    model: Optional[str] = None,
+    extra_env: Optional[dict[str, str]] = None,
+) -> subprocess.CompletedProcess:
+    """Invoke `gemini -p` headlessly.
+
+    `approval_mode` ∈ {'default','auto_edit','yolo','plan'}. We use 'plan' for
+    read-only personas (reviewer, arbiter, triage, security) and 'yolo' for any
+    persona that needs to write files — Gemini doesn't have an equivalent of
+    Claude's --add-dir scope, so 'yolo' is the only fully non-interactive write
+    mode. We don't currently have any Gemini personas that write code, by design.
+    """
+    bin_ = _resolve("gemini", _GEMINI_CANDIDATES)
+    args: list[str] = [
+        bin_, "-p", prompt,
+        "--approval-mode", approval_mode,
+        "--include-directories", str(cwd),
+        "--output-format", "text",
+        "--skip-trust",
+    ]
+    if model:
+        args += ["-m", model]
+
+    env = _base_env()
+    if extra_env:
+        env.update(extra_env)
+
+    return subprocess.run(
+        args, cwd=cwd, env=env,
+        capture_output=True, text=True,
+        timeout=timeout_min * 60,
+    )
+
+
 def run_persona(persona: "Persona", *, prompt: str, cwd: Path) -> PersonaRun:
     """Dispatch a persona's prompt to its configured CLI.
 
@@ -210,6 +253,18 @@ def run_persona(persona: "Persona", *, prompt: str, cwd: Path) -> PersonaRun:
                 timeout_min=persona.timeout_min,
                 sandbox=persona.sandbox or "read-only",
             )
+        elif persona.cli == "gemini":
+            # Gemini's "approval_mode" is the analog of codex's sandbox; `plan`
+            # means read-only. We map it from the persona's `sandbox` field for
+            # consistency: sandbox=='read-only' → plan, otherwise yolo.
+            approval = "plan" if (persona.sandbox or "read-only") == "read-only" else "yolo"
+            proc = run_gemini(
+                prompt=prompt,
+                cwd=cwd,
+                timeout_min=persona.timeout_min,
+                approval_mode=approval,
+            )
+            final_message = proc.stdout
         else:
             raise AgentRunError(f"persona {persona.name!r} has unknown cli {persona.cli!r}")
     except subprocess.TimeoutExpired as e:

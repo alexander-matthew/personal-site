@@ -70,3 +70,16 @@
 - name: "effort:l"
   color: "f9d0c4"
   description: "Avoid — loop rejects diffs over 400 LOC"
+
+# --- Source/origin labels ---
+- name: "source:drift"
+  color: "d4c5f9"
+  description: "Filed by the weekly drift_watcher persona"
+
+# --- Security scan labels ---
+- name: "agent:security-cleared"
+  color: "0e8a16"
+  description: "Security scan passed (or not needed)"
+- name: "agent:security-flag"
+  color: "b60205"
+  description: "Security scan flagged a concern — needs human review"

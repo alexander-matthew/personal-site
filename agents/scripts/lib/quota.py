@@ -30,15 +30,24 @@ from .paths import DB_PATH
 #   ERROR: You've hit your usage limit. Upgrade to Pro (...), visit ... or try
 #   again at 9:24 PM.
 # Claude's CLI message is similar but uses "Reset" / dates; we accept both
-# absolute-time and ISO-ish forms.
+# absolute-time and ISO-ish forms. Gemini's CLI emits messages like
+#   "Quota exceeded. Try again at 14:30." or RESOURCE_EXHAUSTED-style errors.
+# All three are caught by the same broad fallback pattern.
 _CODEX_LIMIT = re.compile(
     r"You['’]ve hit your usage limit.*?try again at\s+(?P<time>[0-9: ]+\s*[APap][Mm])",
     re.S,
 )
 _CLAUDE_LIMIT_TIME = re.compile(
     r"(?:rate.?limit|usage limit|usage cap|quota).*?(?:reset|resets|retry|try again)\s*(?:at|on)?\s*"
-    r"(?P<time>\d{1,2}:\d{2}\s*[APap][Mm]|\d{4}-\d{2}-\d{2}T\d{2}:\d{2})",
+    r"(?P<time>\d{1,2}:\d{2}\s*[APap][Mm]|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}|\d{1,2}:\d{2})",
     re.I | re.S,
+)
+# Gemini's free-tier messages frequently include the literal phrase
+# "resource exhausted" or "quota exceeded" with no explicit reset time; we
+# treat that as a generic 1-hour cool-off so the loop doesn't immediately retry.
+_GEMINI_GENERIC_LIMIT = re.compile(
+    r"(?:RESOURCE_EXHAUSTED|resource\s+exhausted|quota\s+exceeded|429|rateLimitExceeded)",
+    re.I,
 )
 
 
@@ -54,29 +63,36 @@ def detect(stderr_text: str, *, cli: str) -> RateLimit | None:
     """Return a RateLimit if the stderr signals a quota hit, else None."""
     if not stderr_text:
         return None
-    pat = _CODEX_LIMIT if cli == "codex" else _CLAUDE_LIMIT_TIME
-    m = pat.search(stderr_text)
-    if not m:
-        # Cross-check the other pattern in case the agent emits an unexpected format.
-        other = _CLAUDE_LIMIT_TIME if cli == "codex" else _CODEX_LIMIT
-        m = other.search(stderr_text)
-        if not m:
-            return None
 
-    raw_time = m.group("time").strip()
-    now = time.time()
-    retry_ts = _parse_when(raw_time, now=now)
-    if retry_ts is None:
-        return None
-    # Defensive: never return a retry time in the past.
-    if retry_ts <= now:
-        return None
-    return RateLimit(
-        cli=cli,
-        detected_at_ts=now,
-        retry_after_ts=retry_ts,
-        raw_message=stderr_text[m.start():m.end() + 80].strip(),
-    )
+    # Try patterns that include an explicit retry time first.
+    for pat in (_CODEX_LIMIT, _CLAUDE_LIMIT_TIME):
+        m = pat.search(stderr_text)
+        if not m:
+            continue
+        raw_time = m.group("time").strip()
+        now = time.time()
+        retry_ts = _parse_when(raw_time, now=now)
+        if retry_ts is None or retry_ts <= now:
+            continue
+        return RateLimit(
+            cli=cli,
+            detected_at_ts=now,
+            retry_after_ts=retry_ts,
+            raw_message=stderr_text[m.start():m.end() + 80].strip(),
+        )
+
+    # Generic Gemini RESOURCE_EXHAUSTED / 429 without explicit reset → 1-hour gate.
+    m = _GEMINI_GENERIC_LIMIT.search(stderr_text)
+    if m:
+        now = time.time()
+        return RateLimit(
+            cli=cli,
+            detected_at_ts=now,
+            retry_after_ts=now + 3600,
+            raw_message=stderr_text[max(0, m.start() - 40):m.end() + 80].strip(),
+        )
+
+    return None
 
 
 def _parse_when(text: str, *, now: float) -> float | None:

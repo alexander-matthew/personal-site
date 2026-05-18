@@ -76,16 +76,17 @@ def cmd_status(_args: argparse.Namespace) -> int:
     _section("Loop state")
     ks = kill_switch.status()
     halted = any(ks.values())
-    claude_blocked, claude_ts = quota.is_blocked("claude")
-    codex_blocked, codex_ts = quota.is_blocked("codex")
     print(f"  Current time : {now.strftime('%Y-%m-%d %H:%M:%S %Z')}")
     print(f"  Off-hours    : {_ok('YES') if is_off_hours else _dim('no (worker gated)')}")
     print(f"  Kill: STOP   : {_err('ENGAGED') if ks['stop_file'] else _ok('clear')}  ({STOP_PATH})")
     print(f"  Kill: label  : {_err('ENGAGED') if ks['halt_label'] else _ok('clear')}  ({LABEL_HALT})")
-    print(f"  Quota: claude: "
-          f"{_warn(dt.datetime.fromtimestamp(claude_ts).strftime('rate-limited until %H:%M')) if claude_blocked else _ok('armed')}")
-    print(f"  Quota: codex : "
-          f"{_warn(dt.datetime.fromtimestamp(codex_ts).strftime('rate-limited until %H:%M')) if codex_blocked else _ok('armed')}")
+    for cli in ("claude", "codex", "gemini"):
+        blocked_, ts_ = quota.is_blocked(cli)
+        label = f"  Quota: {cli:6s}: "
+        if blocked_:
+            print(label + _warn(dt.datetime.fromtimestamp(ts_).strftime("rate-limited until %H:%M")))
+        else:
+            print(label + _ok("armed"))
     print(f"  Overall      : {_err('HALTED') if halted else _ok('armed')}")
 
     _section(f"Open issues — {LABEL_APPROVED}")

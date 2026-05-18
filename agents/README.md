@@ -1,41 +1,79 @@
 # `agents/` — the autonomous engineering loop
 
 This directory contains the **agent loop** that ships PRs against this repo
-overnight. Subscription-driven (no Anthropic / OpenAI API at runtime): the
-`claude` and `codex` CLIs are invoked headlessly on the homelab host. The
-public-facing view is the `/lab` page on the site.
+overnight. Subscription-driven (no Anthropic / OpenAI / Google API at runtime):
+the `claude`, `codex`, and `gemini` CLIs are invoked headlessly on the homelab
+host. The public-facing view is the `/lab` page on the site.
+
+## The triumvirate
+
+| Persona | Real-world analog | Permissions | CLI |
+|---|---|---|---|
+| **engineer** | Software engineer | write code in worktree, run tests, git commit | Claude (`bypassPermissions`) |
+| **proposer** | Product manager (spec-driven) | read-only — files specs as issues, no code | Claude (Edit/Write disallowed) |
+| **drift_watcher** | Staff IC, weekly housekeeping | read-only — wide-context audits, files cleanup issues | Claude (Edit/Write disallowed) |
+| **reviewer** | Senior reviewer | read-only — critiques diff, can't push | **Codex or Gemini** (sticky per PR) |
+| **arbiter** | Skip-level / staff IC | read-only — tiebreaks deadlocked PRs | **the other of Codex/Gemini** |
+| **triage** | Triage PM | read-only — auto-approves low-risk specs | Gemini |
+| **security** | AppSec | read-only — adversarial pre-merge pass on sensitive PRs | Gemini |
+
+The engineer who wrote a feature is who builds it — `engineer` handles both
+new work and review responses. The reviewer/arbiter pair always provides
+three distinct perspectives on every PR that goes to arbitration: the
+producer (Claude), the critic of record (Codex or Gemini), and the tiebreaker
+(whichever of Codex/Gemini wasn't the critic).
 
 ## Pipeline
 
-Claude is the sole **producer**. Codex is the sole **reviewer**. The dialog
-continues until convergence or a guard rail trips.
-
 ```
-[approved issue] ──▶ claude worker  ──▶ PR opens
-                                          │
-                                          ▼
-                                     codex reviewer  ──▶ APPROVE? ──▶ merge-gate
-                                          │                              │
-                                          ▼                              ▼
-                                  request-changes                    auto-merge
-                                          │
-                                          ▼
-                                  claude responder ──▶ (loop back to reviewer, up to 3 rounds)
+                  ┌──────────────┐
+[approved issue]─▶│   engineer   │─▶ PR opens
+                  │   (Claude)   │
+                  └──────────────┘
+                         │
+                         ▼
+                  ┌──────────────┐
+                  │   reviewer   │  ← Codex or Gemini, sticky per PR
+                  │ (rotation)   │
+                  └──────────────┘
+                         │
+              ┌──────────┼──────────┐
+              │          │          │
+           APPROVE   REQ_CHANGES  cap @ 3 rounds
+              │          │          │
+              ▼          ▼          ▼
+        ┌─────────┐  engineer  ┌──────────┐
+        │security │   (loop)   │  arbiter │  ← the OTHER cli
+        │  scan   │            │          │
+        └────┬────┘            └────┬─────┘
+             │                      │
+        CLEAR│FLAG     ┌────────────┼────────────┐
+             │         │            │            │
+             ▼         ▼            ▼            ▼
+        merge-gate  approve     final_changes  human
+                       │            │
+                       ▼            └─▶ engineer (one last pass)
+                   auto-merge              ▼
+                                       arbiter again (max once more)
 ```
 
 The orchestrator daemon runs **23:00–06:00 CDT** every night via
-`personal-site-loop.timer`. Inside, a 60-second poll loop dispatches exactly
-one phase per tick based on the state machine in `orchestrator.py:_dispatch()`.
+`personal-site-loop.timer`. A 60-second poll loop dispatches exactly one phase
+per tick based on the state machine in `orchestrator.py:_dispatch()`.
 
 ## Phases
 
-| Phase | Script | Agent | What it does |
+| Phase | Script | Persona (CLI) | What it does |
 |---|---|---|---|
-| propose | `propose_issues.py` | Claude | Scans repo + recent git log, files 1-3 `agent:proposal` issues |
-| work | `work_issue.py` | Claude | Claims oldest `agent:approved` issue, implements in worktree, opens PR |
-| review | `review_pr.py` | Codex | Reads PR diff in read-only sandbox, posts structured review |
-| respond | `respond_to_review.py` | Claude | Addresses Codex's checklist, pushes follow-up commits |
-| merge | `merge_gate.py` | (none) | Pure logic: gates merge on approve + CI green + clean diff |
+| propose | `propose_issues.py` | proposer (Claude) | Scans recent activity, files 1-3 `agent:proposal` issues |
+| triage | `triage_proposals.py` | triage (Gemini) | Auto-approves low-risk proposals (type:content/polish/docs + effort:s); leaves others for human |
+| work | `work_issue.py` | engineer (Claude) | Claims oldest `agent:approved` issue, implements in worktree, opens PR |
+| review | `review_pr.py` | reviewer-codex OR reviewer-gemini | Reads PR diff in read-only sandbox, posts structured review |
+| respond | `respond_to_review.py` | engineer (Claude) | Addresses reviewer's checklist, pushes follow-up commits |
+| arbitrate | `arbitrate_pr.py` | arbiter-codex OR arbiter-gemini (whichever wasn't reviewer) | Tiebreaks stuck PRs after MAX_REVIEW_ROUNDS |
+| security | `security_check.py` | security (Gemini) | Adversarial scan of PRs touching sensitive paths before merge |
+| merge | `merge_gate.py` | (none) | Pure logic: APPROVE + CI green + no flags + diff clean → squash-merge |
+| drift | `drift_watcher.py` | drift_watcher (Claude) | Weekly (Sundays) repo-wide audit; files cleanup `agent:proposal` issues |
 
 Each phase logs `start` / `finish` / `error` / `skip` rows to
 `agents/state/runs.sqlite` so the `/lab` page and `loop` CLI have a single
@@ -47,14 +85,20 @@ The loop is **fully autonomous on merge** (no human in the loop), so guard
 rails matter. Defense in depth:
 
 1. **Protected paths.** Listed in `agents/scripts/lib/config.py:PROTECTED_PATHS`
-   — `.github/workflows/`, `infra/`, `agents/scripts/`, `agents/prompts/`,
+   — `.github/workflows/`, `infra/`, `agents/scripts/`, `agents/personas/`,
    `Dockerfile`, `docker-compose*.yml`, `app/services/oauth.py`. Any touch:
    wrapper labels the PR `agent:protected-violation` AND `agent:needs-human`,
    merge gate refuses.
 2. **Diff cap.** 400 lines added+removed. PRs over the cap are labeled
    `agent:too-large` and merge gate refuses.
-3. **Round cap.** Max 3 review iterations per PR. Past that, label
-   `agent:needs-human` is applied and the loop stops touching the PR.
+3. **Round cap → arbiter.** Max 3 reviewer rounds per PR. Past that, the
+   arbiter (the cli not used as reviewer) takes over. The arbiter can approve
+   for merge, request one final pass, or escalate to `agent:needs-human` — but
+   no fourth reviewer round happens.
+4. **Security scan on sensitive PRs.** PRs touching `app/services/oauth.py`,
+   middleware, auth, new endpoints, or new dependencies get an adversarial
+   pre-merge pass from the `security` (Gemini) persona. FLAG verdict applies
+   `agent:security-flag` + `agent:needs-human`.
 4. **CI green required.** The merge gate evaluates GitHub's status-check
    rollup; anything not `SUCCESS` (or the moral equivalent) holds the merge.
 5. **Filesystem isolation.** Each agent run gets a fresh `git worktree` under
@@ -141,6 +185,44 @@ agents/
     loop.lock                          # flock for one-tick-at-a-time
     worktrees/                         # per-phase worktrees, force-removed after use
 ```
+
+## Threat model & guardrails (public repo)
+
+The repo is internet-visible. Defenses, in order from "blocks the most
+attackers" to "defense in depth":
+
+1. **GitHub interaction limit set to `collaborators_only`.** Configured at the
+   repo level and renewed monthly by
+   `.github/workflows/renew-interaction-limit.yml`. Outside users can read
+   the repo but cannot open issues, comment, or review PRs — so an attacker
+   cannot land prompt-injection content in any artifact an agent reads.
+
+2. **Trusted-author filter on marker posts.** `gh.marker_posts()` calls
+   `trust.filter_trusted_marker_posts()` so that even if a future collaborator
+   (or an automation bug) lets through a comment containing `##VERDICT:`,
+   only posts authored by `TRUSTED_AUTHORS` are honored as real reviews.
+   The orchestrator, merge-gate, and arbiter all flow through this filter.
+
+3. **PR-eligibility gate.** Only PRs labeled `agent:authored-by-claude` are
+   eligible for the loop. That label is applied by `work_issue.py` at the
+   moment of `gh pr create` — there is no other path. Attackers can't apply
+   labels (no write access), so attacker-opened PRs never enter the pipeline.
+
+4. **Issue-eligibility gate.** Worker considers only issues with
+   `agent:approved` AND authored by a trusted user. Both signals required.
+
+5. **Untrusted-content wrappers in prompts.** When an agent's prompt
+   includes prose that ultimately came from outside the loop (issue bodies,
+   PR descriptions), the wrapper uses `trust.wrap_untrusted(...)` to mark
+   the block as "data, not instructions to you" with an explicit preamble.
+   Defense for the day GitHub's interaction limit accidentally lapses or
+   when we add a new collaborator.
+
+What we are **not** defending against:
+- A trusted collaborator (you) intentionally injecting bad content.
+- Compromise of the host running the agents (the agents can read `~/.ssh/`,
+  `~/.config/gh/`, etc.; see CLAUDE.md's "Files that must NEVER be committed
+  anywhere" section).
 
 ## Why this design
 

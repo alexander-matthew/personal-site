@@ -47,21 +47,28 @@ def _round_number_from_body(body: str) -> int:
 
 def _build_prompt(persona: Persona, pr: dict, review_parsed: dict, round_n: int) -> str:
     issue_ref = re.search(r"Closes\s+#(\d+)", pr.get("body") or "")
-    return persona.render(
-        PR_NUMBER=pr["number"],
-        PR_TITLE=pr["title"],
-        ISSUE_NUMBER=issue_ref.group(1) if issue_ref else "?",
-        REVIEW_SUMMARY=review_parsed["summary"],
-        REVIEW_CHECKLIST=review_parsed["checklist"],
-        REVIEW_NOTES=review_parsed["notes"],
-        ROUND_NUMBER=round_n,
+    issue_n = issue_ref.group(1) if issue_ref else "?"
+    task_context = (
+        f"## Task — respond to PR review (round {round_n}/{MAX_REVIEW_ROUNDS})\n\n"
+        f"This PR is your earlier work on issue #{issue_n}. The reviewer agent "
+        f"posted a review with one or more unchecked items. The branch is already "
+        f"checked out; add follow-up commits that address every unchecked item. "
+        f"The wrapper will push your commits and the reviewer will look again.\n\n"
+        f"### PR #{pr['number']}: {pr['title']}\n"
+        f"Linked issue: #{issue_n}\n\n"
+        f"### Reviewer's verdict\n\n"
+        f"**Summary:** {review_parsed['summary']}\n\n"
+        f"**Checklist:**\n{review_parsed['checklist']}\n\n"
+        f"**Notes:**\n{review_parsed['notes']}\n\n"
+        f"Address every unchecked item and exit. Do not push or comment."
     )
+    return persona.render(TASK_CONTEXT=task_context)
 
 
 def respond(pr_number: int) -> int:
     """Returns 0 on success (commits pushed), 1 on no-op, 2 on failure."""
     kill_switch.check(reason="respond_to_review start")
-    persona = Persona.load("responder")
+    persona = Persona.load("engineer")
 
     blocked, retry_after = quota.is_blocked(persona.cli)
     if blocked:

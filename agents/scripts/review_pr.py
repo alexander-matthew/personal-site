@@ -15,7 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from lib import agent_run, db, gh, git_worktree, kill_switch, protected, quota  # noqa: E402
+from lib import agent_run, db, gh, git_worktree, kill_switch, protected, quota, rotation  # noqa: E402
 from lib.config import (  # noqa: E402
     LABEL_NEEDS_HUMAN, LABEL_PROTECTED_VIOLATION, LABEL_TOO_LARGE,
     MAX_DIFF_LOC, MAX_REVIEW_ROUNDS,
@@ -96,13 +96,15 @@ def review(pr_number: int) -> int:
     """Returns 0 on success, 1 on skip, 2 on failure."""
     kill_switch.check(reason="review_pr start")
 
-    persona = Persona.load("reviewer")
+    chosen_cli = rotation.pick_reviewer_cli(pr_number)
+    persona = Persona.load(rotation.reviewer_persona_name(chosen_cli))
 
     blocked, retry_after = quota.is_blocked(persona.cli)
     if blocked:
         db.append(phase="review", action="skip", agent=persona.cli,
                   pr_number=pr_number, outcome="rate_limited",
-                  notes={"retry_after_ts": retry_after})
+                  notes={"retry_after_ts": retry_after,
+                         "persona": persona.name})
         return 1
 
     pr = gh.get_pr(pr_number)
@@ -112,12 +114,8 @@ def review(pr_number: int) -> int:
         return 1
 
     round_n = _round_number(pr_number)
-    if round_n > MAX_REVIEW_ROUNDS:
-        gh.add_label(kind="pr", number=pr_number, label=LABEL_NEEDS_HUMAN)
-        db.append(phase="review", action="finish", pr_number=pr_number,
-                  outcome="escalated_max_rounds",
-                  notes={"rounds": round_n})
-        return 1
+    # MAX_REVIEW_ROUNDS handling is owned by the orchestrator (it dispatches
+    # the arbiter when the cap is reached). This script just runs the next round.
 
     # Hard pre-checks the wrapper enforces regardless of Codex's opinion.
     adds = pr.get("additions", 0)
