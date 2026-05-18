@@ -10,7 +10,11 @@ Group=alex-matthew
 WorkingDirectory=/home/alex-matthew/code/personal-site
 Environment=PATH=/home/alex-matthew/.local/bin:/home/alex-matthew/.npm-global/bin:/usr/local/bin:/usr/bin:/bin
 Environment=HOME=/home/alex-matthew
-ExecStart=/usr/bin/python3 /home/alex-matthew/code/personal-site/agents/scripts/orchestrator.py
+Environment=AGENT_LOOP_PROJECT_ROOT=/home/alex-matthew/code/personal-site
+# The orchestrator and phase scripts live in the `agent-loop` package
+# (https://github.com/alexander-matthew/triumvirate) declared as a dep in
+# pyproject.toml. `uv run` resolves the virtualenv and runs the CLI.
+ExecStart=/home/alex-matthew/.local/bin/uv run agent-loop daemon
 # Graceful: SIGTERM the cgroup; agent subprocesses also get SIGTERM and exit.
 KillMode=mixed
 KillSignal=SIGTERM
