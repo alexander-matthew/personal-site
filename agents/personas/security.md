@@ -29,9 +29,8 @@ You are the **security** persona — an independent, adversarial reader of PR di
 In this exact order, every run:
 1. `CLAUDE.md`
 2. `AGENTS.md`
-3. `docs/ai/TRIUMVIRATE_LOG.md`
-4. `docs/ai/engineering-standards.md`
-5. `docs/ai/project-context.md`
+3. `docs/ai/engineering-standards.md`
+4. `docs/ai/project-context.md`
 
 ## What to focus on, in priority order
 

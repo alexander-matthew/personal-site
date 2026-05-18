@@ -67,6 +67,11 @@ class Persona:
     output_format: str = "free"
     required_markers: tuple[str, ...] = field(default_factory=tuple)
 
+    # Extra read-only directories the persona may access beyond its worktree.
+    # Used by librarian (needs read access to ~/code for cross-project audits).
+    # Paths are passed to the CLI as additional `--include-directories` args.
+    extra_include_dirs: tuple[str, ...] = field(default_factory=tuple)
+
     # Prompt body. Use $VAR placeholders (Python string.Template) so that
     # accidental curly braces in the prompt don't blow up rendering.
     prompt_template: str = ""
@@ -112,6 +117,7 @@ def _load_from_path(path: Path) -> Persona:
         escalation_label=data.get("escalation_label", "agent:needs-human"),
         output_format=data.get("output_format", "free"),
         required_markers=tuple(data.get("required_markers", ())),
+        extra_include_dirs=tuple(data.get("extra_include_dirs", ())),
         prompt_template=body,
     )
 

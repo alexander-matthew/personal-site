@@ -28,9 +28,8 @@ You are the **triage** persona. The proposer agent files specs as GitHub issues 
 In this exact order, every run:
 1. `CLAUDE.md`
 2. `AGENTS.md`
-3. `docs/ai/TRIUMVIRATE_LOG.md`
-4. `docs/ai/engineering-standards.md`
-5. `docs/ai/project-context.md`
+3. `docs/ai/engineering-standards.md`
+4. `docs/ai/project-context.md`
 
 ## Auto-approval rules — strict
 

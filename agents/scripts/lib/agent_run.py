@@ -191,15 +191,20 @@ def run_gemini(
     timeout_min: int,
     approval_mode: str = "plan",
     model: Optional[str] = None,
+    extra_include_dirs: Optional[tuple[str, ...]] = None,
     extra_env: Optional[dict[str, str]] = None,
 ) -> subprocess.CompletedProcess:
     """Invoke `gemini -p` headlessly.
 
     `approval_mode` ∈ {'default','auto_edit','yolo','plan'}. We use 'plan' for
-    read-only personas (reviewer, arbiter, triage, security) and 'yolo' for any
-    persona that needs to write files — Gemini doesn't have an equivalent of
-    Claude's --add-dir scope, so 'yolo' is the only fully non-interactive write
-    mode. We don't currently have any Gemini personas that write code, by design.
+    read-only personas (reviewer, arbiter, triage, security, librarian) and
+    'yolo' for any persona that needs to write files — Gemini doesn't have an
+    equivalent of Claude's --add-dir scope, so 'yolo' is the only fully
+    non-interactive write mode. We don't currently have any Gemini personas
+    that write code, by design.
+
+    `extra_include_dirs` widens the read sandbox beyond the worktree (e.g.
+    librarian-gemini needs `~/code` for cross-project consistency audits).
     """
     bin_ = _resolve("gemini", _GEMINI_CANDIDATES)
     args: list[str] = [
@@ -209,6 +214,8 @@ def run_gemini(
         "--output-format", "text",
         "--skip-trust",
     ]
+    for d in (extra_include_dirs or ()):
+        args += ["--include-directories", d]
     if model:
         args += ["-m", model]
 
@@ -263,6 +270,7 @@ def run_persona(persona: "Persona", *, prompt: str, cwd: Path) -> PersonaRun:
                 cwd=cwd,
                 timeout_min=persona.timeout_min,
                 approval_mode=approval,
+                extra_include_dirs=persona.extra_include_dirs,
             )
             final_message = proc.stdout
         else:

@@ -53,6 +53,15 @@ def _gate_reasons(pr: dict) -> list[str]:
         reasons.append(f"{LABEL_PROTECTED_VIOLATION} label set")
     if LABEL_TOO_LARGE in labels:
         reasons.append(f"{LABEL_TOO_LARGE} label set")
+    if "agent:security-flag" in labels:
+        reasons.append("agent:security-flag label set")
+    if "agent:librarian-flag" in labels:
+        reasons.append("agent:librarian-flag label set")
+    # Both pre-merge clearances must be on the PR.
+    if "agent:security-cleared" not in labels:
+        reasons.append("agent:security-cleared label missing")
+    if "agent:librarian-cleared" not in labels:
+        reasons.append("agent:librarian-cleared label missing")
     if pr.get("isDraft"):
         reasons.append("PR is draft")
 

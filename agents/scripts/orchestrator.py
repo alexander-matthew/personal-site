@@ -48,6 +48,7 @@ import propose_issues  # noqa: E402
 import arbitrate_pr  # noqa: E402
 import triage_proposals  # noqa: E402
 import security_check  # noqa: E402
+import librarian_check  # noqa: E402
 import drift_watcher  # noqa: E402
 
 
@@ -204,7 +205,7 @@ def _dispatch() -> tuple[str, int | None]:
         if pending:
             chosen = rotation.pick_reviewer_cli(pr_number)
             if chosen and not _persona_blocked(rotation.reviewer_persona_name(chosen)):
-                rc = review_pr.review(pr_number)
+                rc = review_pr.review(pr_number, cli=chosen)
                 return ("review", pr_number) if rc == 0 else ("review.skip", pr_number)
             continue
 
@@ -217,16 +218,24 @@ def _dispatch() -> tuple[str, int | None]:
             rc = respond_to_review.respond(pr_number)
             return ("respond", pr_number) if rc == 0 else ("respond.skip", pr_number)
             
-        # If all agents approved, security check (if needed) then merge.
+        # If all agents approved, run security + librarian (if needed) then merge.
         if all(v == "APPROVE" for v in verdicts.values()) and verdicts:
             labels = {l["name"] for l in pr.get("labels", [])}
+            # Security scan first.
             if ("agent:security-cleared" not in labels
                     and "agent:security-flag" not in labels):
                 if _persona_blocked("security"):
                     continue
                 rc = security_check.check(pr_number)
                 return ("security", pr_number) if rc == 0 else ("security.skip", pr_number)
-            
+            # Librarian (cross-project consistency) second.
+            if ("agent:librarian-cleared" not in labels
+                    and "agent:librarian-flag" not in labels):
+                if _persona_blocked("librarian-gemini"):
+                    continue
+                rc = librarian_check.check(pr_number)
+                return ("librarian", pr_number) if rc == 0 else ("librarian.skip", pr_number)
+
             rc = merge_gate.evaluate(pr_number)
             return ("merge", pr_number) if rc == 0 else ("merge.skip", pr_number)
 

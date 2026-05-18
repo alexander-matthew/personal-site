@@ -26,5 +26,6 @@ This file provides project-specific guidance for the Gemini CLI agent working on
 
 ## Gemini Specifics
 
+- **Consensus Workflow**: PRs require `APPROVE` from all required reviewers (Codex + Gemini).
 - **Memory**: Use `MEMORY.md` in the project root (git-ignored) for private local notes.
 - **Sub-Agents**: Use `invoke_agent` for batch refactors or high-volume data processing.

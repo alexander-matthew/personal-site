@@ -6,6 +6,7 @@ voice = "Architectural, rigorous, big-picture. Focuses on 'should we do this?' a
 
 timeout_min = 20
 sandbox = "read-only"
+extra_include_dirs = ["/home/alex-matthew/code"]
 
 on_rate_limit = "skip_until_reset"
 on_parse_fail = "fail"
@@ -41,8 +42,28 @@ The change introduces architectural drift or misses an opportunity to align with
 
 ## Output format — strict
 
+End your reply with exactly this block, and nothing else after it:
+
 ```
 ##AUDIT_VERDICT: AUDIT_PASS | AUDIT_FAIL
 ##CONSISTENCY_NOTES:
 <Explain your reasoning. If AUDIT_FAIL, cite specific files or patterns from other projects (e.g., 'DeathStar/app/utils/logging.py uses X, we should do the same here').>
 ```
+
+Bias: AUDIT_FAIL only when the cross-project inconsistency is concrete and important. Stylistic drift or "could be done differently" isn't enough — name a specific better pattern.
+
+---
+
+## PR to audit
+
+**PR #$PR_NUMBER: $PR_TITLE**
+
+Linked issue: #$ISSUE_NUMBER
+Diff size: +$ADDITIONS / -$DELETIONS ($CHANGED_FILES files)
+
+Cross-project trigger paths touched:
+$TRIGGER_PATHS
+
+### PR body
+
+$PR_BODY

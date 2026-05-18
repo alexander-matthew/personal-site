@@ -57,18 +57,14 @@ def _round_number(pr_number: int) -> int:
 
 
 def _needs_review(pr: dict) -> bool:
-    """True if PR has no marker post since its last commit."""
+    """True if at least one required reviewer still owes a verdict on the
+    current commit. Under consensus mode this is the source of truth — the
+    earlier "any marker since latest commit" logic short-circuited as soon as
+    the first reviewer posted, blocking the second required reviewer from
+    ever running."""
     if pr.get("isDraft"):
         return False
-    posts = gh.marker_posts(pr)
-    if not posts:
-        return True
-    last_ts = posts[-1]["ts"]
-    commits = pr.get("commits") or []
-    if not commits:
-        return False
-    last_commit_ts = commits[-1].get("committedDate") or ""
-    return last_commit_ts > last_ts
+    return bool(rotation.pending_reviewer_clis(pr["number"]))
 
 
 # ---- main -----------------------------------------------------------------
@@ -92,11 +88,22 @@ def _extract_issue_ref(pr_body: str) -> int | None:
     return int(m.group(1)) if m else None
 
 
-def review(pr_number: int) -> int:
-    """Returns 0 on success, 1 on skip, 2 on failure."""
+def review(pr_number: int, *, cli: str | None = None) -> int:
+    """Returns 0 on success, 1 on skip, 2 on failure.
+
+    `cli`: the reviewer cli the orchestrator has already chosen for this run.
+    If None (CLI-invoked standalone), the function picks one itself via
+    `rotation.pick_reviewer_cli`. Passing it from the caller avoids the race
+    where the orchestrator chooses A but a second invocation of pick reads a
+    different state and picks B."""
     kill_switch.check(reason="review_pr start")
 
-    chosen_cli = rotation.pick_reviewer_cli(pr_number)
+    chosen_cli = cli or rotation.pick_reviewer_cli(pr_number)
+    if chosen_cli is None:
+        # Defensive: rotation returned None (no pending reviewers). Skip cleanly.
+        db.append(phase="review", action="skip", pr_number=pr_number,
+                  outcome="no_pending_reviewer")
+        return 1
     persona = Persona.load(rotation.reviewer_persona_name(chosen_cli))
 
     blocked, retry_after = quota.is_blocked(persona.cli)
