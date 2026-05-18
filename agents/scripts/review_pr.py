@@ -204,7 +204,7 @@ def review(pr_number: int) -> int:
             f"##SUMMARY: {parsed['summary']}\n"
             f"##CHECKLIST:\n{parsed['checklist']}\n"
             f"##NOTES:\n{parsed['notes']}\n"
-            f"\n---\n*Round {round_n}/{MAX_REVIEW_ROUNDS} · reviewer: codex · {time.strftime('%Y-%m-%d %H:%M')}*"
+            f"\n---\n*Round {round_n}/{MAX_REVIEW_ROUNDS} · reviewer: {persona.cli} · {time.strftime('%Y-%m-%d %H:%M')}*"
         )
 
         verdict_to_flag = {

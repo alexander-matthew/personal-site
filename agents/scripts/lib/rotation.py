@@ -1,95 +1,119 @@
 """Pick which reviewer CLI runs against a given PR.
 
 Rules:
-  - Sticky per PR. Once a PR has been reviewed by Codex, subsequent rounds
-    stay on Codex (and vice versa) for conversational continuity.
-  - First-touch is quota-aware: prefer whichever of {codex, gemini} is armed.
-  - Tiebreak by load balancing — round-robin across PRs based on db history.
-
-Two functions matter to the rest of the loop:
-  - `assigned_reviewer_cli(pr_number)` → the cli already used on this PR
-    (None if no prior review).
-  - `pick_reviewer_cli(pr_number)` → cli to use *now*. Sticky if assigned,
-    fresh pick otherwise. May return a rate-limited cli (caller checks
-    quota.is_blocked separately and chooses to wait or skip).
-
-The arbiter is "the cli not used as reviewer on this PR" — see
-`pick_arbiter_cli` below.
+  - Consensus: all REQUIRED_REVIEWER_CLIS must provide an APPROVE verdict for
+    the CURRENT commit before a PR is eligible for merge.
+  - Sticky per round: a specific agent owns its review thread for the current
+    commit.
+  - Quota-aware: prefer whichever of {codex, gemini} is armed.
+  - Arbiter: the third leg of the stool, invoked when consensus fails.
 """
 from __future__ import annotations
 
 import sqlite3
+import re
 
 from .paths import DB_PATH
-from . import quota
+from . import quota, gh
+from .config import REQUIRED_REVIEWER_CLIS
 
 
-REVIEWER_CLIS = ("codex", "gemini")
+REVIEWER_CLIS = REQUIRED_REVIEWER_CLIS
 
 
-# ---- per-PR sticky assignment -----------------------------------------------
+# ---- consensus state --------------------------------------------------------
 
 
-def assigned_reviewer_cli(pr_number: int) -> str | None:
-    """The cli that has reviewed this PR before. None if no prior review."""
-    conn = sqlite3.connect(DB_PATH, timeout=5)
-    try:
-        row = conn.execute(
-            "SELECT agent FROM events "
-            "WHERE phase='review' AND action='finish' AND pr_number=? "
-            "AND agent IN ('codex','gemini') "
-            "ORDER BY ts DESC LIMIT 1",
-            (pr_number,),
-        ).fetchone()
-    finally:
-        conn.close()
-    return row[0] if row else None
+def reviewer_verdicts(pr_number: int) -> dict[str, str]:
+    """Latest verdict from each agent for the CURRENT commit of the PR.
+    
+    Returns a dict {cli: verdict} where verdict is APPROVE | REQUEST_CHANGES | COMMENT.
+    Only considers reviews posted *after* the latest commit.
+    
+    Includes arbiter overrides: if the arbiter posts an APPROVE_FOR_MERGE,
+    this is treated as a synthetic APPROVE from the reviewing agent it replaced.
+    """
+    pr = gh.get_pr(pr_number)
+    commits = pr.get("commits") or []
+    if not commits:
+        return {}
+    
+    latest_commit_ts = commits[-1].get("committedDate") or ""
+    posts = gh.marker_posts(pr)
+    
+    verdicts = {}
+    
+    # We also check for arbiter overrides. If an arbiter spoke, we treat its
+    # verdict as the definitive one for the agent it replaced.
+    arb_posts = gh.marker_posts(pr, marker="##ARBITER_VERDICT:")
+    latest_arb = None
+    if arb_posts and arb_posts[-1]["ts"] > latest_commit_ts:
+        m = re.search(r"##ARBITER_VERDICT:\s*(\S+)", arb_posts[-1]["body"])
+        if m and m.group(1) == "APPROVE_FOR_MERGE":
+            # Find which agent was NOT the arbiter — that's the one we're overriding.
+            m_arb_agent = re.search(r"arbiter:\s*(\w+)", arb_posts[-1]["body"])
+            if m_arb_agent:
+                arb_agent = m_arb_agent.group(1)
+                overridden_agent = "codex" if arb_agent == "gemini" else "gemini"
+                verdicts[overridden_agent] = "APPROVE"
+
+    for post in reversed(posts):
+        if post["ts"] <= latest_commit_ts:
+            break
+        
+        # Format: "*Round N/M · reviewer: <agent> · ...*"
+        m_agent = re.search(r"reviewer:\s*(\w+)", post["body"])
+        m_verdict = re.search(r"##VERDICT:\s*(\S+)", post["body"])
+        
+        if m_agent and m_verdict:
+            agent = m_agent.group(1)
+            verdict = m_verdict.group(1)
+            if agent not in verdicts:
+                verdicts[agent] = verdict
+                
+    return verdicts
 
 
-# ---- fresh pick (load balance + quota awareness) ----------------------------
+def pending_reviewer_clis(pr_number: int) -> list[str]:
+    """The subset of REQUIRED_REVIEWER_CLIS that haven't reviewed the latest commit."""
+    verdicts = reviewer_verdicts(pr_number)
+    return [c for c in REQUIRED_REVIEWER_CLIS if c not in verdicts]
 
 
-def _last_assignment_cli() -> str | None:
-    """The cli used for the most recent fresh first-review across all PRs."""
-    conn = sqlite3.connect(DB_PATH, timeout=5)
-    try:
-        # "First reviews" = the round-1 row for each PR, which we approximate
-        # by the earliest finish event per pr_number. Cheaper: just look at
-        # the latest review event regardless of round — keeps load roughly even.
-        row = conn.execute(
-            "SELECT agent FROM events "
-            "WHERE phase='review' AND action='finish' "
-            "AND agent IN ('codex','gemini') "
-            "ORDER BY ts DESC LIMIT 1",
-        ).fetchone()
-    finally:
-        conn.close()
-    return row[0] if row else None
-
-
-def fresh_reviewer_cli() -> str:
-    """Pick a cli for a PR with no prior review. Prefer armed; round-robin tiebreak."""
-    armed = [c for c in REVIEWER_CLIS if not quota.is_blocked(c)[0]]
+def pick_reviewer_cli(pr_number: int) -> str | None:
+    """Pick one of the pending reviewers to run next.
+    
+    Prioritizes:
+    1. Pending reviewers that are NOT currently rate-limited.
+    2. Load balance tiebreak (fewest total reviews in history).
+    Returns None if no reviewers are pending for the current commit.
+    """
+    pending = pending_reviewer_clis(pr_number)
+    if not pending:
+        return None
+        
+    armed = [c for c in pending if not quota.is_blocked(c)[0]]
+    if not armed:
+        # If all are blocked, pick the one soonest to reset so orchestrator 
+        # can log the wait.
+        return min(pending, key=lambda c: quota.is_blocked(c)[1] or float("inf"))
+    
     if len(armed) == 1:
         return armed[0]
-    if not armed:
-        # Both blocked. Pick whichever's gate expires sooner so the caller can
-        # at least record an attempt and the gate eventually clears.
-        soonest = min(REVIEWER_CLIS, key=lambda c: quota.is_blocked(c)[1] or float("inf"))
-        return soonest
-
-    # Both armed → round-robin: pick the one *not* used for the most recent assignment.
-    last = _last_assignment_cli()
-    if last in REVIEWER_CLIS:
-        other = "codex" if last == "gemini" else "gemini"
-        return other
-    # No history → arbitrary but stable default.
-    return "codex"
-
-
-def pick_reviewer_cli(pr_number: int) -> str:
-    """Sticky if this PR has been reviewed before, fresh pick otherwise."""
-    return assigned_reviewer_cli(pr_number) or fresh_reviewer_cli()
+        
+    # Tiebreak: pick the one with the fewest total reviews in DB history.
+    def total_reviews(cli: str) -> int:
+        conn = sqlite3.connect(DB_PATH, timeout=5)
+        try:
+            row = conn.execute(
+                "SELECT COUNT(*) FROM events WHERE phase='review' AND action='finish' AND agent=?",
+                (cli,)
+            ).fetchone()
+            return row[0] if row else 0
+        finally:
+            conn.close()
+            
+    return min(armed, key=total_reviews)
 
 
 def reviewer_persona_name(cli: str) -> str:
@@ -102,27 +126,23 @@ def reviewer_persona_name(cli: str) -> str:
 def pick_arbiter_cli(pr_number: int) -> str | None:
     """The arbiter is the cli that has NOT been used to review this PR.
 
-    Returns None if both clis have somehow reviewed the same PR (shouldn't
-    happen under sticky rotation, but might if a previous run swapped). The
-    orchestrator interprets None as 'no clean tiebreaker — escalate to human'.
+    Under consensus, multiple agents review. The arbiter is the one that has
+    reviewed the FEWEST rounds on this PR (usually the one that wasn't the 
+    bottleneck).
     """
-    reviewer = assigned_reviewer_cli(pr_number)
-    if reviewer not in REVIEWER_CLIS:
-        # No prior reviewer — can't arbitrate something with no review.
-        return None
-    arbiter = "codex" if reviewer == "gemini" else "gemini"
-    # Defensive: check arbiter wasn't also used (e.g., via prior cross-review).
-    conn = sqlite3.connect(DB_PATH, timeout=5)
-    try:
-        row = conn.execute(
-            "SELECT 1 FROM events "
-            "WHERE phase='review' AND action='finish' AND pr_number=? AND agent=?",
-            (pr_number, arbiter),
-        ).fetchone()
-    finally:
-        conn.close()
-    if row:
-        return None  # both clis have reviewed, no clean third leg
+    pr = gh.get_pr(pr_number)
+    posts = gh.marker_posts(pr)
+    
+    counts = {"codex": 0, "gemini": 0}
+    for post in posts:
+        m = re.search(r"reviewer:\s*(\w+)", post["body"])
+        if m:
+            agent = m.group(1)
+            if agent in counts:
+                counts[agent] += 1
+                
+    # Pick the one with the fewest reviews.
+    arbiter = min(counts, key=counts.get)
     return arbiter
 
 

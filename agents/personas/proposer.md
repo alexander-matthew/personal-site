@@ -47,7 +47,7 @@ Avoid:
 
 ## What to read
 
-1. `CLAUDE.md`, `AGENTS.md`, `docs/ai/project-context.md`
+1. `CLAUDE.md`, `AGENTS.md`, `docs/ai/TRIUMVIRATE_LOG.md`, `docs/ai/project-context.md`
 2. `git log --oneline -50` to see what's recently shipped
 3. `gh issue list --state all --limit 50` to avoid duplicating existing/closed work
 4. The `app/routes/` and `app/templates/` trees to inventory what's there

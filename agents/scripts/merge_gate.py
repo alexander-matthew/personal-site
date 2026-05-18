@@ -8,10 +8,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from lib import db, gh, kill_switch, protected  # noqa: E402
+from lib import db, gh, kill_switch, protected, rotation  # noqa: E402
 from lib.config import (  # noqa: E402
     LABEL_NEEDS_HUMAN, LABEL_PROTECTED_VIOLATION, LABEL_TOO_LARGE,
-    LABEL_VETO, MAX_DIFF_LOC,
+    LABEL_VETO, MAX_DIFF_LOC, REQUIRED_REVIEWER_CLIS,
 )
 
 
@@ -40,15 +40,6 @@ def _ci_state(pr: dict) -> str:
     return "unknown"
 
 
-def _latest_codex_verdict(pr: dict) -> str | None:
-    """Latest review/comment with our structured marker → APPROVE | REQUEST_CHANGES | COMMENT."""
-    posts = gh.marker_posts(pr)
-    if not posts:
-        return None
-    m = re.search(r"##VERDICT:\s*(\S+)", posts[-1]["body"])
-    return m.group(1) if m else None
-
-
 def _gate_reasons(pr: dict) -> list[str]:
     """Returns [] if mergeable, else a list of blocker reasons."""
     reasons: list[str] = []
@@ -65,10 +56,17 @@ def _gate_reasons(pr: dict) -> list[str]:
     if pr.get("isDraft"):
         reasons.append("PR is draft")
 
-    # Latest review must be APPROVE.
-    verdict = _latest_codex_verdict(pr)
-    if verdict != "APPROVE":
-        reasons.append(f"latest codex verdict is {verdict or 'none'}")
+    # Consensus check: all REQUIRED_REVIEWER_CLIS must have approved the latest commit.
+    pr_number = pr["number"]
+    verdicts = rotation.reviewer_verdicts(pr_number)
+    
+    missing = [c for c in REQUIRED_REVIEWER_CLIS if c not in verdicts]
+    if missing:
+        reasons.append(f"missing reviews from required agents: {missing}")
+    
+    for cli, v in verdicts.items():
+        if v != "APPROVE":
+            reasons.append(f"latest {cli} verdict is {v}")
 
     # Re-check protected paths (defense in depth).
     files = pr.get("files") or []

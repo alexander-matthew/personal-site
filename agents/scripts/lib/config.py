@@ -13,6 +13,9 @@ TICK_SECONDS = 60
 # Max review rounds per PR before escalating to a human.
 MAX_REVIEW_ROUNDS = 3
 
+# Which agent CLIs must provide an APPROVE verdict before auto-merge.
+REQUIRED_REVIEWER_CLIS = ("codex", "gemini")
+
 # PRs larger than this many added+removed lines auto-fail review.
 MAX_DIFF_LOC = 400
 

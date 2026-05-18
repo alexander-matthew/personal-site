@@ -2,10 +2,14 @@
 
 Single-process state machine. Phases the orchestrator can dispatch:
   - work       (Claude implements an approved issue → opens PR)
-  - review     (Codex reviews a PR with no current Codex review)
-  - respond    (Claude addresses Codex's REQUEST_CHANGES)
-  - merge      (PR has APPROVE + CI green + clean → auto-merge)
+  - review     (Codex/Gemini reviews a PR)
+  - respond    (Claude addresses reviewer REQUEST_CHANGES)
+  - arbitrate  (the third leg of the stool; tiebreaker when consensus fails)
+  - security   (Gemini adversarial scan before merge)
+  - merge      (PR has Consensus + Security Clear + CI green → auto-merge)
   - propose    (Claude files 1-3 new proposal issues)
+  - triage     (Gemini auto-approves low-risk proposals)
+  - drift      (Claude weekly architectural audit)
 
 Exactly one phase runs per tick. If the tick has nothing to do, sleep TICK_SECONDS
 and try again. Daemon exits when:
@@ -110,15 +114,6 @@ def _is_arbiter_override(post: dict) -> bool:
     return "Arbiter override" in post["body"]
 
 
-def _latest_codex_verdict(pr: dict) -> str | None:
-    """Reviewer's latest VERDICT (excludes arbiter's APPROVE override comments)."""
-    posts = [p for p in gh.marker_posts(pr) if not _is_arbiter_override(p)]
-    if not posts:
-        return None
-    m = re.search(r"##VERDICT:\s*(\S+)", posts[-1]["body"])
-    return m.group(1) if m else None
-
-
 def _latest_arbiter_verdict(pr: dict) -> tuple[str | None, str | None]:
     """Returns (verdict, ts). None if no arbiter has been invoked on this PR."""
     posts = gh.marker_posts(pr, marker="##ARBITER_VERDICT:")
@@ -131,17 +126,6 @@ def _latest_arbiter_verdict(pr: dict) -> tuple[str | None, str | None]:
 def _reviewer_rounds(pr: dict) -> int:
     """How many reviewer marker posts exist (excluding arbiter)."""
     return len([p for p in gh.marker_posts(pr) if not _is_arbiter_override(p)])
-
-
-def _commits_since_review(pr: dict) -> bool:
-    posts = [p for p in gh.marker_posts(pr) if not _is_arbiter_override(p)]
-    if not posts:
-        return True  # No review yet → "since" is trivially true
-    last_ts = posts[-1]["ts"]
-    commits = pr.get("commits") or []
-    if not commits:
-        return False
-    return (commits[-1].get("committedDate") or "") > last_ts
 
 
 def _commits_since_arbiter(pr: dict) -> bool:
@@ -185,77 +169,66 @@ def _dispatch() -> tuple[str, int | None]:
     agent_prs = [gh.get_pr(p["number"]) for p in candidates]
 
     for pr in agent_prs:
-        verdict = _latest_codex_verdict(pr)
+        pr_number = pr["number"]
+        verdicts = rotation.reviewer_verdicts(pr_number)
+        pending = rotation.pending_reviewer_clis(pr_number)
         arb_verdict, _ = _latest_arbiter_verdict(pr)
 
-        # ---- arbiter has spoken on this PR ----
+        # ---- arbiter has spoken ----
         if arb_verdict is not None:
             # APPROVE_FOR_MERGE: arbiter posted a synthetic ##VERDICT: APPROVE,
-            # so the reviewer-verdict check below sees APPROVE and falls into
-            # the merge branch. Don't dispatch anything here.
+            # which rotation.reviewer_verdicts() sees as an APPROVE from the
+            # reviewing agent it replaced. Falls into merge logic below.
             if arb_verdict == "REQUEST_FINAL_CHANGES":
                 if _commits_since_arbiter(pr):
-                    # Engineer addressed the final-changes ask → arbiter looks
-                    # one more time (re-arbitrate). After this second look, the
-                    # arbiter can only APPROVE or ESCALATE — no further loops.
-                    rc = arbitrate_pr.arbitrate(pr["number"])
-                    return ("arbitrate", pr["number"]) if rc == 0 else ("arbitrate.skip", pr["number"])
-                # Engineer hasn't responded yet to the final-changes ask → respond.
+                    rc = arbitrate_pr.arbitrate(pr_number)
+                    return ("arbitrate", pr_number) if rc == 0 else ("arbitrate.skip", pr_number)
                 if _persona_blocked("engineer"):
                     continue
-                rc = respond_to_review.respond(pr["number"])
-                return ("respond", pr["number"]) if rc == 0 else ("respond.skip", pr["number"])
-            # ESCALATE_TO_HUMAN is handled by _is_stalled (the arbiter applied
-            # agent:needs-human, so the PR was filtered out before this loop).
+                rc = respond_to_review.respond(pr_number)
+                return ("respond", pr_number) if rc == 0 else ("respond.skip", pr_number)
+            # ESCALATE_TO_HUMAN is filtered by _is_stalled.
 
-        # ---- reviewer rounds capped → arbiter takes over ----
-        # When the reviewer has emitted MAX_REVIEW_ROUNDS verdicts and the last
-        # one is REQUEST_CHANGES, we do NOT dispatch round (cap+1). Instead the
-        # arbiter judges the standoff. The engineer doesn't get a 4th attempt
-        # under the regular reviewer — the arbiter chooses whether to give them
-        # one more pass via REQUEST_FINAL_CHANGES.
-        if (verdict == "REQUEST_CHANGES"
+        # ---- reviewer round-cap reached without convergence → invoke arbiter ----
+        has_request_changes = any(v == "REQUEST_CHANGES" for v in verdicts.values())
+        if (has_request_changes
                 and _reviewer_rounds(pr) >= MAX_REVIEW_ROUNDS
+                and not pending
                 and arb_verdict is None):
-            rc = arbitrate_pr.arbitrate(pr["number"])
-            return ("arbitrate", pr["number"]) if rc == 0 else ("arbitrate.skip", pr["number"])
+            rc = arbitrate_pr.arbitrate(pr_number)
+            return ("arbitrate", pr_number) if rc == 0 else ("arbitrate.skip", pr_number)
 
         # ---- normal reviewer / engineer / merge flow ----
-        # PR is approved + no new commits → security check (if needed) then merge.
-        if verdict == "APPROVE" and not _commits_since_review(pr):
+
+        # 1. If reviews are pending for the latest commit, run a reviewer.
+        if pending:
+            chosen = rotation.pick_reviewer_cli(pr_number)
+            if chosen and not _persona_blocked(rotation.reviewer_persona_name(chosen)):
+                rc = review_pr.review(pr_number)
+                return ("review", pr_number) if rc == 0 else ("review.skip", pr_number)
+            continue
+
+        # 2. All required reviews are in for the latest commit.
+
+        # If any agent requested changes, engineer responds.
+        if has_request_changes:
+            if _persona_blocked("engineer"):
+                continue
+            rc = respond_to_review.respond(pr_number)
+            return ("respond", pr_number) if rc == 0 else ("respond.skip", pr_number)
+            
+        # If all agents approved, security check (if needed) then merge.
+        if all(v == "APPROVE" for v in verdicts.values()) and verdicts:
             labels = {l["name"] for l in pr.get("labels", [])}
             if ("agent:security-cleared" not in labels
                     and "agent:security-flag" not in labels):
-                # Hasn't been scanned. security_check.check() handles "not
-                # sensitive" by applying the cleared label without an LLM call,
-                # so this is cheap when no sensitive paths are touched.
                 if _persona_blocked("security"):
-                    continue  # retry next tick once gemini's armed
-                rc = security_check.check(pr["number"])
-                return ("security", pr["number"]) if rc == 0 else ("security.skip", pr["number"])
-            # Already scanned. If flagged, merge gate refuses (agent:needs-human
-            # was also applied so _is_stalled would have filtered, but if we got
-            # here merge_gate still re-checks).
-            rc = merge_gate.evaluate(pr["number"])
-            return ("merge", pr["number"]) if rc == 0 else ("merge.skip", pr["number"])
-
-        # PR has unaddressed change-requests → engineer responds.
-        if verdict == "REQUEST_CHANGES" and not _commits_since_review(pr):
-            if _persona_blocked("engineer"):
-                continue
-            rc = respond_to_review.respond(pr["number"])
-            return ("respond", pr["number"]) if rc == 0 else ("respond.skip", pr["number"])
-
-        # PR has no review yet, OR new commits since last review → reviewer.
-        if verdict is None or _commits_since_review(pr):
-            # Quota-aware via rotation: pick whichever reviewer cli is armed
-            # for THIS PR (sticky if already-assigned, fresh otherwise).
-            chosen = rotation.pick_reviewer_cli(pr["number"])
-            blocked, _ = quota.is_blocked(chosen)
-            if blocked:
-                continue
-            rc = review_pr.review(pr["number"])
-            return ("review", pr["number"]) if rc == 0 else ("review.skip", pr["number"])
+                    continue
+                rc = security_check.check(pr_number)
+                return ("security", pr_number) if rc == 0 else ("security.skip", pr_number)
+            
+            rc = merge_gate.evaluate(pr_number)
+            return ("merge", pr_number) if rc == 0 else ("merge.skip", pr_number)
 
     # No PR work pending. Consider engineer working a new issue (off-hours only).
     if _is_off_hours() and not _persona_blocked("engineer"):
@@ -271,8 +244,7 @@ def _dispatch() -> tuple[str, int | None]:
         rc = propose_issues.run()
         return ("propose", None) if rc == 0 else ("propose.skip", None)
 
-    # Consider triage (once per day, off-hours, after proposer has run today
-    # and there are unhandled proposals).
+    # Consider triage (once per day, off-hours, after proposer).
     if (_is_off_hours()
             and not _triage_ran_today()
             and _proposer_ran_today()
@@ -283,8 +255,6 @@ def _dispatch() -> tuple[str, int | None]:
             return ("triage", None) if rc == 0 else ("triage.skip", None)
 
     # Consider drift_watcher (once per week, Sundays, off-hours).
-    # Sunday = weekday() == 6. Avoid double-firing within the same week by
-    # checking the last 7 days of drift events.
     if (_is_off_hours()
             and dt.datetime.now().weekday() == 6
             and not _drift_ran_this_week()
