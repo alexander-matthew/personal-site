@@ -1,0 +1,77 @@
+{% extends "palantir_base.html" %}
+
+{% block title %}{{ entry.title }} — Deckard's Diary{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/deckard.css') }}">
+{% endblock %}
+
+{% block main %}
+<div class="dk-shell">
+  <header class="dk-titlebar">
+    <div class="dk-brand">
+      <span class="dk-dot"></span>
+      <a href="{{ url_for('deckard.index') }}">Deckard&rsquo;s Diary</a>
+    </div>
+    <div class="dk-meta">
+      <span>entry {{ '%03d' % entry.day_number if entry.day_number else '—' }}</span>
+      <span class="dk-sep">/</span>
+      <span>{{ entry.date }}</span>
+      <span class="dk-sep">/</span>
+      <span class="dk-form">{{ entry.form }}</span>
+    </div>
+    <nav class="dk-nav">
+      {% if older %}<a href="{{ url_for('deckard.entry', date=older) }}" title="older">&larr;</a>{% else %}<span class="dk-disabled">&larr;</span>{% endif %}
+      <a href="{{ url_for('deckard.archive') }}">archive</a>
+      {% if newer %}<a href="{{ url_for('deckard.entry', date=newer) }}" title="newer">&rarr;</a>{% else %}<span class="dk-disabled">&rarr;</span>{% endif %}
+    </nav>
+  </header>
+
+  <div class="dk-workspace">
+    <section class="dk-pane dk-pane--art">
+      <div class="dk-pane-tab"><span class="dk-tab-name">render</span><span class="dk-tab-hint">live</span></div>
+      <div class="dk-canvas-wrap">
+        <canvas id="deckard-canvas"></canvas>
+      </div>
+      <div class="dk-artbar">
+        <span class="dk-artname">{{ entry.art.title }}</span>
+        <span class="dk-seedwrap">seed&nbsp;<code id="deckard-seed">&hellip;</code></span>
+        <span class="dk-spacer"></span>
+        <button type="button" id="deckard-regen">regenerate</button>
+        <button type="button" id="deckard-copy">copy seed</button>
+        <button type="button" id="deckard-save">save frame</button>
+      </div>
+    </section>
+
+    <section class="dk-pane dk-pane--text">
+      <div class="dk-pane-tab"><span class="dk-tab-name">{{ entry.date }}.txt</span></div>
+      <article class="dk-manuscript">
+        <h1 class="dk-entry-title">{{ entry.title }}</h1>
+        {% if entry.epigraph %}<p class="dk-epigraph">{{ entry.epigraph }}</p>{% endif %}
+        <div class="dk-poem dk-form-{{ entry.form }}">
+          {% for line in entry.poem %}<p class="dk-line" style="--i: {{ loop.index0 }}">{{ line }}</p>{% endfor %}
+        </div>
+        {% if entry.colophon %}<p class="dk-colophon">{{ entry.colophon }}</p>{% endif %}
+      </article>
+    </section>
+
+    <section class="dk-pane dk-pane--code">
+      <div class="dk-pane-tab"><span class="dk-tab-name">{{ entry.date }}.js</span><span class="dk-tab-hint">the hand that drew it</span></div>
+      <div class="dk-editor">
+        <pre id="deckard-gutter" class="dk-gutter" aria-hidden="true"></pre>
+        <pre class="dk-code"><code id="deckard-code">// loading the day&rsquo;s sketch&hellip;</code></pre>
+      </div>
+    </section>
+  </div>
+
+  <div id="deckard-note" class="dk-note">{{ entry.colophon }}</div>
+
+  <script type="application/json" id="deckard-data">
+    {"sketchUrl": {{ entry.art.sketch_url | tojson }}, "palette": {{ entry.palette | tojson }}, "date": {{ entry.date | tojson }}}
+  </script>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/deckard/deckard-app.js') }}"></script>
+{% endblock %}

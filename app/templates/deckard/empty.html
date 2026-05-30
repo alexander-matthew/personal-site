@@ -1,0 +1,17 @@
+{% extends "palantir_page.html" %}
+
+{% block title %}Deckard's Diary{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/deckard.css') }}">
+{% endblock %}
+
+{% block page_title %}Deckard&rsquo;s Diary{% endblock %}
+
+{% block page_content %}
+<div class="dk-empty">
+  <p>The diary is quiet for now.</p>
+  <p class="dk-empty-sub">No entry has been written for this day. The next one arrives when the night turns over.</p>
+  <p><a href="{{ url_for('deckard.archive') }}">Browse the archive &rarr;</a></p>
+</div>
+{% endblock %}

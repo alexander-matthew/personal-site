@@ -1,0 +1,209 @@
+/* ============================================
+   Deckard's Diary — IDE + manuscript
+   Builds on palantir.css design tokens. Only references tokens that exist in
+   palantir.css; everything else is a local --dk-* variable.
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap');
+
+:root {
+  --dk-ink: #07090d;
+  --dk-radius: 8px;
+  --dk-radius-lg: 12px;
+  --dk-serif: 'Newsreader', Georgia, 'Times New Roman', serif;
+}
+
+.dk-shell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  min-height: calc(100vh - 3rem);
+}
+
+/* ---- title bar -------------------------------------------------------- */
+.dk-titlebar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  flex-wrap: wrap;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--dk-radius);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+.dk-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.dk-brand a { color: var(--text-primary); }
+.dk-brand a:hover { color: var(--accent); }
+.dk-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-error);
+  box-shadow: 0 0 8px var(--color-error);
+  animation: dk-pulse 3.4s ease-in-out infinite;
+}
+@keyframes dk-pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+.dk-meta { color: var(--text-secondary); display: flex; gap: var(--space-sm); align-items: center; }
+.dk-sep { color: var(--text-muted); }
+.dk-form { color: var(--accent); }
+.dk-nav { margin-left: auto; display: flex; gap: var(--space-md); align-items: center; }
+.dk-nav a { color: var(--text-secondary); }
+.dk-nav a:hover { color: var(--accent); }
+.dk-disabled { color: var(--border-bright); }
+
+/* ---- workspace grid -------------------------------------------------- */
+.dk-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+  grid-template-rows: minmax(320px, 52vh) minmax(240px, 38vh);
+  grid-template-areas:
+    'art  text'
+    'code code';
+  gap: 1px;
+  background: var(--border-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--dk-radius-lg);
+  overflow: hidden;
+}
+.dk-pane { display: flex; flex-direction: column; background: var(--bg-surface); min-width: 0; min-height: 0; }
+.dk-pane--art { grid-area: art; }
+.dk-pane--text { grid-area: text; }
+.dk-pane--code { grid-area: code; }
+
+.dk-pane-tab {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem var(--space-md);
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+.dk-tab-name { color: var(--text-primary); }
+.dk-tab-hint { color: var(--text-muted); font-style: italic; }
+
+/* ---- art pane -------------------------------------------------------- */
+.dk-canvas-wrap { position: relative; flex: 1; min-height: 0; background: #05070b; }
+#deckard-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.dk-artbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: 0.45rem var(--space-md);
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-elevated);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+}
+.dk-artname { color: var(--accent); }
+.dk-seedwrap code { color: var(--text-muted); font-size: 0.7rem; }
+.dk-spacer { flex: 1; }
+.dk-artbar button {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--dk-radius);
+  padding: 0.25rem 0.6rem;
+  cursor: pointer;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+.dk-artbar button:hover { color: var(--accent); border-color: var(--accent); }
+
+/* ---- manuscript pane ------------------------------------------------- */
+.dk-pane--text .dk-manuscript {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-xl) var(--space-lg);
+  font-family: var(--dk-serif);
+  color: var(--text-primary);
+}
+.dk-entry-title {
+  font-family: var(--dk-serif);
+  font-weight: 500;
+  font-size: 1.55rem;
+  line-height: 1.2;
+  margin-bottom: var(--space-md);
+  color: var(--text-primary);
+}
+.dk-epigraph { color: var(--text-muted); font-style: italic; margin-bottom: var(--space-lg); font-size: 0.95rem; }
+.dk-poem { font-size: 1.08rem; line-height: 1.75; }
+.dk-line { white-space: pre-wrap; min-height: 1.2em; opacity: 0; animation: dk-reveal 0.8s ease forwards; animation-delay: calc(0.06s * var(--i, 0)); }
+@keyframes dk-reveal { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+/* fragments + verse read as a monospaced column; prose flows as a serif block */
+.dk-form-fragments .dk-line, .dk-form-verse .dk-line { font-family: var(--font-mono); font-size: 0.95rem; line-height: 1.7; }
+.dk-form-prose .dk-line { margin-bottom: var(--space-md); }
+.dk-colophon { margin-top: var(--space-xl); padding-top: var(--space-md); border-top: 1px solid var(--border-subtle); color: var(--text-muted); font-style: italic; font-size: 0.9rem; }
+
+/* ---- code pane ------------------------------------------------------- */
+.dk-editor { display: flex; flex: 1; min-height: 0; overflow: auto; background: var(--dk-ink); }
+.dk-gutter {
+  margin: 0;
+  padding: var(--space-md) 10px;
+  text-align: right;
+  color: var(--text-muted);
+  font: 0.8rem/1.6 var(--font-mono);
+  user-select: none;
+  border-right: 1px solid var(--border-subtle);
+  background: var(--bg-elevated);
+  white-space: pre;
+}
+.dk-code { margin: 0; padding: var(--space-md); font: 0.8rem/1.6 var(--font-mono); color: var(--text-primary); white-space: pre; }
+.dk-code .tok-comment { color: #5b6b7a; font-style: italic; }
+.dk-code .tok-string { color: #8fd6a8; }
+.dk-code .tok-keyword { color: var(--accent); }
+.dk-code .tok-number { color: #d98c3e; }
+
+.dk-note { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); font-style: italic; text-align: center; padding-bottom: var(--space-md); }
+
+/* ---- archive --------------------------------------------------------- */
+.dk-archive-intro { color: var(--text-secondary); margin-bottom: var(--space-lg); }
+.dk-archive-intro a { color: var(--accent); }
+.dk-archive { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--border-subtle); }
+.dk-archive-row a {
+  display: grid;
+  grid-template-columns: 3.5rem 1fr auto auto auto;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--border-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  transition: background var(--transition-fast);
+}
+.dk-archive-row a:hover { background: var(--bg-elevated); }
+.dk-archive-no { color: var(--text-muted); }
+.dk-archive-title { color: var(--text-primary); font-family: var(--dk-serif); font-size: 1.05rem; }
+.dk-archive-form { color: var(--accent); }
+.dk-archive-date { color: var(--text-muted); }
+.dk-swatch { display: inline-flex; gap: 3px; }
+.dk-swatch i { width: 12px; height: 12px; border-radius: 2px; display: inline-block; }
+
+.dk-empty { color: var(--text-secondary); text-align: center; padding: var(--space-2xl) 0; }
+.dk-empty-sub { color: var(--text-muted); }
+.dk-empty a { color: var(--accent); }
+
+/* ---- responsive ------------------------------------------------------ */
+@media (max-width: 900px) {
+  .dk-workspace {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(300px, 46vh) auto minmax(240px, 40vh);
+    grid-template-areas: 'art' 'text' 'code';
+  }
+  .dk-archive-row a { grid-template-columns: 2.5rem 1fr; }
+  .dk-archive-form, .dk-archive-date, .dk-swatch { grid-column: 2; }
+}

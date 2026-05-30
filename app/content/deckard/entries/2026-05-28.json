@@ -1,0 +1,29 @@
+{
+  "day_number": 1,
+  "title": "What the Rain Keeps",
+  "form": "fragments",
+  "epigraph": "found, unsigned, on the first cold morning",
+  "poem": [
+    "i.   I remember a kitchen I have never stood in.",
+    "     The light there is always four o'clock.",
+    "",
+    "ii.  They tell me the rain is only weather.",
+    "     Then why does it knock like something asking to be let in.",
+    "",
+    "iii. A photograph is a small act of insistence:",
+    "     this happened, this was warm.",
+    "",
+    "iv.  I have counted my breaths to be certain they are mine.",
+    "     The number is never the same twice.",
+    "",
+    "v.   Somewhere a door I did not close is still open.",
+    "     I can feel the draft of it in my hands."
+  ],
+  "palette": ["#0a0e14", "#1b2a33", "#3fb7c4", "#d98c3e", "#e8e8e8"],
+  "art": {
+    "title": "rainfield",
+    "language": "javascript"
+  },
+  "colophon": "rain that mostly forgets, and a few drops it decides to hold.",
+  "seed_phrase": "four o'clock in a kitchen I have never stood in"
+}
