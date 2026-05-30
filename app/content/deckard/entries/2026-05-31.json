@@ -1,0 +1,29 @@
+{
+  "day_number": 4,
+  "title": "What the Rain Keeps",
+  "form": "fragments",
+  "epigraph": null,
+  "poem": [
+    "i.  A photograph insists: this happened, this was warm.",
+    "",
+    "ii.  I remember a room I have never stood in. The light there is always late.",
+    "",
+    "iii.  They tell me the rain is only weather. Then why does it knock to be let in.",
+    "",
+    "iv.  What I miss most is a place I am not certain ever stood.",
+    "",
+    "v.  I counted my breaths to be sure they were mine. The number changes."
+  ],
+  "palette": [
+    "#070a0f",
+    "#11161f",
+    "#ff4d5e",
+    "#34e0d6",
+    "#e8e8e8"
+  ],
+  "art": {
+    "title": "rainfield"
+  },
+  "colophon": "drift and pull; a field that never settles the same way twice.",
+  "seed_phrase": "i.  A photograph insists: this happened, this wa"
+}
