@@ -32,6 +32,23 @@ If any guidance conflicts with implementation details, code is source of truth.
 - Route names should follow the established `router.endpoint` naming pattern used by templates.
 - Keep docs accurate when changing architecture, deployment, or workflow.
 
+## Autonomous Engineering Loop
+
+This repo runs an overnight Claude+Codex loop that ships PRs against itself.
+**Full design + runbook in `agents/README.md`.** When working on this repo
+through the loop:
+
+- Hard rules for every loop-authored PR are in `agents/scripts/lib/config.py`
+  (`PROTECTED_PATHS`, `MAX_DIFF_LOC`) and in the prompts under
+  `agents/prompts/`. These are enforced by wrapper code, not just by the
+  prompt — violating them auto-blocks merge.
+- Codex's reviewer role is defined in `agents/prompts/review.md`. The review
+  format is structured (VERDICT / SUMMARY / CHECKLIST / NOTES markers) and
+  is parsed by `agents/scripts/review_pr.py`. Stay on-format or the review
+  is reposted as a plain comment.
+- Diffs over 400 added+removed lines are auto-rejected. Split large issues
+  into `effort:s` (≤200) or `effort:m` (≤400) before approving them.
+
 ## Documentation Sync Rule
 
 When changing repo-level behavior, update docs in this order:

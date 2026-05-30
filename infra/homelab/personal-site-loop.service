@@ -1,0 +1,27 @@
+[Unit]
+Description=personal-site agent loop daemon (Claude+Codex autonomous engineering)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=alex-matthew
+Group=alex-matthew
+WorkingDirectory=/home/alex-matthew/code/personal-site
+Environment=PATH=/home/alex-matthew/.local/bin:/home/alex-matthew/.npm-global/bin:/usr/local/bin:/usr/bin:/bin
+Environment=HOME=/home/alex-matthew
+Environment=AGENT_LOOP_PROJECT_ROOT=/home/alex-matthew/code/personal-site
+# The orchestrator and phase scripts live in the `agent-loop` package
+# (https://github.com/alexander-matthew/triumvirate) declared as a dep in
+# pyproject.toml. `uv run` resolves the virtualenv and runs the CLI.
+ExecStart=/home/alex-matthew/.local/bin/uv run agent-loop daemon
+# Graceful: SIGTERM the cgroup; agent subprocesses also get SIGTERM and exit.
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=90
+# Don't auto-restart — the timer fires it once per night, and an error mid-loop
+# should be visible in journalctl rather than retried silently.
+Restart=no
+
+[Install]
+WantedBy=multi-user.target

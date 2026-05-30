@@ -1,0 +1,36 @@
+{% extends "palantir_page.html" %}
+
+{% block title %}Archive — Deckard's Diary{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/deckard.css') }}">
+{% endblock %}
+
+{% block page_title %}Deckard&rsquo;s Diary &middot; archive{% endblock %}
+
+{% block page_content %}
+<p class="dk-archive-intro">
+  A diary kept one day at a time &mdash; a short piece, and the hand that drew its echo.
+  <a href="{{ url_for('deckard.index') }}">Return to the latest entry &rarr;</a>
+</p>
+
+{% if entries %}
+<ol class="dk-archive">
+  {% for e in entries %}
+  <li class="dk-archive-row">
+    <a href="{{ url_for('deckard.entry', date=e.date) }}">
+      <span class="dk-archive-no">{{ '%03d' % e.day_number if e.day_number else '···' }}</span>
+      <span class="dk-archive-title">{{ e.title }}</span>
+      <span class="dk-archive-form">{{ e.form }}</span>
+      <span class="dk-archive-date">{{ e.date }}</span>
+      <span class="dk-swatch">
+        {% for c in e.palette[:5] %}<i style="background:{{ c }}"></i>{% endfor %}
+      </span>
+    </a>
+  </li>
+  {% endfor %}
+</ol>
+{% else %}
+<p class="dk-empty">The diary has not been started yet.</p>
+{% endif %}
+{% endblock %}

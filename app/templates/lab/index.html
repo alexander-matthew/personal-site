@@ -1,0 +1,188 @@
+{% extends "palantir_page.html" %}
+
+{% block title %}lab · {{ site.name }}{% endblock %}
+
+{% block page_title %}lab{% endblock %}
+
+{% block head %}
+<style>
+    .lab-status-bar {
+        display: flex;
+        gap: var(--space-md);
+        flex-wrap: wrap;
+        padding: var(--space-md);
+        margin-bottom: var(--space-lg);
+        border: 1px solid var(--border);
+        background: var(--bg-secondary);
+        font-family: var(--font-mono);
+        font-size: 0.9em;
+    }
+    .lab-status-bar .pill {
+        padding: 2px 10px;
+        border-radius: 3px;
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border);
+    }
+    .lab-status-bar .pill.ok { color: #4ade80; border-color: #4ade8033; }
+    .lab-status-bar .pill.warn { color: #fbbf24; border-color: #fbbf2433; }
+    .lab-status-bar .pill.halt { color: #f87171; border-color: #f8717133; }
+
+    .lab-section { margin-top: var(--space-xl); }
+    .lab-section h2 {
+        font-size: 1.1em;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border);
+        padding-bottom: var(--space-xs);
+        margin-bottom: var(--space-md);
+    }
+    .lab-list { list-style: none; padding: 0; margin: 0; }
+    .lab-list li {
+        padding: var(--space-sm) 0;
+        border-bottom: 1px dashed var(--border);
+        font-family: var(--font-mono);
+        font-size: 0.95em;
+    }
+    .lab-list li:last-child { border-bottom: none; }
+    .lab-list .muted { color: var(--text-muted); font-size: 0.85em; }
+    .lab-list .badge {
+        display: inline-block;
+        padding: 1px 6px;
+        margin-right: var(--space-xs);
+        font-size: 0.8em;
+        border: 1px solid var(--border);
+        border-radius: 2px;
+        color: var(--text-muted);
+    }
+    .lab-list .badge.approve { color: #4ade80; border-color: #4ade8033; }
+    .lab-list .badge.changes { color: #fbbf24; border-color: #fbbf2433; }
+    .lab-list .badge.blocked { color: #f87171; border-color: #f8717133; }
+
+    .lab-events { font-family: var(--font-mono); font-size: 0.85em; line-height: 1.7; }
+    .lab-events .ev { display: grid; grid-template-columns: 80px 70px 60px 90px 1fr; gap: var(--space-sm); }
+    .lab-events .ev .ts { color: var(--text-muted); }
+    .lab-events .ev .ph { color: var(--accent); }
+    .lab-events .ev .ag { color: var(--text-muted); }
+    .lab-events .ev .tgt { color: var(--text-muted); }
+    .lab-events .ev .ac { color: var(--text-primary); }
+    .lab-events .ev.error .ac, .lab-events .ev.halted .ac { color: #f87171; }
+    .lab-events .ev.finish .ac { color: #4ade80; }
+
+    .empty { color: var(--text-muted); font-style: italic; }
+</style>
+{% endblock %}
+
+{% block page_content %}
+
+<p style="max-width: 720px;">
+    This page is the public view of personal-site's autonomous engineering loop.
+    Each night between 11pm and 6am Central, a Claude worker picks an approved
+    GitHub issue and implements it in a branch. Codex reviews the resulting PR.
+    Claude addresses the feedback. They iterate until Codex approves and CI is
+    green, at which point the merge gate ships it. The site you are reading is
+    partly built by that loop.
+</p>
+
+<div class="lab-status-bar">
+    {% if state.halted %}
+        <span class="pill halt">● halted</span>
+    {% else %}
+        <span class="pill ok">● armed</span>
+    {% endif %}
+    {% for k, v in state.summary.items() %}
+        <span class="pill">{{ k }}: {{ v }}</span>
+    {% endfor %}
+    {% if state.error %}
+        <span class="pill warn">{{ state.error }}</span>
+    {% endif %}
+</div>
+
+<div class="lab-section">
+    <h2>Open agent PRs</h2>
+    {% if state.open_agent_prs %}
+        <ul class="lab-list">
+            {% for pr in state.open_agent_prs %}
+                <li>
+                    {% set verdict = (pr.reviewDecision or '') %}
+                    {% if verdict == 'APPROVED' %}<span class="badge approve">approved</span>
+                    {% elif verdict == 'CHANGES_REQUESTED' %}<span class="badge changes">changes</span>
+                    {% elif verdict %}<span class="badge">{{ verdict|lower }}</span>
+                    {% else %}<span class="badge">unreviewed</span>{% endif %}
+                    <a href="https://github.com/alexander-matthew/personal-site/pull/{{ pr.number }}"
+                       target="_blank" rel="noopener noreferrer">
+                        PR #{{ pr.number }}
+                    </a>
+                    — {{ pr.title }}
+                    <div class="muted">+{{ pr.additions }}/-{{ pr.deletions }} · {{ pr.changedFiles }} files
+                        {% for l in pr.labels %}· {{ l.name }}{% endfor %}
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="empty">No agent PRs open right now.</p>
+    {% endif %}
+</div>
+
+<div class="lab-section">
+    <h2>Approved queue · what the worker will pick up next</h2>
+    {% if state.approved_issues %}
+        <ul class="lab-list">
+            {% for i in state.approved_issues %}
+                <li>
+                    <a href="https://github.com/alexander-matthew/personal-site/issues/{{ i.number }}"
+                       target="_blank" rel="noopener noreferrer">
+                        #{{ i.number }}
+                    </a>
+                    — {{ i.title }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="empty">Queue is empty.</p>
+    {% endif %}
+</div>
+
+<div class="lab-section">
+    <h2>Proposals · filed by the agent, awaiting human triage</h2>
+    {% if state.proposals %}
+        <ul class="lab-list">
+            {% for i in state.proposals %}
+                <li>
+                    <a href="https://github.com/alexander-matthew/personal-site/issues/{{ i.number }}"
+                       target="_blank" rel="noopener noreferrer">
+                        #{{ i.number }}
+                    </a>
+                    — {{ i.title }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="empty">No outstanding proposals.</p>
+    {% endif %}
+</div>
+
+<div class="lab-section">
+    <h2>Recent loop events</h2>
+    {% if state.events %}
+        <div class="lab-events">
+            {% for ev in state.events %}
+                <div class="ev {{ ev.action }}">
+                    <span class="ts">{{ ev.ts|int|string }}</span>
+                    <span class="ph">{{ ev.phase }}</span>
+                    <span class="ag">{{ ev.agent or '' }}</span>
+                    <span class="tgt">
+                        {% if ev.pr_number %}PR#{{ ev.pr_number }}
+                        {% elif ev.issue_number %}#{{ ev.issue_number }}{% endif %}
+                    </span>
+                    <span class="ac">{{ ev.action }}{% if ev.outcome %} → {{ ev.outcome }}{% endif %}</span>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="empty">No events logged yet — the loop hasn't run.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

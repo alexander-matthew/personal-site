@@ -1,0 +1,57 @@
+# personal-site's agent-loop configuration.
+# Consumed by the `agent-loop` package (github.com/alexander-matthew/triumvirate)
+# at process startup. All project-specific knobs live here; the framework
+# itself is project-agnostic.
+
+[project]
+name = "personal-site"
+repo = "alexander-matthew/personal-site"
+trusted_authors = ["alexander-matthew"]
+off_hours_start = 23     # 11pm CDT
+off_hours_end   = 6      # 6am CDT
+tick_seconds = 60
+
+
+[guards]
+max_diff_loc = 400
+max_review_rounds = 3
+protected_paths = [
+    ".github/workflows/",
+    "infra/",
+    "agents/personas/",
+    "agents/config.toml",
+    "Dockerfile",
+    "docker-compose.yml",
+    "docker-compose.homelab.yml",
+    "app/services/oauth.py",
+]
+
+
+[security]
+sensitive_path_prefixes = [
+    "app/services/oauth.py",
+    "app/services/rate_limit.py",
+    "app/services/cache.py",
+    "app/__init__.py",
+    "app/templating.py",
+]
+
+
+[librarian]
+trigger_paths = [
+    "pyproject.toml",
+    "package.json",
+    "uv.lock",
+    "package-lock.json",
+    ".devcontainer/",
+    "app/services/",
+]
+
+
+[reviewers]
+required_clis = ["codex", "gemini"]
+
+
+[paths]
+personas_dir = "agents/personas"
+state_dir    = "agents/state"

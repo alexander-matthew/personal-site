@@ -113,11 +113,17 @@ def create_app() -> FastAPI:
     from app.routes import weather
     app.include_router(weather.router)
 
+    from app.routes import deckard
+    app.include_router(deckard.router)
+
     from app.routes import resume
     app.include_router(resume.router)
 
     from app.routes.tools import router as tools_router
     app.include_router(tools_router)
+
+    from app.routes import lab
+    app.include_router(lab.router)
 
     # Error handlers
     @app.exception_handler(StarletteHTTPException)

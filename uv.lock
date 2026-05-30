@@ -3,6 +3,11 @@ revision = 3
 requires-python = ">=3.11"
 
 [[package]]
+name = "agent-loop"
+version = "0.1.0"
+source = { git = "https://github.com/alexander-matthew/triumvirate?rev=main#08cea0c0a3dd63e0c7a606f5da78af463c2698cc" }
+
+[[package]]
 name = "annotated-doc"
 version = "0.0.4"
 source = { registry = "https://pypi.org/simple" }
@@ -404,6 +409,7 @@ name = "personal-site"
 version = "1.0.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "agent-loop" },
     { name = "fastapi" },
     { name = "httpx" },
     { name = "itsdangerous" },
@@ -422,6 +428,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "agent-loop", git = "https://github.com/alexander-matthew/triumvirate?rev=main" },
     { name = "fastapi", specifier = ">=0.115.0" },
     { name = "httpx", specifier = ">=0.28.0" },
     { name = "itsdangerous", specifier = ">=2.2.0" },
