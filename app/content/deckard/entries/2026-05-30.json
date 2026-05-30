@@ -1,18 +1,13 @@
 {
-  "day_number": 1,
-  "title": "What the Rain Keeps",
-  "form": "fragments",
+  "day_number": 3,
+  "title": "Letter to the Harbor",
+  "form": "verse",
   "epigraph": null,
   "poem": [
-    "i.  Somewhere a door I did not close is still open. I feel its draft in my hands.",
-    "",
-    "ii.  I counted my breaths to be sure they were mine. The number changes.",
-    "",
-    "iii.  What I miss most is a place I am not certain ever stood.",
-    "",
-    "iv.  A photograph insists: this happened, this was warm.",
-    "",
-    "v.  I keep an inventory of tendernesses meant for someone else."
+    "The window holds two of me:",
+    "the one inside, the one the night keeps.",
+    "We blink in turn,",
+    "uncertain which is the reflection."
   ],
   "palette": [
     "#0a0f0d",
@@ -22,8 +17,8 @@
     "#eef2ee"
   ],
   "art": {
-    "title": "rainfield"
+    "title": "dissolving grid"
   },
-  "colophon": "rain that mostly forgets, and a few drops it decides to hold.",
-  "seed_phrase": "i.  Somewhere a door I did not close is still op"
+  "colophon": "a grid keeping its composure, then losing it toward one corner.",
+  "seed_phrase": "The window holds two of me:"
 }
