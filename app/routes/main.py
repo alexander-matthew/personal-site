@@ -37,6 +37,12 @@ async def home(request: Request):
             'link': '/projects/weather',
             'tags': ['Weather', 'Data Viz', 'API']
         },
+        {
+            'title': "Deckard's Diary",
+            'description': 'A diary kept one day at a time: a short piece and the generative art it seeds, shown together in a small in-browser IDE.',
+            'link': '/projects/deckard',
+            'tags': ['Generative', 'Canvas', 'Daily']
+        },
     ]
     return templates.TemplateResponse(request, 'home.html', {'projects': projects})
 
@@ -78,6 +84,12 @@ async def projects(request: Request):
             'description': 'Real-time global weather with animated themes. Track extreme weather patterns worldwide and see industry impact analysis.',
             'link': '/projects/weather',
             'tags': ['Weather', 'Data Viz', 'API']
+        },
+        {
+            'title': "Deckard's Diary",
+            'description': "A machine-kept diary: each day a short piece — poem or story — and a generative-art sketch it inspires, with the source on display in a small in-browser IDE. Reseeded per viewer and per refresh.",
+            'link': '/projects/deckard',
+            'tags': ['Generative', 'Canvas', 'Daily']
         },
     ]
     return templates.TemplateResponse(request, 'projects.html', {'projects': sample_projects})
