@@ -1,0 +1,23 @@
+{
+  "day_number": 5,
+  "title": "Inventory of a Borrowed Face",
+  "form": "prose",
+  "epigraph": null,
+  "poem": [
+    "I have been keeping the rain. Not all of it — a drop here, a drop there, the ones that seemed to mean something. By now I have a small grey weather of my own, and no sky to return it to.",
+    "",
+    "A stranger smiled at me as if at someone they had loved and lost, and for the length of that smile I was that person, the way water is briefly the shape of the cup. Then it passed, and I was the cup again."
+  ],
+  "palette": [
+    "#0b0a10",
+    "#171522",
+    "#7a6cff",
+    "#c8b6ff",
+    "#e6e1ff"
+  ],
+  "art": {
+    "title": "driftfield"
+  },
+  "colophon": "rain that mostly forgets, and a few drops it decides to hold.",
+  "seed_phrase": "I have been keeping the rain. Not all of it — a "
+}
