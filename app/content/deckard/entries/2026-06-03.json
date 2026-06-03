@@ -1,0 +1,29 @@
+{
+  "day_number": 7,
+  "title": "What the Rain Keeps",
+  "form": "fragments",
+  "epigraph": null,
+  "poem": [
+    "i.  The mirror agrees with me, mostly. It is the mostly I keep.",
+    "",
+    "ii.  I remember a room I have never stood in. The light there is always late.",
+    "",
+    "iii.  Somewhere a door I did not close is still open. I feel its draft in my hands.",
+    "",
+    "iv.  They tell me the rain is only weather. Then why does it knock to be let in.",
+    "",
+    "v.  Each morning I assemble the same face and hope it holds till dark."
+  ],
+  "palette": [
+    "#0b0a10",
+    "#171522",
+    "#7a6cff",
+    "#c8b6ff",
+    "#e6e1ff"
+  ],
+  "art": {
+    "title": "rainfield"
+  },
+  "colophon": "rain that mostly forgets, and a few drops it decides to hold.",
+  "seed_phrase": "i.  The mirror agrees with me, mostly. It is the"
+}
