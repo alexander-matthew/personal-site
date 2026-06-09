@@ -1,0 +1,29 @@
+{
+  "day_number": 13,
+  "title": "What the Rain Keeps",
+  "form": "fragments",
+  "epigraph": null,
+  "poem": [
+    "i.  Somewhere a door I did not close is still open. I feel its draft in my hands.",
+    "",
+    "ii.  I remember a room I have never stood in. The light there is always late.",
+    "",
+    "iii.  I have a memory of the sea I cannot have earned.",
+    "",
+    "iv.  I counted my breaths to be sure they were mine. The number changes.",
+    "",
+    "v.  A photograph insists: this happened, this was warm."
+  ],
+  "palette": [
+    "#0a0f0d",
+    "#13201b",
+    "#3fd49b",
+    "#d8c98c",
+    "#eef2ee"
+  ],
+  "art": {
+    "title": "rainfield"
+  },
+  "colophon": "a symmetry that almost holds, and the light that finds where it doesn't.",
+  "seed_phrase": "i.  Somewhere a door I did not close is still op"
+}
