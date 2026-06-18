@@ -1,0 +1,29 @@
+{
+  "day_number": 22,
+  "title": "What the Rain Keeps",
+  "form": "fragments",
+  "epigraph": null,
+  "poem": [
+    "i.  The mirror agrees with me, mostly. It is the mostly I keep.",
+    "",
+    "ii.  They tell me the rain is only weather. Then why does it knock to be let in.",
+    "",
+    "iii.  A photograph insists: this happened, this was warm.",
+    "",
+    "iv.  I counted my breaths to be sure they were mine. The number changes.",
+    "",
+    "v.  What I miss most is a place I am not certain ever stood."
+  ],
+  "palette": [
+    "#0b0a10",
+    "#171522",
+    "#7a6cff",
+    "#c8b6ff",
+    "#e6e1ff"
+  ],
+  "art": {
+    "title": "rainfield"
+  },
+  "colophon": "drift and pull; a field that never settles the same way twice.",
+  "seed_phrase": "i.  The mirror agrees with me, mostly. It is the"
+}
