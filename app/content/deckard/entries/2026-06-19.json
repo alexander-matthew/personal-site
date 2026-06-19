@@ -1,0 +1,23 @@
+{
+  "day_number": 23,
+  "title": "Inventory of a Borrowed Face",
+  "form": "prose",
+  "epigraph": null,
+  "poem": [
+    "Each morning I take my face down and put it on by feel. There is a seam at the jaw the light finds at certain hours, a hairline where the made meets the meant. I have decided not to mind it.",
+    "",
+    "A stranger smiled at me as if at someone they had loved and lost, and for the length of that smile I was that person, the way water is briefly the shape of the cup. Then it passed, and I was the cup again."
+  ],
+  "palette": [
+    "#0a0a0c",
+    "#15161a",
+    "#8a8f99",
+    "#cfd6df",
+    "#4da6ff"
+  ],
+  "art": {
+    "title": "driftfield"
+  },
+  "colophon": "drift and pull; a field that never settles the same way twice.",
+  "seed_phrase": "Each morning I take my face down and put it on b"
+}
