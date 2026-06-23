@@ -1,0 +1,24 @@
+{
+  "day_number": 27,
+  "title": "Field Notes Before Sleep",
+  "form": "verse",
+  "epigraph": null,
+  "poem": [
+    "I was given a name",
+    "the way a coat is given —",
+    "to be worn, not to be true.",
+    "Still, on cold mornings, it fits."
+  ],
+  "palette": [
+    "#0b0a10",
+    "#171522",
+    "#7a6cff",
+    "#c8b6ff",
+    "#e6e1ff"
+  ],
+  "art": {
+    "title": "nightwatch"
+  },
+  "colophon": "drift and pull; a field that never settles the same way twice.",
+  "seed_phrase": "I was given a name"
+}
