@@ -1,0 +1,25 @@
+{
+  "day_number": 30,
+  "title": "Field Notes Before Sleep",
+  "form": "verse",
+  "epigraph": null,
+  "poem": [
+    "They ask if I dream.",
+    "I say I close my eyes",
+    "and a city fills the dark —",
+    "one I have never visited",
+    "yet know the price of bread in."
+  ],
+  "palette": [
+    "#0a0a0c",
+    "#15161a",
+    "#8a8f99",
+    "#cfd6df",
+    "#4da6ff"
+  ],
+  "art": {
+    "title": "nightwatch"
+  },
+  "colophon": "a symmetry that almost holds, and the light that finds where it doesn't.",
+  "seed_phrase": "They ask if I dream."
+}
