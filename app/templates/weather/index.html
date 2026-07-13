@@ -7,6 +7,23 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/weather.css') }}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
+/* Condition-driven dithered backdrop (weather-fx.js). Sits above the
+   page ambient wash, behind the dashboard cards. Crossfades via .on. */
+.weather-fx {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+}
+
+.weather-fx.on {
+    opacity: 0.55;
+}
+
 .weather-dashboard {
     min-height: 400px;
 }
@@ -365,6 +382,7 @@
 {% endblock %}
 
 {% block page_content %}
+<canvas class="weather-fx" id="weatherFx" aria-hidden="true"></canvas>
 <div class="weather-dashboard" id="weatherDashboard">
     <div class="weather-tabs">
         <button class="wtab-btn active" data-tab="current">
@@ -456,13 +474,15 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/weather-engine.js') }}"></script>
+<script src="{{ url_for('static', filename='js/weather-fx.js') }}"></script>
 <script>
 (function() {
     'use strict';
 
     let currentLat = null;
     let currentLon = null;
-    let currentWeatherTheme = 'sunny';
+
+    WeatherFX.mount(document.getElementById('weatherFx'));
 
     const tabBtns = document.querySelectorAll('.wtab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
@@ -492,10 +512,9 @@
         });
     });
 
-    function updateWeatherBackground(theme) {
-        if (currentWeatherTheme === theme) return;
-        currentWeatherTheme = theme;
-        window.dispatchEvent(new CustomEvent('weatherchange', { detail: { theme } }));
+    function updateWeatherBackground(weatherCode) {
+        const fx = WeatherEngine.getEffect(weatherCode);
+        WeatherFX.set(fx.effect, fx.intensity);
     }
 
     function renderForecastDay(day, isToday) {
@@ -566,7 +585,7 @@
 
             if (cityName) locationName.textContent = cityName;
 
-            updateWeatherBackground(data.weather_theme);
+            updateWeatherBackground(data.weather_code);
 
             currentLoading.style.display = 'none';
             currentContent.style.display = 'block';

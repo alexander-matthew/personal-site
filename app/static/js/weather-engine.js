@@ -76,6 +76,49 @@ const WeatherEngine = (function() {
         return info.text;
     }
 
+    // Background-effect descriptors per WMO code: which ambient effect the
+    // dashboard backdrop should render and how hard (0..1). Codes absent
+    // here fall back through getEffect().
+    const EFFECT_CODES = {
+        0: { effect: 'clear', intensity: 0.2 },
+        1: { effect: 'clear', intensity: 0.35 },
+        2: { effect: 'clouds', intensity: 0.45 },
+        3: { effect: 'clouds', intensity: 0.85 },
+        45: { effect: 'fog', intensity: 0.6 },
+        48: { effect: 'fog', intensity: 0.8 },
+        51: { effect: 'rain', intensity: 0.2 },
+        53: { effect: 'rain', intensity: 0.35 },
+        55: { effect: 'rain', intensity: 0.5 },
+        56: { effect: 'rain', intensity: 0.25 },
+        57: { effect: 'rain', intensity: 0.55 },
+        61: { effect: 'rain', intensity: 0.4 },
+        63: { effect: 'rain', intensity: 0.65 },
+        65: { effect: 'rain', intensity: 1.0 },
+        66: { effect: 'rain', intensity: 0.45 },
+        67: { effect: 'rain', intensity: 1.0 },
+        71: { effect: 'snow', intensity: 0.35 },
+        73: { effect: 'snow', intensity: 0.6 },
+        75: { effect: 'snow', intensity: 1.0 },
+        77: { effect: 'snow', intensity: 0.4 },
+        80: { effect: 'rain', intensity: 0.5 },
+        81: { effect: 'rain', intensity: 0.75 },
+        82: { effect: 'rain', intensity: 1.0 },
+        85: { effect: 'snow', intensity: 0.5 },
+        86: { effect: 'snow', intensity: 0.9 },
+        95: { effect: 'storm', intensity: 0.7 },
+        96: { effect: 'storm', intensity: 0.85 },
+        99: { effect: 'storm', intensity: 1.0 }
+    };
+
+    /**
+     * Get the ambient background effect for a WMO code
+     * @param {number} code - WMO weather code
+     * @returns {object} { effect: 'clear'|'clouds'|'fog'|'rain'|'snow'|'storm', intensity: 0..1 }
+     */
+    function getEffect(code) {
+        return EFFECT_CODES[code] || EFFECT_CODES[0];
+    }
+
     /**
      * Format temperature with unit
      * @param {number} temp - Temperature value
@@ -282,6 +325,7 @@ const WeatherEngine = (function() {
         getIconClass,
         getTheme,
         getDescription,
+        getEffect,
         formatTemperature,
         celsiusToFahrenheit,
         fahrenheitToCelsius,

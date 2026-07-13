@@ -1,6 +1,7 @@
 {% extends "palantir_base.html" %}
 
 {% block main %}
+<div class="page-ambient" aria-hidden="true"></div>
 <div class="page-container">
     {% set _title %}{% block page_title %}{% endblock %}{% endset %}
     {% if _title | trim %}

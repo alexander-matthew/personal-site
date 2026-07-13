@@ -498,6 +498,15 @@
             waves: waves,
             columns: columns
         },
+        // Deterministic drawing helpers for page-specific sources
+        // (e.g. weather-fx.js) — same rules apply: never Math.random().
+        util: {
+            hashCell: hashCell,
+            clamp: clamp,
+            smoothstep: smoothstep,
+            vnoise: vnoise,
+            fbm3: fbm3
+        },
         autoInit: autoInit
     };
 

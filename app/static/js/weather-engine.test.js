@@ -253,4 +253,69 @@ describe('WeatherEngine', () => {
             expect(WeatherEngine.findExtreme(locations, 'invalid')).toBeNull();
         });
     });
+
+    describe('getEffect', () => {
+        test('maps clear sky to a gentle clear effect', () => {
+            expect(WeatherEngine.getEffect(0)).toEqual({ effect: 'clear', intensity: 0.2 });
+        });
+
+        test('maps partly cloudy vs overcast to increasing cloud cover', () => {
+            const partly = WeatherEngine.getEffect(2);
+            const overcast = WeatherEngine.getEffect(3);
+            expect(partly.effect).toBe('clouds');
+            expect(overcast.effect).toBe('clouds');
+            expect(overcast.intensity).toBeGreaterThan(partly.intensity);
+        });
+
+        test('rain intensity scales light < moderate < heavy', () => {
+            const light = WeatherEngine.getEffect(61);
+            const moderate = WeatherEngine.getEffect(63);
+            const heavy = WeatherEngine.getEffect(65);
+            expect(light.effect).toBe('rain');
+            expect(moderate.effect).toBe('rain');
+            expect(heavy.effect).toBe('rain');
+            expect(light.intensity).toBeLessThan(moderate.intensity);
+            expect(moderate.intensity).toBeLessThan(heavy.intensity);
+            expect(heavy.intensity).toBe(1.0);
+        });
+
+        test('drizzle is lighter than rain of the same tier', () => {
+            expect(WeatherEngine.getEffect(51).intensity)
+                .toBeLessThan(WeatherEngine.getEffect(61).intensity);
+        });
+
+        test('all thunderstorm codes map to storm', () => {
+            [95, 96, 99].forEach(code => {
+                expect(WeatherEngine.getEffect(code).effect).toBe('storm');
+            });
+            expect(WeatherEngine.getEffect(99).intensity)
+                .toBeGreaterThan(WeatherEngine.getEffect(95).intensity);
+        });
+
+        test('snow codes map to snow with scaled intensity', () => {
+            const light = WeatherEngine.getEffect(71);
+            const heavy = WeatherEngine.getEffect(75);
+            expect(light.effect).toBe('snow');
+            expect(heavy.effect).toBe('snow');
+            expect(light.intensity).toBeLessThan(heavy.intensity);
+        });
+
+        test('fog codes map to fog', () => {
+            expect(WeatherEngine.getEffect(45).effect).toBe('fog');
+            expect(WeatherEngine.getEffect(48).effect).toBe('fog');
+        });
+
+        test('unknown codes fall back to clear', () => {
+            expect(WeatherEngine.getEffect(9999)).toEqual(WeatherEngine.getEffect(0));
+        });
+
+        test('every WMO code has an effect with intensity in (0, 1]', () => {
+            Object.keys(WeatherEngine.WMO_CODES).forEach(code => {
+                const fx = WeatherEngine.getEffect(Number(code));
+                expect(['clear', 'clouds', 'fog', 'rain', 'snow', 'storm']).toContain(fx.effect);
+                expect(fx.intensity).toBeGreaterThan(0);
+                expect(fx.intensity).toBeLessThanOrEqual(1);
+            });
+        });
+    });
 });

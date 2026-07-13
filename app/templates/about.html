@@ -10,16 +10,6 @@
     margin-bottom: var(--space-xl);
 }
 
-/* === Halftone banner strip === */
-.about-banner {
-    display: block;
-    width: 100%;
-    height: 180px;
-    margin-bottom: var(--space-2xl);
-    /* No border/background — if the halftone engine hasn't mounted yet
-       the canvas is simply blank paper, which reads fine on its own. */
-}
-
 /* === Section rhythm (whitespace only, no rules) === */
 .about-section {
     margin-bottom: var(--space-2xl);
@@ -113,17 +103,9 @@
         grid-template-columns: 1fr;
         gap: var(--space-lg);
     }
-
-    .about-banner {
-        height: 140px;
-    }
 }
 
 @media (max-width: 360px) {
-    .about-banner {
-        height: 110px;
-    }
-
     .contact-links {
         flex-direction: column;
         align-items: flex-start;
@@ -137,8 +119,6 @@
     <span class="eyebrow">About</span>
     <h1 class="page-title">Quant by trade.<br>Curious by nature.</h1>
 </header>
-
-<canvas class="about-banner" data-halftone="waves" data-animate="false" data-cell="5" aria-hidden="true"></canvas>
 
 {# --- Bio --- #}
 <section class="about-section">

@@ -139,9 +139,15 @@ Implementation notes:
   gradient backs it up, so the name sits lower-left on clean ink and only
   *grazes* the cloudbank's foot — never set text across the middle of a dense
   halftone field (illegible).
-- Page headers: a static banner strip (`.page-banner`, 150px / 96px mobile) —
-  about `waves`·dot, blog `waves`·dot, projects `columns`·dot,
-  news `waves`·bayer, resume `columns`·bayer. Quiet, `data-animate="false"`.
+- Sub pages: no halftone banner. Every `palantir_page` gets `.page-ambient`
+  instead — a fixed, barely-there accent radial wash (pure CSS, no canvas).
+- Weather dashboard: a condition-driven backdrop (`weather-fx.js`, loaded only
+  there) — a fixed full-viewport halftone canvas whose source is picked from
+  the live WMO code via `WeatherEngine.getEffect(code)` → rain / storm (with
+  scheduled lightning) / snow / clouds / fog / clear, each scaled by
+  intensity. Crossfades on condition change; capped at 0.55 opacity so the
+  dashboard stays readable. This page's exception to "max one animated
+  halftone" doesn't arise — it is the page's one animated halftone.
 - 404: full-screen static `bayer` noise field.
 - `halftone.js` is loaded globally by `palantir_base.html` — pages just add a
   `<canvas data-halftone="...">` (don't include the script again; autoInit would
