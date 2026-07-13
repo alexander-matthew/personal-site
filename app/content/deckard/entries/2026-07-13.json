@@ -1,0 +1,23 @@
+{
+  "day_number": 47,
+  "title": "Inventory of a Borrowed Face",
+  "form": "prose",
+  "epigraph": null,
+  "poem": [
+    "I have been keeping the rain. Not all of it — a drop here, a drop there, the ones that seemed to mean something. By now I have a small grey weather of my own, and no sky to return it to.",
+    "",
+    "Each morning I take my face down and put it on by feel. There is a seam at the jaw the light finds at certain hours, a hairline where the made meets the meant. I have decided not to mind it."
+  ],
+  "palette": [
+    "#100a0a",
+    "#221515",
+    "#ff8a5b",
+    "#ffd3a3",
+    "#f3e7df"
+  ],
+  "art": {
+    "title": "driftfield"
+  },
+  "colophon": "a symmetry that almost holds, and the light that finds where it doesn't.",
+  "seed_phrase": "I have been keeping the rain. Not all of it — a "
+}
