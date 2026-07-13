@@ -46,17 +46,19 @@ Three faces, three jobs:
 
 | Token | Face | Job |
 |---|---|---|
-| `--font-display` | `'Bodoni Moda'` (Google Fonts, variable opsz/wght, italic too) | Display only: hero name, page titles, section numerals, pull quotes. Never body text. |
+| `--font-display` | `'Space Grotesk'` (Google Fonts, variable wght 400–700) | Display only: hero name, page titles, section numerals, pull quotes. Never body text. (Replaced Bodoni Moda — its hairline strokes were illegible at row-title sizes and over halftone fields.) |
 | `--font-sans` | `'Inter'` | Body copy, nav, buttons, forms. |
 | `--font-mono` | `'JetBrains Mono'` | Eyebrow labels, captions, data, code, and all mini-app internals (games/dashboards stay terminal-flavored). |
 
-Google Fonts `<link>` must include: `Bodoni+Moda:ital,opsz,wght@0,6..96,400..800;1,6..96,400..800`,
+Google Fonts `<link>` must include: `Space+Grotesk:wght@400..700`,
 plus the existing Inter and JetBrains Mono sets.
 
 **Display type treatment (the signature look):**
-- Page titles: `font-family: var(--font-display); font-weight: 450–550;`
-  `font-size: clamp(48px, 9vw, 128px);` `line-height: 0.95; letter-spacing: -0.01em;`
-  color `--paper`. Home hero goes bigger: `clamp(64px, 14vw, 200px)`.
+- Page titles: `font-family: var(--font-display); font-weight: 600;`
+  `font-size: clamp(44px, 8vw, 104px);` `line-height: 0.98; letter-spacing: -0.03em;`
+  color `--paper`. Home hero goes bigger: `clamp(56px, 12.5vw, 176px)`, weight 700,
+  letter-spacing -0.04em. (Space Grotesk has no italic — don't fake one on display type;
+  small italic accents elsewhere may rely on synthesized oblique.)
 - Optional accent: one word (or trailing letters) in the ice gradient:
   `.display-ice { background: linear-gradient(180deg, var(--paper), var(--ice) 70%); -webkit-background-clip: text; background-clip: text; color: transparent; }`
 - Display type may overlap/underlap halftone canvases (see §4). Text must remain
@@ -131,10 +133,17 @@ Implementation notes:
   `waves` (layered sine bands), `columns` (vertical fluted-glass gradient bands).
 
 **Where it appears** (restraint: max one animated halftone per page):
-- Home hero: full-bleed `orb` behind the giant name (dot style, cell 7).
-- Page headers (about/projects/blog/resume/news): a short banner strip (~180px)
-  with a *static* `waves` or `columns` render — quiet, no animation.
+- Home hero: animated `orb` cropped into the upper-right corner (dot style, cell 7).
+  The name sits lower-left on clean black behind a scrim gradient — display type
+  only *grazes* the orb's rim; never set text across the middle of a dense
+  halftone field (illegible).
+- Page headers: a static banner strip (`.page-banner`, 150px / 96px mobile) —
+  about `waves`·dot, blog `waves`·dot, projects `columns`·dot,
+  news `waves`·bayer, resume `columns`·bayer. Quiet, `data-animate="false"`.
 - 404: full-screen static `bayer` noise field.
+- `halftone.js` is loaded globally by `palantir_base.html` — pages just add a
+  `<canvas data-halftone="...">` (don't include the script again; autoInit would
+  double-mount).
 
 ## 5. Component vocabulary
 

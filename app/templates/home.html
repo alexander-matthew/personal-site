@@ -12,18 +12,18 @@
     min-height: calc(100vh - 64px);
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
+    justify-content: flex-end;
     background: var(--bg-primary);
     overflow: hidden;
 }
 
+/* The orb sits upper-right, cropped by the viewport edge; the name lives
+   lower-left on clean black and only grazes the orb's rim. */
 .hero-canvas {
     position: absolute;
-    /* Shift the orb up so the tagline/buttons land on its sparse lower rim */
-    inset: -12% 0 12% 0;
-    width: 100%;
+    top: -12%;
+    right: -10%;
+    width: 62%;
     height: 100%;
     pointer-events: none;
     opacity: 0;
@@ -31,21 +31,35 @@
     animation-delay: 0.8s;
 }
 
+/* Guarantees text contrast wherever the name and orb overlap. */
+.hero-scrim {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        linear-gradient(0deg, rgba(6, 7, 9, 0.92) 0%, rgba(6, 7, 9, 0.55) 28%, rgba(6, 7, 9, 0) 55%),
+        linear-gradient(80deg, rgba(6, 7, 9, 0.85) 25%, rgba(6, 7, 9, 0) 55%);
+}
+
 .hero-content {
     position: relative;
     z-index: 1;
-    padding: 12vh var(--space-lg) 0;
+    padding: 0 var(--space-xl) 16vh;
+    max-width: 1400px;
+    width: 100%;
+    margin: 0 auto;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
+    text-align: left;
 }
 
 .hero-name {
     font-family: var(--font-display);
-    font-weight: 500;
-    font-size: clamp(64px, 14vw, 200px);
-    line-height: 0.9;
-    letter-spacing: -0.01em;
+    font-weight: 700;
+    font-size: clamp(56px, 12.5vw, 176px);
+    line-height: 0.95;
+    letter-spacing: -0.04em;
     color: var(--paper);
     margin: 0;
     opacity: 0;
@@ -67,7 +81,6 @@
     font-family: var(--font-sans);
     font-size: var(--font-size-lg);
     color: var(--text-primary);
-    text-shadow: 0 1px 10px rgba(6, 7, 9, 0.9), 0 0 24px rgba(6, 7, 9, 0.7);
     margin-top: var(--space-lg);
     opacity: 0;
     transform: translateY(16px);
@@ -267,12 +280,23 @@
 /* === Responsive === */
 @media (max-width: 768px) {
     .hero {
-        min-height: 85vh;
+        min-height: 88vh;
+    }
+
+    /* Orb becomes a top-half backdrop; text keeps the bottom half. */
+    .hero-canvas {
+        top: -4%;
+        right: -22%;
+        width: 110%;
+        height: 58%;
+    }
+
+    .hero-content {
+        padding: 0 var(--space-lg) 12vh;
     }
 
     .hero-actions {
         flex-wrap: wrap;
-        justify-content: center;
     }
 
     .hero-caption {
@@ -291,6 +315,7 @@
 {% block main %}
 <section class="hero" id="hero">
     <canvas class="hero-canvas" id="hero-canvas" data-halftone="orb" data-cell="7" data-style="dot"></canvas>
+    <div class="hero-scrim" aria-hidden="true"></div>
     <div class="hero-content">
         <h1 class="hero-name">Alexa<span class="display-ice">nder</span></h1>
         <p class="hero-tagline">Quant &amp; curious generalist.</p>
@@ -315,11 +340,11 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/halftone.js') }}"></script>
 <script>
 (function() {
     // Halftone canvas mounts itself automatically from the
-    // data-halftone="orb" attribute above (see halftone.js autoInit).
+    // data-halftone="orb" attribute above (halftone.js is loaded
+    // globally by palantir_base.html).
 
     // === Feed Item Reveal ===
     var feedItems = document.querySelectorAll('.feed-item');

@@ -29,6 +29,8 @@
     <p class="page-intro">Personal projects and experiments &mdash; select one to explore.</p>
 </header>
 
+<canvas class="page-banner" data-halftone="columns" data-animate="false" data-cell="5" aria-hidden="true"></canvas>
+
 <div class="projects-list">
     {% for project in projects %}
     <a href="{{ project.link }}" class="feed-item">
