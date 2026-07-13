@@ -10,7 +10,7 @@
  *
  * Usage:
  *   Halftone.mount(canvasEl, {
- *     source: Halftone.sources.orb,   // (ctx, w, h, t) => void, or an <img>
+ *     source: Halftone.sources.clouds, // (ctx, w, h, t) => void, or an <img>
  *     cell: 7,
  *     style: 'dot',                   // 'dot' | 'bayer'
  *     plates: { shadow, mid, light, paper },
@@ -18,7 +18,7 @@
  *     animate: true,
  *   });
  *
- * Canvases with a `data-halftone="orb|waves|columns"` attribute are mounted
+ * Canvases with a `data-halftone="clouds|waves|columns"` attribute are mounted
  * automatically on DOMContentLoaded (see Halftone.sources / autoInit below).
  */
 (function (global) {
@@ -301,81 +301,94 @@
         return 'rgb(' + v + ',' + v + ',' + v + ')';
     }
 
-    // A shaded, slowly-rotating sphere (classical orb/globe) — filled disc
-    // with an off-center radial gradient, faceted polygon shading and a
-    // few great-circle ellipse strokes so the dithered result reads as
-    // a rotating 3D globe rather than a flat circle.
-    function orb(ctx, w, h, t) {
+    function smoothstep(e0, e1, x) {
+        var s = clamp((x - e0) / (e1 - e0), 0, 1);
+        return s * s * (3 - 2 * s);
+    }
+
+    // Value noise on the hashCell lattice, bilinear with smooth fade.
+    function vnoise(x, y) {
+        var xi = Math.floor(x), yi = Math.floor(y);
+        var xf = x - xi, yf = y - yi;
+        var u = xf * xf * (3 - 2 * xf);
+        var v = yf * yf * (3 - 2 * yf);
+        var a = hashCell(xi, yi);
+        var b = hashCell(xi + 1, yi);
+        var c = hashCell(xi, yi + 1);
+        var d = hashCell(xi + 1, yi + 1);
+        return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+    }
+
+    // Three-octave fBm, normalized to ~[0,1]. Octave offsets decorrelate
+    // the lattices so billow edges don't align.
+    function fbm3(x, y) {
+        var s = 0.5 * vnoise(x, y);
+        s += 0.25 * vnoise(x * 2.02 + 19.3, y * 2.02 + 7.1);
+        s += 0.125 * vnoise(x * 4.05 + 53.1, y * 4.05 + 31.7);
+        return s / 0.875;
+    }
+
+    // Drifting cloudbank over a dark sky — the full-bleed hero backdrop.
+    // fBm billows shaped by a vertical envelope: sparse dust above, a
+    // luminous bank of cloud tops mid-frame (lit from above via the
+    // row-to-row density derivative), fading to clean ink in the lower
+    // third so display type sits on black. Writes greyscale ImageData
+    // directly — at offscreen scale (cols x rows) this is cheap.
+    function clouds(ctx, w, h, t) {
         t = t || 0;
-        ctx.clearRect(0, 0, w, h);
 
-        var cx = w / 2, cy = h / 2;
-        var r = Math.min(w, h) * 0.42;
-        var rot = t * 0.15;
+        var img = ctx.createImageData(w, h);
+        var data = img.data;
+        var prevRow = new Float32Array(w);
+        var drift = t * 0.016;
 
-        // Off-center highlight (bright upper-left -> dark rim).
-        var lx = cx - r * 0.38;
-        var ly = cy - r * 0.4 + Math.sin(t * 0.1) * r * 0.03;
+        var x, y, ny, u, n, far, dens, shape, top, lum, sky, fade, idx;
+        for (y = 0; y < h; y++) {
+            ny = y / (h - 1 || 1);
+            // Where the main bank lives: none at the very top, densest
+            // ~55%, gone by ~85% of the height.
+            var env = smoothstep(0.04, 0.42, ny) * (1 - smoothstep(0.55, 0.85, ny));
+            // A second, distant layer high in the sky for depth.
+            var envFar = smoothstep(0.02, 0.16, ny) * (1 - smoothstep(0.3, 0.5, ny));
+            fade = 1 - smoothstep(0.68, 0.94, ny);
 
-        var grad = ctx.createRadialGradient(lx, ly, 0, cx, cy, r * 1.35);
-        grad.addColorStop(0, '#ffffff');
-        grad.addColorStop(0.35, '#b4b4b4');
-        grad.addColorStop(0.7, '#585858');
-        grad.addColorStop(1, '#090909');
+            for (x = 0; x < w; x++) {
+                u = x / h;
+                n = fbm3(u * 1.7 + drift, ny * 2.6 + drift * 0.22);
 
-        ctx.beginPath();
-        ctx.arc(cx, cy, r, 0, Math.PI * 2);
-        ctx.fillStyle = grad;
-        ctx.fill();
+                dens = n + (env - 0.55) * 0.6;
+                shape = smoothstep(0.38, 0.72, dens);
 
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(cx, cy, r, 0, Math.PI * 2);
-        ctx.clip();
+                lum = 0;
+                if (shape > 0) {
+                    // Density increasing downward = a cloud's upper edge —
+                    // brighten it (sun-from-above rim light).
+                    top = y === 0 ? 0 : clamp((n - prevRow[x]) * 20, -0.3, 0.75);
+                    lum = shape * (0.68 + top) * (1.2 - ny * 0.7);
+                }
 
-        // Rotating "longitude" great circles, squashed by cos(phase) to
-        // fake 3D rotation about the vertical axis.
-        ctx.lineWidth = Math.max(1, r * 0.012);
-        var i, phase, ry;
-        for (i = 0; i < 5; i++) {
-            phase = rot + i * (Math.PI / 5);
-            ry = Math.max(1.5, r * Math.abs(Math.cos(phase)));
-            ctx.beginPath();
-            ctx.ellipse(cx, cy, r, ry, 0, 0, Math.PI * 2);
-            ctx.strokeStyle = 'rgba(255,255,255,0.16)';
-            ctx.stroke();
+                // Distant bank: smaller features drifting slower, dim
+                // enough to stay on the shadow/mid plates.
+                if (envFar > 0 && shape < 1) {
+                    far = vnoise(u * 4.2 + drift * 0.5 + 40.7, ny * 6.5 + 60.2);
+                    far = smoothstep(0.55, 0.8, far + (envFar - 0.7) * 0.5) * 0.38;
+                    if (far > lum) { lum = far; }
+                }
+
+                // Sparse dust in the open sky, densest near the bank.
+                sky = (0.12 + n * 0.1) * (1 - shape) * env;
+                if (sky > lum) { lum = sky; }
+                lum = clamp(lum * fade, 0, 1);
+
+                prevRow[x] = n;
+
+                idx = (y * w + x) * 4;
+                data[idx] = data[idx + 1] = data[idx + 2] = (lum * 255) | 0;
+                data[idx + 3] = 255;
+            }
         }
 
-        // A couple of static-ish "latitude" bands for globe structure.
-        var j, ly2, rx;
-        for (j = -1; j <= 1; j++) {
-            ly2 = cy + j * r * 0.45;
-            rx = Math.sqrt(Math.max(0, r * r - Math.pow(j * r * 0.45, 2)));
-            ctx.beginPath();
-            ctx.ellipse(cx, ly2, rx, Math.max(1, rx * 0.16), 0, 0, Math.PI * 2);
-            ctx.strokeStyle = 'rgba(0,0,0,0.16)';
-            ctx.stroke();
-        }
-
-        // Faceted polygon shading (icosahedron-ish) drifting slowly with t.
-        var facetCount = 10, k, ang, fx, fy, size, shade;
-        for (k = 0; k < facetCount; k++) {
-            ang = rot * 1.3 + k * (Math.PI * 2 / facetCount);
-            fx = cx + Math.cos(ang) * r * 0.5;
-            fy = cy + Math.sin(ang) * r * 0.3;
-            size = r * 0.34;
-            shade = (Math.sin(ang * 2 + rot) + 1) / 2 * 0.16;
-
-            ctx.beginPath();
-            ctx.moveTo(fx, fy - size * 0.5);
-            ctx.lineTo(fx + size * 0.5, fy + size * 0.4);
-            ctx.lineTo(fx - size * 0.5, fy + size * 0.4);
-            ctx.closePath();
-            ctx.fillStyle = 'rgba(0,0,0,' + shade + ')';
-            ctx.fill();
-        }
-
-        ctx.restore();
+        ctx.putImageData(img, 0, 0);
     }
 
     // 4-6 layered horizontal sine bands, each a soft vertical gradient,
@@ -453,7 +466,7 @@
 
     function autoInit() {
         var canvases = document.querySelectorAll('canvas[data-halftone]');
-        var i, canvas, name, source, cell, style, animate;
+        var i, canvas, name, source, cell, style, animate, fps;
 
         for (i = 0; i < canvases.length; i++) {
             canvas = canvases[i];
@@ -465,8 +478,10 @@
             if (!cell || cell <= 0) { cell = 6; }
             style = canvas.getAttribute('data-style') === 'bayer' ? 'bayer' : 'dot';
             animate = parseBool(canvas.getAttribute('data-animate'), true);
+            fps = parseFloat(canvas.getAttribute('data-fps'));
+            if (!fps || fps <= 0) { fps = 30; }
 
-            Halftone.mount(canvas, { source: source, cell: cell, style: style, animate: animate });
+            Halftone.mount(canvas, { source: source, cell: cell, style: style, animate: animate, fps: fps });
         }
     }
 
@@ -479,7 +494,7 @@
             return new Instance(canvas, opts);
         },
         sources: {
-            orb: orb,
+            clouds: clouds,
             waves: waves,
             columns: columns
         },

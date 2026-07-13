@@ -128,14 +128,16 @@ Implementation notes:
   per-cell deterministic jitter (hash of x,y) so grids don't moiré).
 - `IntersectionObserver` pauses offscreen canvases; `prefers-reduced-motion` renders
   a single static frame; `resize` re-rasterizes (debounced).
-- Expose procedural sources on `Halftone.sources`: `orb` (the v1 icosahedron
-  wireframe redrawn filled/shaded so it dithers like a sphere with facets),
+- Expose procedural sources on `Halftone.sources`: `clouds` (a drifting
+  atmospheric cloudbank — value-noise fBm billows rim-lit from above, with a
+  fainter distant layer for depth, fading to clean ink in the lower third),
   `waves` (layered sine bands), `columns` (vertical fluted-glass gradient bands).
 
 **Where it appears** (restraint: max one animated halftone per page):
-- Home hero: animated `orb` cropped into the upper-right corner (dot style, cell 7).
-  The name sits lower-left on clean black behind a scrim gradient — display type
-  only *grazes* the orb's rim; never set text across the middle of a dense
+- Home hero: animated `clouds` full-bleed behind the content (dot style, cell 6,
+  fps 24). The source keeps its lower third near-black and a bottom scrim
+  gradient backs it up, so the name sits lower-left on clean ink and only
+  *grazes* the cloudbank's foot — never set text across the middle of a dense
   halftone field (illegible).
 - Page headers: a static banner strip (`.page-banner`, 150px / 96px mobile) —
   about `waves`·dot, blog `waves`·dot, projects `columns`·dot,
@@ -164,7 +166,7 @@ Implementation notes:
 ## 6. Motion
 
 - One orchestrated page-load moment on home only: name fades up (0.3s delay),
-  halftone orb fades in (0.8s), corner captions last (1.4s). Elsewhere: content
+  halftone cloudscape fades in (0.8s), corner captions last (1.4s). Elsewhere: content
   loads static; feed rows keep the existing IntersectionObserver reveal.
 - Hover micro-interactions ≤200ms. No parallax, no scroll-jacking.
 - `@media (prefers-reduced-motion: reduce)`: all animation off, halftones static.
