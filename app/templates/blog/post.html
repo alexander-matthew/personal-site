@@ -1,70 +1,128 @@
 {% extends "palantir_page.html" %}
 
 {% block title %}{{ post.title }}{% endblock %}
-{% block page_title %}{{ post.title }}{% endblock %}
 
 {% block head %}
 <style>
-.post-meta {
-    color: var(--text-muted);
-    font-size: var(--font-size-sm);
-    margin-bottom: var(--space-lg);
-    padding-bottom: var(--space-md);
-    border-bottom: 1px solid var(--border-subtle);
+.post-header {
+    margin-bottom: var(--space-2xl);
 }
 
-.post-content {
-    line-height: 1.8;
+.post-title {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(40px, 6vw, 72px);
+    line-height: 1.0;
+    letter-spacing: -0.01em;
+    color: var(--paper);
+    margin-top: var(--space-sm);
+}
+
+.post-body {
+    max-width: 65ch;
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.7;
     color: var(--text-primary);
 }
 
-.post-content p {
+.post-body p {
     margin-bottom: var(--space-md);
 }
 
-.post-content h1, .post-content h2, .post-content h3 {
-    margin: var(--space-lg) 0 var(--space-sm) 0;
-    color: var(--text-primary);
+.post-body h1,
+.post-body h2,
+.post-body h3 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    color: var(--paper);
+    line-height: 1.2;
+    margin: var(--space-xl) 0 var(--space-sm) 0;
 }
 
-.post-content ul, .post-content ol {
-    margin-left: var(--space-lg);
-    margin-bottom: var(--space-md);
+.post-body ul,
+.post-body ol {
+    margin: 0 0 var(--space-md) var(--space-lg);
 }
 
-.post-content code {
-    background: var(--bg-elevated);
+.post-body li {
+    margin-bottom: var(--space-xs);
+}
+
+.post-body a {
+    color: var(--accent);
+}
+
+.post-body blockquote {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: clamp(20px, 3vw, 24px);
+    line-height: 1.4;
+    color: var(--paper);
+    border-left: 2px solid var(--accent);
+    padding: var(--space-xs) 0 var(--space-xs) var(--space-lg);
+    margin: var(--space-xl) 0;
+}
+
+.post-body code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    background: var(--bg-surface);
     padding: 2px 6px;
-    border-radius: 3px;
-    font-size: var(--font-size-sm);
+    border-radius: var(--radius);
 }
 
-.post-content pre {
-    background: var(--bg-elevated);
+.post-body pre {
+    font-family: var(--font-mono);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
     padding: var(--space-md);
-    border-radius: 4px;
     overflow-x: auto;
-    margin-bottom: var(--space-md);
-    border: 1px solid var(--border-default);
+    margin: 0 0 var(--space-md) 0;
 }
 
-.post-content pre code {
+.post-body pre code {
     background: none;
     padding: 0;
 }
 
 .post-back {
-    margin-top: var(--space-xl);
+    margin-top: var(--space-2xl);
+}
+
+.post-back-link {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.post-back-link:hover {
+    color: var(--accent);
+}
+
+@media (max-width: 360px) {
+    .post-body {
+        font-size: 15px;
+    }
 }
 </style>
 {% endblock %}
 
 {% block page_content %}
-<div class="post-meta">{{ post.date }}</div>
-<div class="post-content">
+<header class="post-header">
+    <span class="eyebrow">{{ post.date }}</span>
+    <h1 class="post-title">{{ post.title }}</h1>
+</header>
+
+<div class="post-body">
     {{ post.content | safe }}
 </div>
+
 <div class="post-back">
-    <a href="{{ url_for('blog.index') }}" class="btn">&larr; Back to Blog</a>
+    <a href="{{ url_for('blog.index') }}" class="post-back-link">&larr; Back to Blog</a>
 </div>
 {% endblock %}

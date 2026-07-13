@@ -59,7 +59,7 @@
     padding: var(--space-sm);
     background: var(--bg-surface);
     border: 1px solid var(--border-default);
-    border-radius: 4px;
+    border-radius: var(--radius);
 }
 
 .location-current {
@@ -87,7 +87,7 @@
     padding: var(--space-xs) var(--space-sm);
     background: var(--bg-primary);
     border: 1px solid var(--border-default);
-    border-radius: 3px 0 0 3px;
+    border-radius: var(--radius) 0 0 var(--radius);
     color: var(--text-primary);
     font-family: var(--font-mono);
     font-size: var(--font-size-sm);
@@ -109,12 +109,12 @@
 }
 
 .location-search button {
-    border-radius: 0 3px 3px 0;
+    border-radius: 0 var(--radius) var(--radius) 0;
     border-left: none;
 }
 
 .geo-btn {
-    border-radius: 3px;
+    border-radius: var(--radius);
 }
 
 .location-search button:hover, .geo-btn:hover {
@@ -129,7 +129,7 @@
     right: 0;
     background: var(--bg-elevated);
     border: 1px solid var(--border-default);
-    border-radius: 0 0 4px 4px;
+    border-radius: 0 0 var(--radius) var(--radius);
     z-index: 100;
     display: none;
     max-height: 200px;
@@ -146,7 +146,7 @@
 
 .search-item:hover {
     background: var(--accent);
-    color: #000;
+    color: var(--ink);
 }
 
 .search-item i {
@@ -155,13 +155,13 @@
 }
 
 .search-item:hover i {
-    color: #000;
+    color: var(--ink);
 }
 
 .current-weather-card {
     background: var(--bg-surface);
     border: 1px solid var(--border-default);
-    border-radius: 4px;
+    border-radius: var(--radius);
     padding: var(--space-md);
     margin-bottom: var(--space-md);
 }
@@ -190,15 +190,17 @@
 
 .weather-icon-large {
     font-size: 48px;
-    color: var(--color-warning);
+    color: var(--accent);
 }
 
-.weather-icon-large.sunny { color: var(--color-warning); }
-.weather-icon-large.cloudy { color: var(--text-secondary); }
-.weather-icon-large.rainy { color: var(--accent); }
-.weather-icon-large.stormy { color: var(--text-muted); }
-.weather-icon-large.snowy { color: var(--accent-hover); }
-.weather-icon-large.foggy { color: var(--text-secondary); }
+/* Per-condition accents come from the shared tokens in weather.css so both
+   stylesheets agree — cooled toward the blue/ice family, no yellows. */
+.weather-icon-large.sunny { color: var(--sunny-accent); }
+.weather-icon-large.cloudy { color: var(--cloudy-accent); }
+.weather-icon-large.rainy { color: var(--rainy-accent); }
+.weather-icon-large.stormy { color: var(--stormy-accent); }
+.weather-icon-large.snowy { color: var(--snowy-accent); }
+.weather-icon-large.foggy { color: var(--foggy-accent); }
 
 .weather-temp {
     display: flex;
@@ -233,7 +235,7 @@
 .detail-item {
     background: var(--bg-elevated);
     border: 1px solid var(--border-subtle);
-    border-radius: 4px;
+    border-radius: var(--radius);
     padding: var(--space-sm);
     text-align: center;
 }
@@ -261,7 +263,7 @@
 .forecast-section {
     background: var(--bg-surface);
     border: 1px solid var(--border-default);
-    border-radius: 4px;
+    border-radius: var(--radius);
     padding: var(--space-md);
 }
 
@@ -289,7 +291,7 @@
     padding: var(--space-sm) var(--space-xs);
     background: var(--bg-elevated);
     border: 1px solid var(--border-subtle);
-    border-radius: 4px;
+    border-radius: var(--radius);
 }
 
 .forecast-day-name {

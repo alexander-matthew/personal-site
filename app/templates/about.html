@@ -5,40 +5,37 @@
 
 {% block head %}
 <style>
-/* === About Section Headers === */
-.about-section {
+/* === Header (eyebrow + display-serif statement) === */
+.about-header {
     margin-bottom: var(--space-xl);
+}
+
+/* === Halftone banner strip === */
+.about-banner {
+    display: block;
+    width: 100%;
+    height: 180px;
+    margin-bottom: var(--space-2xl);
+    /* No border/background — if the halftone engine hasn't mounted yet
+       the canvas is simply blank paper, which reads fine on its own. */
+}
+
+/* === Section rhythm (whitespace only, no rules) === */
+.about-section {
+    margin-bottom: var(--space-2xl);
 }
 
 .about-section:last-child {
     margin-bottom: 0;
 }
 
-.about-section-label {
-    font-size: var(--font-size-xs);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    color: var(--text-muted);
-    margin-bottom: var(--space-md);
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-}
-
-.about-section-label::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border-default);
-}
-
 /* === Bio === */
 .bio-text {
-    font-size: var(--font-size-sm);
-    line-height: 1.8;
-    color: var(--text-secondary);
-    max-width: 680px;
+    font-family: var(--font-sans);
+    font-size: var(--font-size-base);
+    line-height: 1.65;
+    color: var(--text-primary);
+    max-width: 65ch;
 }
 
 .bio-text p {
@@ -49,30 +46,27 @@
     margin-bottom: 0;
 }
 
-/* === Interests === */
-.interests-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: var(--space-sm);
+/* === Interests (display-serif italic cycler + flat mono index) === */
+.interests-display {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 500;
+    font-size: clamp(28px, 4.5vw, 44px);
+    line-height: 1.1;
+    color: var(--ice);
+    margin-bottom: var(--space-md);
+    transition: opacity var(--transition-base);
 }
 
-.interest-item {
-    padding: var(--space-sm) var(--space-md);
-    font-size: var(--font-size-sm);
-    color: var(--text-secondary);
-    background: var(--bg-surface);
-    border: 1px solid var(--border-subtle);
-    border-left: 2px solid transparent;
-    border-radius: 3px;
-    transition: all var(--transition-base);
+.interests-display.is-fading {
+    opacity: 0;
 }
 
-.interest-item.active {
-    color: var(--accent);
-    border-left-color: var(--accent);
-    background: var(--accent-glow);
-    border-color: rgba(77, 166, 255, 0.25);
-    border-left-color: var(--accent);
+.interests-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px var(--space-sm);
+    max-width: 65ch;
 }
 
 /* === Skills === */
@@ -82,158 +76,154 @@
     gap: var(--space-lg);
 }
 
-.skill-category h3 {
+.skill-category-label {
+    font-family: var(--font-mono);
     font-size: var(--font-size-xs);
+    letter-spacing: 0.15em;
     text-transform: uppercase;
-    letter-spacing: 1px;
     color: var(--text-muted);
     margin-bottom: var(--space-sm);
-    padding-bottom: var(--space-xs);
-    border-bottom: 1px solid var(--border-subtle);
 }
 
 .skill-category .tags {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-xs);
+    gap: 4px var(--space-sm);
 }
 
 /* === Contact === */
 .contact-text {
-    font-size: var(--font-size-sm);
+    font-family: var(--font-sans);
+    font-size: var(--font-size-base);
     color: var(--text-secondary);
-    line-height: 1.7;
+    line-height: 1.65;
     margin-bottom: var(--space-lg);
-    max-width: 540px;
+    max-width: 65ch;
 }
 
 .contact-links {
     display: flex;
+    flex-wrap: wrap;
     gap: var(--space-md);
-}
-
-/* === Divider === */
-.about-divider {
-    border: none;
-    border-top: 1px solid var(--border-subtle);
-    margin: var(--space-xl) 0;
 }
 
 /* === Responsive === */
 @media (max-width: 768px) {
     .skills-columns {
         grid-template-columns: 1fr;
-        gap: var(--space-md);
+        gap: var(--space-lg);
     }
 
-    .interests-grid {
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    .about-banner {
+        height: 140px;
+    }
+}
+
+@media (max-width: 360px) {
+    .about-banner {
+        height: 110px;
     }
 
     .contact-links {
         flex-direction: column;
-        gap: var(--space-sm);
+        align-items: flex-start;
     }
 }
 </style>
 {% endblock %}
 
 {% block page_content %}
-<div class="content-panel">
-    <div class="content-panel-header">About</div>
-    <div class="content-panel-body">
+<header class="about-header">
+    <span class="eyebrow">About</span>
+    <h1 class="page-title">Quant by trade.<br>Curious by nature.</h1>
+</header>
 
-        {# --- Bio --- #}
-        <div class="about-section">
-            <div class="about-section-label">Bio</div>
-            <div class="bio-text">
-                <p>
-                    Hello! I'm Alexander &mdash; a quant by trade and curious generalist at heart.
-                </p>
-                <p>
-                    This site is a project and learning experience in itself &mdash; built from scratch
-                    to sharpen my skills while also serving as a place to showcase my other work.
-                </p>
-            </div>
-        </div>
+<canvas class="about-banner" data-halftone="waves" data-animate="false" data-cell="5" aria-hidden="true"></canvas>
 
-        <hr class="about-divider">
-
-        {# --- Interests --- #}
-        <div class="about-section">
-            <div class="about-section-label">Interests</div>
-            <div class="interests-grid" id="interests-list">
-                <div class="interest-item">Machine Learning</div>
-                <div class="interest-item">Artificial Intelligence</div>
-                <div class="interest-item">3D Printing</div>
-                <div class="interest-item">Computer Graphics</div>
-                <div class="interest-item">Electronic Music</div>
-                <div class="interest-item">Weightlifting</div>
-                <div class="interest-item">Snowboarding</div>
-                <div class="interest-item">Fencing</div>
-                <div class="interest-item">Painting</div>
-                <div class="interest-item">Strategy Games</div>
-                <div class="interest-item">World History</div>
-                <div class="interest-item">Finance</div>
-                <div class="interest-item">Functional Programming</div>
-            </div>
-        </div>
-
-        <hr class="about-divider">
-
-        {# --- Skills --- #}
-        <div class="about-section">
-            <div class="about-section-label">Skills</div>
-            <div class="skills-columns">
-                <div class="skill-category">
-                    <h3>Languages</h3>
-                    {{ tag_list(['Python', 'JavaScript', 'SQL', 'HTML/CSS']) }}
-                </div>
-                <div class="skill-category">
-                    <h3>Frameworks & Tools</h3>
-                    {{ tag_list(['FastAPI', 'React', 'Git', 'Docker']) }}
-                </div>
-                <div class="skill-category">
-                    <h3>Specializations</h3>
-                    {{ tag_list(['Quantitative Finance', 'Data Analysis', 'Machine Learning']) }}
-                </div>
-            </div>
-        </div>
-
-        <hr class="about-divider">
-
-        {# --- Contact --- #}
-        <div class="about-section">
-            <div class="about-section-label">Contact</div>
-            <p class="contact-text">
-                This site is dedicated to my personal projects and side interests.
-                For my professional work, check out my LinkedIn profile.
-            </p>
-            <div class="contact-links">
-                <a href="{{ site.linkedin_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">LinkedIn</a>
-                <a href="{{ site.github_url }}" target="_blank" rel="noopener noreferrer" class="btn">GitHub</a>
-            </div>
-        </div>
-
+{# --- Bio --- #}
+<section class="about-section">
+    <span class="eyebrow">Bio</span>
+    <div class="bio-text">
+        <p>
+            Hello! I'm Alexander &mdash; a quant by trade and curious generalist at heart.
+        </p>
+        <p>
+            This site is a project and learning experience in itself &mdash; built from scratch
+            to sharpen my skills while also serving as a place to showcase my other work.
+        </p>
     </div>
-</div>
+</section>
+
+{# --- Interests --- #}
+<section class="about-section">
+    <span class="eyebrow">Interests</span>
+    <p class="interests-display" id="interests-display">Machine Learning</p>
+    {{ tag_list(['Machine Learning', 'Artificial Intelligence', '3D Printing', 'Computer Graphics',
+                 'Electronic Music', 'Weightlifting', 'Snowboarding', 'Fencing', 'Painting',
+                 'Strategy Games', 'World History', 'Finance', 'Functional Programming'], class='tags interests-tags') }}
+</section>
+
+{# --- Skills --- #}
+<section class="about-section">
+    <span class="eyebrow">Skills</span>
+    <div class="skills-columns">
+        <div class="skill-category">
+            <div class="skill-category-label">Languages</div>
+            {{ tag_list(['Python', 'JavaScript', 'SQL', 'HTML/CSS']) }}
+        </div>
+        <div class="skill-category">
+            <div class="skill-category-label">Frameworks &amp; Tools</div>
+            {{ tag_list(['FastAPI', 'React', 'Git', 'Docker']) }}
+        </div>
+        <div class="skill-category">
+            <div class="skill-category-label">Specializations</div>
+            {{ tag_list(['Quantitative Finance', 'Data Analysis', 'Machine Learning']) }}
+        </div>
+    </div>
+</section>
+
+{# --- Contact --- #}
+<section class="about-section">
+    <span class="eyebrow">Contact</span>
+    <p class="contact-text">
+        This site is dedicated to my personal projects and side interests.
+        For my professional work, check out my LinkedIn profile.
+    </p>
+    <div class="contact-links">
+        <a href="{{ site.linkedin_url }}" target="_blank" rel="noopener noreferrer" class="btn-pill">LinkedIn</a>
+        <a href="{{ site.github_url }}" target="_blank" rel="noopener noreferrer" class="btn-pill btn-ghost">GitHub</a>
+    </div>
+</section>
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='js/halftone.js') }}"></script>
 <script>
 (function() {
-    // Interests cycling animation
-    var items = document.querySelectorAll('.interest-item');
+    // Interests cycler — display-serif italic word swap, driven from the
+    // flat mono interest tags already in the DOM (single source of truth,
+    // so the full list still renders correctly with JS disabled).
+    var display = document.getElementById('interests-display');
+    var words = Array.prototype.map.call(
+        document.querySelectorAll('.interests-tags .tag'),
+        function(el) { return el.textContent.trim(); }
+    );
+
+    if (!display || words.length < 2) { return; }
+
+    var reduceMotion = window.matchMedia &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduceMotion) { return; }
+
     var current = 0;
-
-    function cycle() {
-        items.forEach(function(i) { i.classList.remove('active'); });
-        items[current].classList.add('active');
-        current = (current + 1) % items.length;
-    }
-
-    cycle();
-    setInterval(cycle, 2000);
+    setInterval(function() {
+        current = (current + 1) % words.length;
+        display.classList.add('is-fading');
+        setTimeout(function() {
+            display.textContent = words[current];
+            display.classList.remove('is-fading');
+        }, 200);
+    }, 2200);
 })();
 </script>
 {% endblock %}

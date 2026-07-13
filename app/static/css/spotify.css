@@ -29,12 +29,12 @@
 .spotify-page .tool-header h1 {
     font-size: 2rem;
     font-weight: 600;
-    color: var(--text-color);
+    color: var(--text-primary);
     margin-bottom: 0.5rem;
 }
 
 .spotify-page .tool-description {
-    color: var(--text-light);
+    color: var(--text-secondary);
 }
 
 /* ===============================================
@@ -48,15 +48,15 @@
 }
 
 .stat-card {
-    background: rgba(10, 10, 10, 0.85);
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius);
     padding: 1.5rem;
 }
 
 .stat-card__label {
     font-size: 0.8125rem;
-    color: var(--text-light);
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     margin-bottom: 0.75rem;
@@ -66,7 +66,7 @@
     font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
     font-size: 2.5rem;
     font-weight: 600;
-    color: var(--text-color);
+    color: var(--text-primary);
 }
 
 .stat-card__value--text {
@@ -98,19 +98,19 @@
    Section Cards
    =============================================== */
 .section-card {
-    background: rgba(10, 10, 10, 0.85);
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius);
     padding: 2rem;
 }
 
 .section-card__title {
     font-size: 1rem;
     font-weight: 600;
-    color: var(--text-color);
+    color: var(--text-primary);
     margin-bottom: 1.25rem;
     padding-bottom: 0.75rem;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-default);
 }
 
 /* ===============================================
@@ -136,7 +136,7 @@
 
 .ascii-bar__label {
     font-size: 0.875rem;
-    color: var(--text-light);
+    color: var(--text-secondary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -145,7 +145,7 @@
 .ascii-bar__blocks {
     font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
     font-size: 0.875rem;
-    color: var(--text-color);
+    color: var(--text-primary);
     letter-spacing: 0;
     white-space: pre;
 }
@@ -153,7 +153,7 @@
 .ascii-bar__value {
     font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
     font-size: 0.875rem;
-    color: var(--text-light);
+    color: var(--text-secondary);
     text-align: right;
 }
 
@@ -175,7 +175,7 @@
 
 .ascii-heatmap__day {
     width: 3rem;
-    color: var(--text-light);
+    color: var(--text-secondary);
     flex-shrink: 0;
     font-size: 0.875rem;
 }
@@ -187,13 +187,13 @@
 .ascii-heatmap__cell {
     width: 1.25rem;
     text-align: center;
-    color: var(--text-color);
+    color: var(--text-primary);
     cursor: default;
     position: relative;
 }
 
 .ascii-heatmap__cell:hover {
-    color: var(--primary-color);
+    color: var(--accent);
 }
 
 .ascii-heatmap__header {
@@ -205,7 +205,7 @@
 .ascii-heatmap__hour {
     width: 1.25rem;
     text-align: center;
-    color: var(--text-light);
+    color: var(--text-secondary);
     font-size: 0.75rem;
 }
 
@@ -227,11 +227,11 @@
 .ascii-chart__bar {
     width: 1.25rem;
     text-align: center;
-    color: var(--text-color);
+    color: var(--text-primary);
 }
 
 .ascii-chart__axis {
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid var(--border-default);
     margin-top: 0.5rem;
     padding-top: 0.75rem;
     display: flex;
@@ -242,7 +242,7 @@
 .ascii-chart__label {
     width: 1.25rem;
     text-align: center;
-    color: var(--text-light);
+    color: var(--text-secondary);
     font-size: 0.75rem;
 }
 
@@ -252,10 +252,10 @@
 .audio-profile {
     font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
     font-size: 0.9375rem;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius);
     padding: 1.25rem;
-    background: rgba(0, 0, 0, 0.3);
+    background: var(--bg-primary);
 }
 
 .audio-profile__row {
@@ -267,18 +267,18 @@
 }
 
 .audio-profile__label {
-    color: var(--text-light);
+    color: var(--text-secondary);
     white-space: nowrap;
 }
 
 .audio-profile__meter {
-    color: var(--text-color);
+    color: var(--text-primary);
     letter-spacing: 0;
     overflow: hidden;
 }
 
 .audio-profile__value {
-    color: var(--text-light);
+    color: var(--text-secondary);
     text-align: right;
     white-space: nowrap;
 }
@@ -298,25 +298,25 @@
     gap: 1rem;
     align-items: center;
     padding: 0.625rem;
-    border-radius: 4px;
+    border-radius: var(--radius);
     transition: background-color 0.15s;
 }
 
 .track-item:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-elevated);
 }
 
 .track-item__rank {
     font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
     font-size: 1rem;
-    color: var(--text-light);
+    color: var(--text-secondary);
     text-align: right;
 }
 
 .track-item__cover {
     width: 48px;
     height: 48px;
-    border-radius: 4px;
+    border-radius: var(--radius);
     object-fit: cover;
     filter: grayscale(30%);
 }
@@ -328,7 +328,7 @@
 .track-item__name {
     font-size: 0.9375rem;
     font-weight: 500;
-    color: var(--text-color);
+    color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -336,7 +336,7 @@
 
 .track-item__artist {
     font-size: 0.8125rem;
-    color: var(--text-light);
+    color: var(--text-secondary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -345,7 +345,7 @@
 .track-item__duration {
     font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
     font-size: 0.8125rem;
-    color: var(--text-light);
+    color: var(--text-secondary);
 }
 
 /* ===============================================
@@ -365,12 +365,12 @@
 .taste-period__label {
     font-size: 0.875rem;
     font-weight: 600;
-    color: var(--text-light);
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     padding-bottom: 0.75rem;
     margin-bottom: 1rem;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-default);
 }
 
 .taste-period__list {
@@ -389,7 +389,7 @@
 
 .taste-artist__rank {
     font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
-    color: var(--text-light);
+    color: var(--text-secondary);
     width: 1.5rem;
     flex-shrink: 0;
 }
@@ -397,13 +397,13 @@
 .taste-artist__img {
     width: 32px;
     height: 32px;
-    border-radius: 4px;
+    border-radius: var(--radius);
     filter: grayscale(50%);
     flex-shrink: 0;
 }
 
 .taste-artist__name {
-    color: var(--text-color);
+    color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -423,7 +423,7 @@
 .pattern-section__title {
     font-size: 0.875rem;
     font-weight: 600;
-    color: var(--text-light);
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     margin-bottom: 1rem;
@@ -440,24 +440,24 @@
     align-items: center;
     gap: 1rem;
     padding: 0.5rem;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 4px;
+    background: var(--bg-primary);
+    border-radius: var(--radius);
 }
 
 .peak-hour__time {
     font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
     font-size: 1.25rem;
-    color: var(--text-color);
+    color: var(--text-primary);
     min-width: 4rem;
 }
 
 .peak-hour__info {
     font-size: 0.75rem;
-    color: var(--text-light);
+    color: var(--text-secondary);
 }
 
 .peak-hour__count {
-    color: var(--primary-color);
+    color: var(--accent);
 }
 
 /* ===============================================
@@ -474,31 +474,31 @@
     font-size: 0.75rem;
     padding: 0.5rem 1rem;
     background: transparent;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    color: var(--text-light);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius);
+    color: var(--text-secondary);
     cursor: pointer;
     transition: all 0.15s;
 }
 
 .time-btn:hover {
-    border-color: var(--primary-color);
-    color: var(--primary-color);
+    border-color: var(--accent);
+    color: var(--accent);
 }
 
 .time-btn.active {
-    background: var(--primary-color);
-    border-color: var(--primary-color);
-    color: #000;
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg-primary);
 }
 
 /* ===============================================
    Auth States
    =============================================== */
 .auth-box {
-    background: rgba(10, 10, 10, 0.85);
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius);
     text-align: center;
     padding: 4rem 2rem;
     max-width: 500px;
@@ -508,13 +508,13 @@
 .auth-box__title {
     font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
     font-size: 0.875rem;
-    color: var(--text-light);
+    color: var(--text-secondary);
     letter-spacing: 0.1em;
     margin-bottom: 1rem;
 }
 
 .auth-box__message {
-    color: var(--text-light);
+    color: var(--text-secondary);
     margin-bottom: 2rem;
     line-height: 1.6;
 }
@@ -524,10 +524,10 @@
     font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
     font-size: 0.875rem;
     padding: 0.875rem 2rem;
-    background: var(--primary-color);
+    background: var(--accent);
     border: none;
-    border-radius: 4px;
-    color: #000;
+    border-radius: var(--radius);
+    color: var(--bg-primary);
     text-decoration: none;
     cursor: pointer;
     transition: opacity 0.15s;
@@ -545,7 +545,7 @@
     align-items: center;
     justify-content: center;
     min-height: 120px;
-    color: var(--text-light);
+    color: var(--text-secondary);
     font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
     font-size: 0.875rem;
 }
@@ -567,7 +567,7 @@
 .empty-state {
     text-align: center;
     padding: 2rem;
-    color: var(--text-light);
+    color: var(--text-secondary);
     font-size: 0.875rem;
 }
 
@@ -580,11 +580,11 @@
     margin-top: 2rem;
     font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
     font-size: 0.75rem;
-    color: var(--text-light);
+    color: var(--text-secondary);
 }
 
 .disconnect-link:hover {
-    color: var(--primary-color);
+    color: var(--accent);
 }
 
 /* ===============================================
@@ -649,9 +649,9 @@
     left: 0;
     right: 0;
     height: 64px;
-    background: rgba(10, 10, 10, 0.95);
+    background: var(--bg-surface);
     backdrop-filter: blur(10px);
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid var(--border-default);
     z-index: 1000;
     transition: height 0.3s ease;
     display: flex;
@@ -675,11 +675,11 @@
     transform: translateX(-50%);
     width: 48px;
     height: 24px;
-    background: rgba(10, 10, 10, 0.95);
-    border: 1px solid var(--border-color);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
     border-bottom: none;
-    border-radius: 8px 8px 0 0;
-    color: var(--text-light);
+    border-radius: var(--radius) var(--radius) 0 0;
+    color: var(--text-secondary);
     cursor: pointer;
     font-size: 0.75rem;
     display: flex;
@@ -689,7 +689,7 @@
 }
 
 .player-expand-toggle:hover {
-    color: var(--primary-color);
+    color: var(--accent);
 }
 
 /* Player Content */
@@ -713,7 +713,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--text-light);
+    color: var(--text-secondary);
     font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
     font-size: 0.875rem;
 }
@@ -722,7 +722,7 @@
 .player-album-art {
     width: 48px;
     height: 48px;
-    border-radius: 4px;
+    border-radius: var(--radius);
     object-fit: cover;
     filter: grayscale(30%);
     flex-shrink: 0;
@@ -745,7 +745,7 @@
 .player-track-name {
     font-size: 0.875rem;
     font-weight: 500;
-    color: var(--text-color);
+    color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -753,7 +753,7 @@
 
 .player-artist-name {
     font-size: 0.75rem;
-    color: var(--text-light);
+    color: var(--text-secondary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -761,7 +761,7 @@
 
 .player-album-name {
     font-size: 0.75rem;
-    color: var(--text-light);
+    color: var(--text-secondary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -782,22 +782,22 @@
 .player-btn {
     background: none;
     border: none;
-    color: var(--text-color);
+    color: var(--text-primary);
     cursor: pointer;
     font-size: 1rem;
     padding: 0.5rem;
-    border-radius: 4px;
+    border-radius: var(--radius);
     transition: color 0.15s, background-color 0.15s;
     font-family: inherit;
 }
 
 .player-btn:hover {
-    color: var(--primary-color);
-    background: rgba(255, 255, 255, 0.05);
+    color: var(--accent);
+    background: var(--bg-elevated);
 }
 
 .player-btn.active {
-    color: var(--primary-color);
+    color: var(--accent);
 }
 
 .player-btn--play {
@@ -821,8 +821,8 @@
 .player-progress-bar {
     flex: 1;
     height: 4px;
-    background: var(--border-color);
-    border-radius: 2px;
+    background: var(--border-default);
+    border-radius: var(--radius);
     cursor: pointer;
     position: relative;
     overflow: hidden;
@@ -830,20 +830,20 @@
 
 .player-progress-fill {
     height: 100%;
-    background: var(--primary-color);
-    border-radius: 2px;
+    background: var(--accent);
+    border-radius: var(--radius);
     width: 0%;
     transition: width 0.1s linear;
 }
 
 .player-progress-bar:hover .player-progress-fill {
-    background: #93c5fd;
+    background: var(--ice);
 }
 
 .player-time {
     font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
     font-size: 0.625rem;
-    color: var(--text-light);
+    color: var(--text-secondary);
     min-width: 2.5rem;
 }
 
@@ -863,8 +863,8 @@
     height: 4px;
     -webkit-appearance: none;
     appearance: none;
-    background: var(--border-color);
-    border-radius: 2px;
+    background: var(--border-default);
+    border-radius: var(--radius);
     cursor: pointer;
 }
 
@@ -873,7 +873,7 @@
     appearance: none;
     width: 12px;
     height: 12px;
-    background: var(--text-color);
+    background: var(--text-primary);
     border-radius: 50%;
     cursor: pointer;
 }
@@ -881,7 +881,7 @@
 .player-volume-slider::-moz-range-thumb {
     width: 12px;
     height: 12px;
-    background: var(--text-color);
+    background: var(--text-primary);
     border-radius: 50%;
     cursor: pointer;
     border: none;
@@ -890,7 +890,7 @@
 .player-volume-value {
     font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
     font-size: 0.625rem;
-    color: var(--text-light);
+    color: var(--text-secondary);
     min-width: 2rem;
     display: none;
 }
@@ -925,9 +925,9 @@
     bottom: 100%;
     right: 0;
     margin-bottom: 0.5rem;
-    background: rgba(10, 10, 10, 0.98);
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius);
     min-width: 200px;
     display: none;
     flex-direction: column;
@@ -942,10 +942,10 @@
     padding: 0.75rem 1rem;
     font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
     font-size: 0.75rem;
-    color: var(--text-light);
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-default);
 }
 
 .player-devices-list {
@@ -965,28 +965,28 @@
 }
 
 .device-item:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-elevated);
 }
 
 .device-item.active {
-    background: rgba(96, 165, 250, 0.1);
+    background: var(--accent-glow);
 }
 
 .device-indicator {
     font-size: 0.5rem;
-    color: var(--primary-color);
+    color: var(--accent);
 }
 
 .device-name {
     flex: 1;
     font-size: 0.875rem;
-    color: var(--text-color);
+    color: var(--text-primary);
 }
 
 .device-type {
     font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
     font-size: 0.625rem;
-    color: var(--text-light);
+    color: var(--text-secondary);
 }
 
 /* Expanded Layout */
@@ -1051,22 +1051,22 @@
 }
 
 .track-item--playable:hover {
-    background: rgba(96, 165, 250, 0.1);
+    background: var(--accent-glow);
 }
 
 .track-item--playing {
-    background: rgba(96, 165, 250, 0.1);
+    background: var(--accent-glow);
 }
 
 .track-item--playing .track-item__rank {
-    color: var(--primary-color);
+    color: var(--accent);
 }
 
 .track-item__play-indicator {
     display: none;
     font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
     font-size: 0.75rem;
-    color: var(--primary-color);
+    color: var(--accent);
     animation: equalizer-pulse 0.5s ease-in-out infinite alternate;
 }
 

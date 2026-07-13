@@ -6,78 +6,146 @@
 {% block head %}
 <style>
 .resume-header {
-    text-align: center;
-    margin-bottom: var(--space-xl);
-    padding-bottom: var(--space-lg);
-    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: var(--space-2xl);
 }
 
-.resume-header h2 {
-    font-size: var(--font-size-xl);
-    color: var(--text-primary);
+.resume-header .name {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(28px, 4vw, 36px);
+    color: var(--paper);
     margin-bottom: var(--space-xs);
 }
 
 .resume-header .location {
+    font-family: var(--font-sans);
     color: var(--text-secondary);
     font-size: var(--font-size-sm);
     margin-bottom: var(--space-sm);
 }
 
 .resume-header .links {
+    font-family: var(--font-mono);
     font-size: var(--font-size-xs);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-muted);
 }
 
 .resume-header .links a {
-    margin: 0 var(--space-sm);
+    color: var(--text-muted);
+    margin-right: var(--space-md);
+}
+
+.resume-header .links a:hover {
+    color: var(--accent);
 }
 
 .resume-section {
+    margin-bottom: var(--space-2xl);
+}
+
+.resume-section:last-of-type {
     margin-bottom: var(--space-xl);
 }
 
 .resume-section h3 {
-    font-size: var(--font-size-base);
+    font-family: var(--font-mono);
+    font-weight: 400;
+    font-size: var(--font-size-xs);
+    letter-spacing: 0.25em;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--text-secondary);
-    padding-bottom: var(--space-sm);
-    border-bottom: 1px solid var(--border-default);
+    color: var(--text-muted);
     margin-bottom: var(--space-lg);
 }
 
+/* === Timeline === */
 .timeline-entry {
-    margin-bottom: var(--space-lg);
-    padding-left: var(--space-md);
-    border-left: 2px solid var(--accent);
+    position: relative;
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    column-gap: var(--space-lg);
+    padding-bottom: var(--space-xl);
+}
+
+.timeline-entry:last-child {
+    padding-bottom: 0;
+}
+
+.timeline-entry::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    bottom: 0;
+    left: calc(110px + (var(--space-lg) / 2));
+    width: 1px;
+    background: var(--border-subtle);
+    transform: translateX(-50%);
+}
+
+.timeline-entry:last-child::before {
+    bottom: auto;
+    height: 16px;
+}
+
+.timeline-entry::after {
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: calc(110px + (var(--space-lg) / 2));
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 1px;
+    transform: translateX(-50%);
 }
 
 .timeline-entry .date {
+    grid-column: 1;
+    grid-row: 1;
+    font-family: var(--font-mono);
     font-size: var(--font-size-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     color: var(--text-muted);
+    padding-top: 4px;
+}
+
+.timeline-entry .title,
+.timeline-entry .org,
+.timeline-entry .description,
+.timeline-entry ul,
+.timeline-entry .skill-tags {
+    grid-column: 2;
 }
 
 .timeline-entry .title {
-    font-weight: 600;
-    font-size: var(--font-size-sm);
-    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 24px;
+    line-height: 1.25;
+    color: var(--paper);
 }
 
 .timeline-entry .org {
+    margin-top: 2px;
+    font-family: var(--font-sans);
     font-size: var(--font-size-sm);
     color: var(--text-secondary);
     font-style: italic;
 }
 
 .timeline-entry .description {
-    margin-top: var(--space-xs);
+    margin-top: var(--space-sm);
+    font-family: var(--font-sans);
     font-size: var(--font-size-sm);
     color: var(--text-secondary);
 }
 
 .timeline-entry ul {
-    margin: var(--space-xs) 0 0 var(--space-lg);
+    margin: var(--space-sm) 0 0 var(--space-lg);
     padding: 0;
+    font-family: var(--font-sans);
     font-size: var(--font-size-sm);
     color: var(--text-secondary);
 }
@@ -86,61 +154,82 @@
     margin-bottom: 3px;
 }
 
-.skill-tags {
+.timeline-entry .skill-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-xs);
+    gap: 2px;
     margin-top: var(--space-sm);
 }
 
 .resume-footer {
-    text-align: center;
+    margin-top: var(--space-xl);
     padding-top: var(--space-lg);
     border-top: 1px solid var(--border-subtle);
+    font-family: var(--font-sans);
     color: var(--text-muted);
-    font-size: var(--font-size-xs);
+    font-size: var(--font-size-sm);
+}
+
+/* === Responsive: dates move above content below 768px === */
+@media (max-width: 768px) {
+    .timeline-entry {
+        grid-template-columns: 1fr;
+        column-gap: 0;
+        padding-left: var(--space-md);
+    }
+
+    .timeline-entry .date {
+        padding-top: 0;
+        margin-bottom: var(--space-xs);
+    }
+
+    .timeline-entry::before,
+    .timeline-entry::after {
+        left: 0;
+        transform: none;
+    }
 }
 </style>
 {% endblock %}
 
 {% block page_content %}
-<div class="content-panel">
-    <div class="content-panel-header">Resume</div>
-    <div class="content-panel-body">
-        <div class="resume-header">
-            <h2>Alex Matthew, CFA</h2>
-            <p class="location">St Louis, Missouri</p>
-            <p class="links">
-                <a href="{{ site.linkedin_url }}" target="_blank" rel="noopener noreferrer">LinkedIn</a>
-                <a href="{{ site.github_url }}" target="_blank" rel="noopener noreferrer">GitHub</a>
-            </p>
-        </div>
+<header>
+    <span class="eyebrow">Timeline</span>
+    <h1 class="page-title">Resume</h1>
+</header>
 
-        <div class="resume-section">
-            <h3>Experience</h3>
-            {% for item in timeline if item.type == 'work' %}
-            {{ timeline_entry(item, show_skills=true) }}
-            {% endfor %}
-        </div>
+<div class="resume-header">
+    <p class="name">Alex Matthew, CFA</p>
+    <p class="location">St Louis, Missouri</p>
+    <p class="links">
+        <a href="{{ site.linkedin_url }}" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+        <a href="{{ site.github_url }}" target="_blank" rel="noopener noreferrer">GitHub</a>
+    </p>
+</div>
 
-        <div class="resume-section">
-            <h3>Education</h3>
-            {% for item in timeline if item.type == 'education' %}
-            {{ timeline_entry(item) }}
-            {% endfor %}
-        </div>
+<div class="resume-section">
+    <h3>Experience</h3>
+    {% for item in timeline if item.type == 'work' %}
+    {{ timeline_entry(item, show_skills=true) }}
+    {% endfor %}
+</div>
 
-        <div class="resume-section">
-            <h3>Licenses & Certifications</h3>
-            {% for item in timeline if item.type == 'certification' %}
-            {{ timeline_entry(item) }}
-            {% endfor %}
-        </div>
+<div class="resume-section">
+    <h3>Education</h3>
+    {% for item in timeline if item.type == 'education' %}
+    {{ timeline_entry(item) }}
+    {% endfor %}
+</div>
 
-        <div class="resume-footer">
-            For full details, please visit my
-            <a href="{{ site.linkedin_url }}" target="_blank" rel="noopener noreferrer">LinkedIn profile</a>.
-        </div>
-    </div>
+<div class="resume-section">
+    <h3>Licenses &amp; Certifications</h3>
+    {% for item in timeline if item.type == 'certification' %}
+    {{ timeline_entry(item) }}
+    {% endfor %}
+</div>
+
+<div class="resume-footer">
+    For full details, please visit my
+    <a href="{{ site.linkedin_url }}" target="_blank" rel="noopener noreferrer">LinkedIn profile</a>.
 </div>
 {% endblock %}

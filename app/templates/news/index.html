@@ -5,79 +5,87 @@
 
 {% block head %}
 <style>
-.news-list {
-    display: grid;
-    gap: var(--space-md);
-}
-
-.news-card {
-    padding: var(--space-lg);
-    background: var(--bg-surface);
-    border: 1px solid var(--border-default);
-    border-left: 3px solid var(--accent);
-    border-radius: 4px;
-}
-
-.news-card-meta {
-    font-size: var(--font-size-xs);
-    color: var(--text-muted);
-    margin-bottom: var(--space-xs);
-}
-
-.news-card-meta .source {
-    color: var(--accent);
-    font-weight: 600;
-}
-
-.news-card h3 {
-    font-size: var(--font-size-base);
-    margin-bottom: var(--space-sm);
-}
-
-.news-card h3 a {
-    color: var(--text-primary);
-}
-
-.news-card h3 a:hover {
-    color: var(--accent);
-}
-
-.news-card p {
+.news-intro {
+    font-family: var(--font-sans);
     font-size: var(--font-size-sm);
     color: var(--text-secondary);
-    line-height: 1.6;
+    max-width: 65ch;
+    margin-bottom: var(--space-2xl);
+}
+
+.press-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.press-item {
+    padding: var(--space-lg) 0;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.press-list .press-item:first-child {
+    border-top: 1px solid var(--border-subtle);
+}
+
+.press-item-meta {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
     margin-bottom: var(--space-sm);
 }
 
-.news-card .read-more {
-    font-size: var(--font-size-xs);
+.press-item-headline {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(20px, 4vw, 24px);
+    line-height: 1.25;
+    margin: 0;
 }
 
+.press-item-headline a {
+    color: var(--paper);
+    transition: color var(--transition-fast);
+}
+
+.press-item-headline a:hover {
+    color: var(--accent);
+}
+
+.press-item-desc {
+    margin-top: var(--space-sm);
+    font-family: var(--font-sans);
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    max-width: 65ch;
+}
 </style>
 {% endblock %}
 
 {% block page_content %}
-<div class="content-panel">
-    <div class="content-panel-header">In the News</div>
-    <div class="content-panel-body">
-        <p class="page-intro">Articles, interviews, and press mentions.</p>
+<header>
+    <span class="eyebrow">Press</span>
+    <h1 class="page-title">News</h1>
+</header>
 
-        {% if articles %}
-        <div class="news-list">
-            {% for article in articles %}
-            <div class="news-card">
-                <div class="news-card-meta">
-                    <span class="source">{{ article.source }}</span> | {{ article.date }}
-                </div>
-                <h3><a href="{{ article.url }}" target="_blank" rel="noopener noreferrer">{{ article.title }}</a></h3>
-                <p>{{ article.description }}</p>
-                <a href="{{ article.url }}" target="_blank" rel="noopener noreferrer" class="read-more">Read full article &rarr;</a>
-            </div>
-            {% endfor %}
-        </div>
-        {% else %}
-        {{ empty_state("No news articles found. Check back soon.") }}
+<p class="news-intro">Articles, interviews, and press mentions.</p>
+
+{% if articles %}
+<div class="press-list">
+    {% for article in articles %}
+    <div class="press-item">
+        <div class="press-item-meta">{{ article.source }} &middot; {{ article.date }}</div>
+        <h2 class="press-item-headline">
+            <a href="{{ article.url }}" target="_blank" rel="noopener noreferrer">{{ article.title }}</a>
+        </h2>
+        {% if article.description %}
+        <p class="press-item-desc">{{ article.description }}</p>
         {% endif %}
     </div>
+    {% endfor %}
 </div>
+{% else %}
+{{ empty_state("No news articles found. Check back soon.") }}
+{% endif %}
 {% endblock %}

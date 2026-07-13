@@ -5,59 +5,92 @@
 
 {% block head %}
 <style>
-.blog-grid {
-    display: grid;
-    gap: var(--space-md);
+.blog-intro {
+    font-family: var(--font-sans);
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    max-width: 65ch;
+    margin-bottom: var(--space-2xl);
 }
 
-.blog-card {
+.post-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.post-row {
     display: block;
-    padding: var(--space-lg);
-    background: var(--bg-surface);
-    border: 1px solid var(--border-default);
-    border-radius: 4px;
+    padding: var(--space-lg) 0;
+    border-bottom: 1px solid var(--border-subtle);
     text-decoration: none;
     color: inherit;
-    transition: all var(--transition-fast);
+    transition: padding-left var(--transition-base);
 }
 
-.blog-card:hover {
-    border-color: var(--accent);
+.post-list .post-row:first-child {
+    border-top: 1px solid var(--border-subtle);
+}
+
+.post-row:hover {
+    padding-left: var(--space-sm);
     color: inherit;
 }
 
-.blog-card h3 {
-    font-size: var(--font-size-base);
-    color: var(--text-primary);
-    margin-bottom: var(--space-xs);
-}
-
-.blog-card .date {
+.post-row-date {
+    display: block;
+    font-family: var(--font-mono);
     font-size: var(--font-size-xs);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
     color: var(--text-muted);
+    margin-bottom: var(--space-sm);
 }
 
+.post-row-title {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(24px, 5vw, 32px);
+    line-height: 1.15;
+    color: var(--paper);
+    margin: 0;
+    transition: color var(--transition-fast);
+}
+
+.post-row:hover .post-row-title {
+    color: var(--accent);
+}
+
+.post-row-excerpt {
+    margin-top: var(--space-sm);
+    font-family: var(--font-sans);
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    max-width: 65ch;
+}
 </style>
 {% endblock %}
 
 {% block page_content %}
-<div class="content-panel">
-    <div class="content-panel-header">Blog</div>
-    <div class="content-panel-body">
-        <p class="page-intro">Thoughts, projects, and things I find interesting.</p>
+<header>
+    <span class="eyebrow">Journal</span>
+    <h1 class="page-title">Blog</h1>
+</header>
 
-        {% if posts %}
-        <div class="blog-grid">
-            {% for post in posts %}
-            <a href="{{ url_for('blog.post', slug=post.slug) }}" class="blog-card">
-                <h3>{{ post.title }}</h3>
-                <span class="date">{{ post.date }}</span>
-            </a>
-            {% endfor %}
-        </div>
-        {% else %}
-        {{ empty_state("No blog posts yet. Check back soon.") }}
+<p class="blog-intro">Thoughts, projects, and things I find interesting.</p>
+
+{% if posts %}
+<div class="post-list">
+    {% for post in posts %}
+    <a href="{{ url_for('blog.post', slug=post.slug) }}" class="post-row">
+        <span class="post-row-date">{{ post.date }}</span>
+        <h2 class="post-row-title">{{ post.title }}</h2>
+        {% if post.summary %}
+        <p class="post-row-excerpt">{{ post.summary }}</p>
         {% endif %}
-    </div>
+    </a>
+    {% endfor %}
 </div>
+{% else %}
+{{ empty_state("No blog posts yet. Check back soon.") }}
+{% endif %}
 {% endblock %}

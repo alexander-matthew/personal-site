@@ -36,24 +36,24 @@
 
 .difficulty-selector label {
     font-size: 0.9rem;
-    color: var(--text-light);
+    color: var(--text-secondary);
 }
 
 .difficulty-selector select {
     padding: 0.4rem 0.6rem;
-    border-radius: 4px;
-    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    border: 1px solid var(--border-default);
     font-size: 0.9rem;
-    background: var(--bg-color);
-    color: var(--text-color);
+    background: var(--bg-surface);
+    color: var(--text-primary);
 }
 
 .new-game-btn {
     padding: 0.5rem 1.25rem;
-    background: var(--primary-color);
-    color: white;
+    background: var(--accent);
+    color: var(--paper);
     border: none;
-    border-radius: 4px;
+    border-radius: var(--radius);
     cursor: pointer;
     font-size: 0.9rem;
     transition: opacity 0.15s;
@@ -75,16 +75,16 @@
 .sudoku-grid {
     display: grid;
     grid-template-columns: repeat(9, 1fr);
-    border: 3px solid var(--text-color);
+    border: 3px solid var(--border-default);
     aspect-ratio: 1;
     width: 100%;
     max-width: 400px;
-    background: var(--border-color);
+    background: var(--border-default);
     gap: 1px;
 }
 
 .cell {
-    background: var(--bg-color);
+    background: var(--bg-surface);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -97,37 +97,37 @@
 }
 
 .cell:hover:not(.given) {
-    background: var(--bg-secondary);
+    background: var(--bg-elevated);
 }
 
-/* 3x3 Box Borders */
+/* 3x3 Box Borders (brighter than the 1px cell gaps so the subgrids still read) */
 .cell.box-right {
-    border-right: 2px solid var(--text-color);
+    border-right: 2px solid var(--border-bright);
 }
 
 .cell.box-bottom {
-    border-bottom: 2px solid var(--text-color);
+    border-bottom: 2px solid var(--border-bright);
 }
 
 /* Cell States */
 .cell.given {
-    color: var(--text-color);
+    color: var(--text-primary);
     cursor: default;
-    background: #f5f5f5;
+    background: var(--bg-elevated);
     font-weight: 700;
 }
 
 .cell.user-input {
-    color: var(--primary-color);
+    color: var(--accent);
 }
 
 .cell.selected {
-    background: #e3f2fd;
+    background: var(--accent-glow);
 }
 
 .cell.error {
-    color: #dc3545;
-    background: #ffebee;
+    color: var(--color-error);
+    background: rgba(248, 113, 113, 0.15);
 }
 
 /* Number Buttons */
@@ -144,16 +144,16 @@
     height: 40px;
     font-size: 1.1rem;
     font-weight: 600;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    background: var(--bg-color);
-    color: var(--text-color);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius);
+    background: var(--bg-surface);
+    color: var(--text-primary);
     cursor: pointer;
     transition: background-color 0.1s;
 }
 
 .num-btn:hover {
-    background: var(--bg-secondary);
+    background: var(--bg-elevated);
 }
 
 .num-btn.erase {
@@ -169,7 +169,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(6, 7, 9, 0.7);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -185,30 +185,31 @@
 }
 
 .win-content {
-    background: var(--bg-color);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
     padding: 2rem 3rem;
-    border-radius: 8px;
+    border-radius: var(--radius);
     text-align: center;
 }
 
 .win-content h2 {
-    color: #4caf50;
+    color: var(--color-success);
     margin: 0 0 0.5rem 0;
     font-size: 1.75rem;
 }
 
 .win-content p {
-    color: var(--text-light);
+    color: var(--text-secondary);
     margin: 0 0 1.5rem 0;
 }
 
 .win-content button {
     padding: 0.6rem 1.5rem;
     font-size: 1rem;
-    background: #4caf50;
-    color: white;
+    background: var(--color-success);
+    color: var(--ink);
     border: none;
-    border-radius: 4px;
+    border-radius: var(--radius);
     cursor: pointer;
     transition: opacity 0.15s;
 }
@@ -244,17 +245,8 @@
     }
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-    .cell.given {
-        background: #2a2a2a;
-    }
-
-    .cell.selected {
-        background: #1a3a5c;
-    }
-
-    .cell.error {
-        background: #3d1a1a;
-    }
-}
+/* Dark mode support: removed. The site no longer varies by OS
+   prefers-color-scheme — it is a single dark theme sitewide — so this block
+   would only have caused OS-dark-mode users to see hardcoded, non-token
+   colors layered on top of the base rules above. The base rules already are
+   the single dark treatment via design tokens. */

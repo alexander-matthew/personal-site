@@ -1,35 +1,49 @@
-{% from "components/macros.html" import project_card %}
 {% extends "palantir_page.html" %}
 
 {% block title %}Projects{% endblock %}
 
 {% block head %}
 <style>
-.projects-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: var(--space-md);
+/* === Header === */
+.projects-header {
+    margin-bottom: var(--space-xl);
 }
 
-@media (max-width: 768px) {
-    .projects-grid {
-        grid-template-columns: 1fr;
-    }
+.projects-header .page-intro {
+    max-width: 65ch;
+    margin-bottom: 0;
+}
+
+/* === Editorial index (rows, whitespace + hairlines only) === */
+.projects-list {
+    display: flex;
+    flex-direction: column;
 }
 </style>
 {% endblock %}
 
 {% block page_content %}
-<div class="content-panel">
-    <div class="content-panel-header">Projects</div>
-    <div class="content-panel-body">
-        <p class="page-intro">Personal projects and experiments. Select a project to explore.</p>
+<header class="projects-header">
+    <span class="eyebrow">Index</span>
+    <h1 class="page-title">Projects</h1>
+    <p class="page-intro">Personal projects and experiments &mdash; select one to explore.</p>
+</header>
 
-        <div class="projects-grid">
-            {% for project in projects %}
-            {{ project_card(project) }}
-            {% endfor %}
+<div class="projects-list">
+    {% for project in projects %}
+    <a href="{{ project.link }}" class="feed-item">
+        <div class="feed-item-header">
+            <span class="feed-item-title">{{ project.title }}</span>
+            {% if project.tags %}
+            <span class="feed-item-tags">
+                {% for tag in project.tags %}
+                <span class="tag">{{ tag }}</span>
+                {% endfor %}
+            </span>
+            {% endif %}
         </div>
-    </div>
+        <div class="feed-item-desc">{{ project.description }}</div>
+    </a>
+    {% endfor %}
 </div>
 {% endblock %}

@@ -19,7 +19,7 @@
 .data-card {
     background: var(--bg-surface);
     border: 1px solid var(--border-default);
-    border-radius: 4px;
+    border-radius: var(--radius);
     padding: var(--space-md);
     text-align: center;
 }
@@ -51,7 +51,7 @@
 .dashboard-item {
     background: var(--bg-surface);
     border: 1px solid var(--border-default);
-    border-radius: 4px;
+    border-radius: var(--radius);
     padding: var(--space-md);
 }
 
@@ -65,7 +65,7 @@
 .timeline-heatmap {
     background: var(--bg-surface);
     border: 1px solid var(--border-default);
-    border-radius: 4px;
+    border-radius: var(--radius);
     padding: var(--space-md);
     margin-bottom: var(--space-md);
 }
@@ -83,7 +83,7 @@
     padding: var(--space-xl);
     background: var(--bg-surface);
     border: 1px solid var(--border-default);
-    border-radius: 4px;
+    border-radius: var(--radius);
 }
 
 .auth-box h3 {
@@ -100,8 +100,8 @@
     display: inline-block;
     padding: var(--space-sm) var(--space-lg);
     background: var(--accent);
-    color: #000;
-    border-radius: 3px;
+    color: var(--bg-primary);
+    border-radius: var(--radius);
     text-decoration: none;
     font-weight: 600;
     font-size: var(--font-size-sm);
@@ -139,7 +139,7 @@
 .time-btn {
     padding: var(--space-xs) var(--space-sm);
     border: 1px solid var(--border-default);
-    border-radius: 3px;
+    border-radius: var(--radius);
     background: var(--bg-elevated);
     color: var(--text-secondary);
     cursor: pointer;
@@ -148,7 +148,7 @@
 }
 
 .time-btn:hover { border-color: var(--accent); color: var(--text-primary); }
-.time-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
+.time-btn.active { background: var(--accent); color: var(--bg-primary); border-color: var(--accent); }
 
 /* Tracks list */
 .tracks-list { display: flex; flex-direction: column; gap: var(--space-xs); }
@@ -159,11 +159,11 @@
     gap: var(--space-sm);
     padding: var(--space-xs) var(--space-sm);
     background: var(--bg-elevated);
-    border-radius: 3px;
+    border-radius: var(--radius);
 }
 
 .track-rank { width: 20px; text-align: center; color: var(--text-muted); font-size: 12px; }
-.track-cover { width: 36px; height: 36px; border-radius: 3px; object-fit: cover; }
+.track-cover { width: 36px; height: 36px; border-radius: var(--radius); object-fit: cover; }
 .track-info { display: flex; flex-direction: column; min-width: 0; }
 .track-name { font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; }
 .track-artist { font-size: 12px; color: var(--text-secondary); }
@@ -189,8 +189,8 @@
 .day-bars { display: flex; flex-direction: column; gap: 3px; }
 .day-bar-row { display: flex; align-items: center; gap: var(--space-xs); }
 .day-bar-label { width: 28px; font-size: 11px; color: var(--text-muted); }
-.day-bar-container { flex: 1; height: 14px; background: var(--bg-elevated); border-radius: 2px; overflow: hidden; }
-.day-bar { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s; }
+.day-bar-container { flex: 1; height: 14px; background: var(--bg-elevated); border-radius: var(--radius); overflow: hidden; }
+.day-bar { height: 100%; background: var(--accent); border-radius: var(--radius); transition: width 0.3s; }
 .day-bar-value { width: 20px; font-size: 11px; color: var(--text-muted); text-align: right; }
 .peak-hours { display: flex; flex-direction: column; gap: var(--space-xs); }
 .peak-hour-item { display: flex; align-items: center; gap: var(--space-sm); }
@@ -202,12 +202,12 @@
 .genre-bars { display: flex; flex-direction: column; gap: var(--space-xs); }
 .genre-item { display: flex; align-items: center; gap: var(--space-xs); }
 .genre-name { width: 100px; font-size: 12px; color: var(--text-secondary); text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.genre-bar-container { flex: 1; height: 14px; background: var(--bg-elevated); border-radius: 2px; overflow: hidden; }
-.genre-bar { height: 100%; border-radius: 2px; transition: width 0.3s; }
+.genre-bar-container { flex: 1; height: 14px; background: var(--bg-elevated); border-radius: var(--radius); overflow: hidden; }
+.genre-bar { height: 100%; border-radius: var(--radius); transition: width 0.3s; }
 .genre-bar-1 { background: var(--accent); }
 .genre-bar-2 { background: var(--color-success); }
 .genre-bar-3 { background: var(--color-warning); }
-.genre-bar-4 { background: #a78bfa; }
+.genre-bar-4 { background: var(--ice); }
 .genre-bar-5 { background: var(--color-error); }
 .genre-percent { width: 36px; font-size: 11px; color: var(--text-muted); text-align: right; }
 
@@ -222,7 +222,7 @@
 .heatmap-day-label { color: var(--text-muted); text-align: right; padding-right: 4px; line-height: 16px; }
 .heatmap-cell {
     height: 16px;
-    border-radius: 2px;
+    border-radius: var(--radius);
     position: relative;
     cursor: default;
 }
@@ -240,7 +240,7 @@
     background: var(--bg-surface);
     border: 1px solid var(--border-default);
     padding: 2px 6px;
-    border-radius: 3px;
+    border-radius: var(--radius);
     font-size: 10px;
     white-space: nowrap;
     z-index: 10;

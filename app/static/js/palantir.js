@@ -1,27 +1,52 @@
-/* Palantir Theme - Interactivity */
+/* Gravure Theme - Interactivity */
 (function () {
     'use strict';
 
-    // === Sidebar Toggle (mobile) ===
+    // === Mobile Nav Overlay Toggle ===
     const hamburger = document.getElementById('hamburger');
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebar-overlay');
+    const overlay = document.getElementById('nav-overlay');
+    const overlayClose = document.getElementById('nav-overlay-close');
 
-    if (hamburger && sidebar && overlay) {
+    function openOverlay() {
+        if (!overlay) return;
+        overlay.classList.add('open');
+        if (hamburger) hamburger.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeOverlay() {
+        if (!overlay) return;
+        overlay.classList.remove('open');
+        if (hamburger) hamburger.setAttribute('aria-expanded', 'false');
+    }
+
+    if (hamburger && overlay) {
         hamburger.addEventListener('click', () => {
-            sidebar.classList.toggle('open');
-            overlay.classList.toggle('open');
+            if (overlay.classList.contains('open')) {
+                closeOverlay();
+            } else {
+                openOverlay();
+            }
         });
 
-        overlay.addEventListener('click', () => {
-            sidebar.classList.remove('open');
-            overlay.classList.remove('open');
+        if (overlayClose) {
+            overlayClose.addEventListener('click', closeOverlay);
+        }
+
+        // Close when a nav link inside the overlay is clicked
+        overlay.querySelectorAll('a[data-path]').forEach(link => {
+            link.addEventListener('click', closeOverlay);
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && overlay.classList.contains('open')) {
+                closeOverlay();
+            }
         });
     }
 
     // === Active Link Highlighting ===
     const path = window.location.pathname;
-    const navLinks = document.querySelectorAll('.sidebar-nav a[data-path]');
+    const navLinks = document.querySelectorAll('.topnav-links a[data-path], .nav-overlay-links a[data-path]');
 
     navLinks.forEach(link => {
         const linkPath = link.getAttribute('data-path');

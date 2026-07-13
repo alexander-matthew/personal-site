@@ -35,7 +35,7 @@
     padding: var(--space-xs) var(--space-sm);
     background: var(--bg-primary);
     border: 1px solid var(--border-default);
-    border-radius: 3px;
+    border-radius: var(--radius);
     color: var(--text-primary);
     font-family: var(--font-mono);
     font-size: var(--font-size-sm);
@@ -84,6 +84,7 @@
 }
 
 .cell.selected {
+    /* Inset ring marks the selected cell — functions like a focus ring, not a glow. */
     background: var(--accent-glow);
     box-shadow: inset 0 0 0 2px var(--accent);
 }
@@ -116,7 +117,7 @@
     font-weight: bold;
     background: var(--bg-elevated);
     border: 1px solid var(--border-default);
-    border-radius: 3px;
+    border-radius: var(--radius);
     color: var(--text-primary);
     cursor: pointer;
     font-family: var(--font-mono);
@@ -130,7 +131,7 @@
 
 .num-btn:active {
     background: var(--accent);
-    color: #000;
+    color: var(--ink);
 }
 
 .num-btn.erase {
@@ -146,7 +147,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(6, 7, 9, 0.7);
     justify-content: center;
     align-items: center;
     z-index: 10000;
@@ -159,10 +160,9 @@
 .win-content {
     background: var(--bg-surface);
     border: 1px solid var(--border-default);
-    border-radius: 4px;
+    border-radius: var(--radius);
     padding: var(--space-lg) var(--space-xl);
     text-align: center;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
 .win-content h2 {
@@ -181,8 +181,8 @@
     padding: var(--space-sm) var(--space-md);
     background: var(--accent);
     border: none;
-    border-radius: 3px;
-    color: #000;
+    border-radius: var(--radius);
+    color: var(--ink);
     font-family: var(--font-mono);
     font-size: var(--font-size-sm);
     font-weight: 600;

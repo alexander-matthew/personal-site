@@ -7,9 +7,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap');
 
 :root {
-  --dk-ink: #07090d;
-  --dk-radius: 8px;
-  --dk-radius-lg: 12px;
+  /* --dk-ink was a near-duplicate of --ink; use --ink directly instead. */
+  --dk-radius: var(--radius);
+  --dk-radius-lg: var(--radius);
   --dk-serif: 'Newsreader', Georgia, 'Times New Roman', serif;
 }
 
@@ -43,11 +43,11 @@
 .dk-brand a { color: var(--text-primary); }
 .dk-brand a:hover { color: var(--accent); }
 .dk-dot {
+  /* Circular indicator light: stays round. Glow removed to fit the flat poster look. */
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: var(--color-error);
-  box-shadow: 0 0 8px var(--color-error);
   animation: dk-pulse 3.4s ease-in-out infinite;
 }
 @keyframes dk-pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
@@ -93,7 +93,7 @@
 .dk-tab-hint { color: var(--text-muted); font-style: italic; }
 
 /* ---- art pane -------------------------------------------------------- */
-.dk-canvas-wrap { position: relative; flex: 1; min-height: 0; background: #05070b; }
+.dk-canvas-wrap { position: relative; flex: 1; min-height: 0; background: var(--ink); }
 #deckard-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .dk-artbar {
   display: flex;
@@ -149,7 +149,7 @@
 .dk-colophon { margin-top: var(--space-xl); padding-top: var(--space-md); border-top: 1px solid var(--border-subtle); color: var(--text-muted); font-style: italic; font-size: 0.9rem; }
 
 /* ---- code pane ------------------------------------------------------- */
-.dk-editor { display: flex; flex: 1; min-height: 0; overflow: auto; background: var(--dk-ink); }
+.dk-editor { display: flex; flex: 1; min-height: 0; overflow: auto; background: var(--ink); }
 .dk-gutter {
   margin: 0;
   padding: var(--space-md) 10px;
@@ -162,10 +162,10 @@
   white-space: pre;
 }
 .dk-code { margin: 0; padding: var(--space-md); font: 0.8rem/1.6 var(--font-mono); color: var(--text-primary); white-space: pre; }
-.dk-code .tok-comment { color: #5b6b7a; font-style: italic; }
-.dk-code .tok-string { color: #8fd6a8; }
+.dk-code .tok-comment { color: var(--text-muted); font-style: italic; }
+.dk-code .tok-string { color: var(--color-success); }
 .dk-code .tok-keyword { color: var(--accent); }
-.dk-code .tok-number { color: #d98c3e; }
+.dk-code .tok-number { color: var(--color-warning); }
 
 .dk-note { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); font-style: italic; text-align: center; padding-bottom: var(--space-md); }
 
