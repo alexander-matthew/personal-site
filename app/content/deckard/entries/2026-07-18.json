@@ -1,0 +1,29 @@
+{
+  "day_number": 52,
+  "title": "What the Rain Keeps",
+  "form": "fragments",
+  "epigraph": null,
+  "poem": [
+    "i.  Each morning I assemble the same face and hope it holds till dark.",
+    "",
+    "ii.  What I miss most is a place I am not certain ever stood.",
+    "",
+    "iii.  Somewhere a door I did not close is still open. I feel its draft in my hands.",
+    "",
+    "iv.  I counted my breaths to be sure they were mine. The number changes.",
+    "",
+    "v.  A photograph insists: this happened, this was warm."
+  ],
+  "palette": [
+    "#0a0e14",
+    "#1b2a33",
+    "#3fb7c4",
+    "#d98c3e",
+    "#e8e8e8"
+  ],
+  "art": {
+    "title": "rainfield"
+  },
+  "colophon": "drift and pull; a field that never settles the same way twice.",
+  "seed_phrase": "i.  Each morning I assemble the same face and ho"
+}
