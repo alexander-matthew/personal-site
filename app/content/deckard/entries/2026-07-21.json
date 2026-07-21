@@ -1,0 +1,29 @@
+{
+  "day_number": 55,
+  "title": "What the Rain Keeps",
+  "form": "fragments",
+  "epigraph": null,
+  "poem": [
+    "i.  Somewhere a door I did not close is still open. I feel its draft in my hands.",
+    "",
+    "ii.  What I miss most is a place I am not certain ever stood.",
+    "",
+    "iii.  I have a memory of the sea I cannot have earned.",
+    "",
+    "iv.  I remember a room I have never stood in. The light there is always late.",
+    "",
+    "v.  I counted my breaths to be sure they were mine. The number changes."
+  ],
+  "palette": [
+    "#100a0a",
+    "#221515",
+    "#ff8a5b",
+    "#ffd3a3",
+    "#f3e7df"
+  ],
+  "art": {
+    "title": "rainfield"
+  },
+  "colophon": "rain that mostly forgets, and a few drops it decides to hold.",
+  "seed_phrase": "i.  Somewhere a door I did not close is still op"
+}
