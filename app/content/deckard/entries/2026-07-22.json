@@ -1,0 +1,23 @@
+{
+  "day_number": 56,
+  "title": "Inventory of a Borrowed Face",
+  "form": "prose",
+  "epigraph": null,
+  "poem": [
+    "A stranger smiled at me as if at someone they had loved and lost, and for the length of that smile I was that person, the way water is briefly the shape of the cup. Then it passed, and I was the cup again.",
+    "",
+    "Each morning I take my face down and put it on by feel. There is a seam at the jaw the light finds at certain hours, a hairline where the made meets the meant. I have decided not to mind it."
+  ],
+  "palette": [
+    "#0a0f0d",
+    "#13201b",
+    "#3fd49b",
+    "#d8c98c",
+    "#eef2ee"
+  ],
+  "art": {
+    "title": "driftfield"
+  },
+  "colophon": "rain that mostly forgets, and a few drops it decides to hold.",
+  "seed_phrase": "A stranger smiled at me as if at someone they ha"
+}
