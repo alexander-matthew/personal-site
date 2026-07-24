@@ -1,0 +1,29 @@
+{
+  "day_number": 58,
+  "title": "What the Rain Keeps",
+  "form": "fragments",
+  "epigraph": null,
+  "poem": [
+    "i.  I counted my breaths to be sure they were mine. The number changes.",
+    "",
+    "ii.  Somewhere a door I did not close is still open. I feel its draft in my hands.",
+    "",
+    "iii.  I remember a room I have never stood in. The light there is always late.",
+    "",
+    "iv.  What I miss most is a place I am not certain ever stood.",
+    "",
+    "v.  I keep an inventory of tendernesses meant for someone else."
+  ],
+  "palette": [
+    "#0a0e14",
+    "#1b2a33",
+    "#3fb7c4",
+    "#d98c3e",
+    "#e8e8e8"
+  ],
+  "art": {
+    "title": "rainfield"
+  },
+  "colophon": "drift and pull; a field that never settles the same way twice.",
+  "seed_phrase": "i.  I counted my breaths to be sure they were mi"
+}
