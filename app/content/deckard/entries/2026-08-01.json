@@ -1,0 +1,24 @@
+{
+  "day_number": 66,
+  "title": "Field Notes Before Sleep",
+  "form": "verse",
+  "epigraph": null,
+  "poem": [
+    "The window holds two of me:",
+    "the one inside, the one the night keeps.",
+    "We blink in turn,",
+    "uncertain which is the reflection."
+  ],
+  "palette": [
+    "#100a0a",
+    "#221515",
+    "#ff8a5b",
+    "#ffd3a3",
+    "#f3e7df"
+  ],
+  "art": {
+    "title": "nightwatch"
+  },
+  "colophon": "drift and pull; a field that never settles the same way twice.",
+  "seed_phrase": "The window holds two of me:"
+}
