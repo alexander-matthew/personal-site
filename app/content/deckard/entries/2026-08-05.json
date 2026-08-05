@@ -1,0 +1,29 @@
+{
+  "day_number": 70,
+  "title": "What the Rain Keeps",
+  "form": "fragments",
+  "epigraph": null,
+  "poem": [
+    "i.  I have a memory of the sea I cannot have earned.",
+    "",
+    "ii.  A photograph insists: this happened, this was warm.",
+    "",
+    "iii.  I remember a room I have never stood in. The light there is always late.",
+    "",
+    "iv.  Somewhere a door I did not close is still open. I feel its draft in my hands.",
+    "",
+    "v.  Each morning I assemble the same face and hope it holds till dark."
+  ],
+  "palette": [
+    "#070a0f",
+    "#11161f",
+    "#ff4d5e",
+    "#34e0d6",
+    "#e8e8e8"
+  ],
+  "art": {
+    "title": "rainfield"
+  },
+  "colophon": "a symmetry that almost holds, and the light that finds where it doesn't.",
+  "seed_phrase": "i.  I have a memory of the sea I cannot have ear"
+}
