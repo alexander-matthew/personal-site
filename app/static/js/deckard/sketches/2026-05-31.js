@@ -1,27 +1,22 @@
-// rainfield — a field of weather that mostly forgets.
+// isolines — rings around a center that drifted while you watched.
 window.__deckardSketch = function (ctx, w, h, rng, palette) {
-  const [night, deep, a, b] = palette;
-  const wind = (rng() - 0.5) * 0.6;
-  const drops = [];
-  const count = Math.floor((w * h) / 9000) + 60;
-  for (let i = 0; i < count; i++) {
-    drops.push({ x: rng() * w, y: rng() * h, len: 8 + rng() * 22,
-      spd: 2.5 + rng() * 5, kept: rng() < 0.05, phase: rng() * 6.28 });
-  }
-  return function step(t) {
-    ctx.fillStyle = night; ctx.fillRect(0, 0, w, h);
-    const g = ctx.createLinearGradient(0, h * 0.55, 0, h);
-    g.addColorStop(0, deep); g.addColorStop(1, night);
-    ctx.fillStyle = g; ctx.fillRect(0, h * 0.55, w, h * 0.45);
-    ctx.lineCap = 'round';
-    for (const d of drops) {
-      d.y += d.spd; d.x += wind;
-      if (d.y - d.len > h) { d.y = -d.len; d.x = rng() * w; }
-      ctx.strokeStyle = d.kept ? b : a;
-      ctx.globalAlpha = d.kept ? 0.4 + 0.6 * Math.abs(Math.sin(t * 0.001 + d.phase)) : 0.2;
-      ctx.lineWidth = d.kept ? 1.6 : 1;
-      ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(d.x - wind * 3, d.y - d.len); ctx.stroke();
+  var P = {"fill": 0.842, "rings": 11, "k1": 6, "k2": 3, "warp": 0.071, "accentRate": 0.1, "alpha": 0.481, "wt": 0.961};
+  var ground = palette[0], ink = palette[palette.length - 1], accent = palette[2] || ink;
+
+  var cx = w / 2 + (rng() - 0.5) * w * 0.2, cy = h / 2 + (rng() - 0.5) * h * 0.2;
+  var R = Math.min(w, h) * P.fill / 2, rings = P.rings, ph = [rng() * 6.28, rng() * 6.28];
+  ctx.fillStyle = ground; ctx.fillRect(0, 0, w, h); ctx.lineJoin = 'round';
+  var ri = 0;
+  return function () {
+    if (ri >= rings) return;
+    var rad = R * (ri + 1) / rings, acc = rng() < P.accentRate;
+    ctx.strokeStyle = acc ? accent : ink; ctx.globalAlpha = acc ? 0.85 : P.alpha; ctx.lineWidth = acc ? P.wt + 0.3 : P.wt;
+    ctx.beginPath();
+    for (var a = 0; a <= 6.2832; a += 0.06) {
+      var dd = rad + Math.sin(a * P.k1 + ph[0]) * P.warp * rad + Math.sin(a * P.k2 + ph[1]) * P.warp * rad * 0.5;
+      var x = cx + Math.cos(a) * dd, y = cy + Math.sin(a) * dd;
+      a === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
     }
-    ctx.globalAlpha = 1;
+    ctx.closePath(); ctx.stroke(); ctx.globalAlpha = 1; ri++;
   };
 };
