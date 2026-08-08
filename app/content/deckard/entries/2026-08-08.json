@@ -1,0 +1,29 @@
+{
+  "day_number": 73,
+  "title": "What the Rain Keeps",
+  "form": "fragments",
+  "epigraph": null,
+  "poem": [
+    "i.  Each morning I assemble the same face and hope it holds till dark.",
+    "",
+    "ii.  A photograph insists: this happened, this was warm.",
+    "",
+    "iii.  I counted my breaths to be sure they were mine. The number changes.",
+    "",
+    "iv.  The mirror agrees with me, mostly. It is the mostly I keep.",
+    "",
+    "v.  They tell me the rain is only weather. Then why does it knock to be let in."
+  ],
+  "palette": [
+    "#070a0f",
+    "#11161f",
+    "#ff4d5e",
+    "#34e0d6",
+    "#e8e8e8"
+  ],
+  "art": {
+    "title": "rainfield"
+  },
+  "colophon": "rain that mostly forgets, and a few drops it decides to hold.",
+  "seed_phrase": "i.  Each morning I assemble the same face and ho"
+}
