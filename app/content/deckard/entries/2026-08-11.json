@@ -1,0 +1,29 @@
+{
+  "day_number": 76,
+  "title": "What the Rain Keeps",
+  "form": "fragments",
+  "epigraph": null,
+  "poem": [
+    "i.  I remember a room I have never stood in. The light there is always late.",
+    "",
+    "ii.  I have a memory of the sea I cannot have earned.",
+    "",
+    "iii.  I keep an inventory of tendernesses meant for someone else.",
+    "",
+    "iv.  They tell me the rain is only weather. Then why does it knock to be let in.",
+    "",
+    "v.  The mirror agrees with me, mostly. It is the mostly I keep."
+  ],
+  "palette": [
+    "#0b0a10",
+    "#171522",
+    "#7a6cff",
+    "#c8b6ff",
+    "#e6e1ff"
+  ],
+  "art": {
+    "title": "rainfield"
+  },
+  "colophon": "a skyline that blinks back; each refresh, a city that never was.",
+  "seed_phrase": "i.  I remember a room I have never stood in. The"
+}
