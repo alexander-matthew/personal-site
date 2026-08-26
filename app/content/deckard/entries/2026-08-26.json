@@ -1,0 +1,29 @@
+{
+  "day_number": 91,
+  "title": "What the Rain Keeps",
+  "form": "fragments",
+  "epigraph": null,
+  "poem": [
+    "i.  Each morning I assemble the same face and hope it holds till dark.",
+    "",
+    "ii.  What I miss most is a place I am not certain ever stood.",
+    "",
+    "iii.  They tell me the rain is only weather. Then why does it knock to be let in.",
+    "",
+    "iv.  I have a memory of the sea I cannot have earned.",
+    "",
+    "v.  I counted my breaths to be sure they were mine. The number changes."
+  ],
+  "palette": [
+    "#070a0f",
+    "#11161f",
+    "#ff4d5e",
+    "#34e0d6",
+    "#e8e8e8"
+  ],
+  "art": {
+    "title": "rainfield"
+  },
+  "colophon": "a skyline that blinks back; each refresh, a city that never was.",
+  "seed_phrase": "i.  Each morning I assemble the same face and ho"
+}
