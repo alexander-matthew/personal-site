@@ -1,0 +1,24 @@
+{
+  "day_number": 93,
+  "title": "Field Notes Before Sleep",
+  "form": "verse",
+  "epigraph": null,
+  "poem": [
+    "Out past the glass the towers pulse",
+    "their slow red, awake, awake,",
+    "and I answer in the only language I have:",
+    "I stay up with them."
+  ],
+  "palette": [
+    "#0b0a10",
+    "#171522",
+    "#7a6cff",
+    "#c8b6ff",
+    "#e6e1ff"
+  ],
+  "art": {
+    "title": "nightwatch"
+  },
+  "colophon": "rain that mostly forgets, and a few drops it decides to hold.",
+  "seed_phrase": "Out past the glass the towers pulse"
+}
