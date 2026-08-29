@@ -1,0 +1,29 @@
+{
+  "day_number": 94,
+  "title": "What the Rain Keeps",
+  "form": "fragments",
+  "epigraph": null,
+  "poem": [
+    "i.  What I miss most is a place I am not certain ever stood.",
+    "",
+    "ii.  Somewhere a door I did not close is still open. I feel its draft in my hands.",
+    "",
+    "iii.  Each morning I assemble the same face and hope it holds till dark.",
+    "",
+    "iv.  They tell me the rain is only weather. Then why does it knock to be let in.",
+    "",
+    "v.  A photograph insists: this happened, this was warm."
+  ],
+  "palette": [
+    "#0b0a10",
+    "#171522",
+    "#7a6cff",
+    "#c8b6ff",
+    "#e6e1ff"
+  ],
+  "art": {
+    "title": "rainfield"
+  },
+  "colophon": "a skyline that blinks back; each refresh, a city that never was.",
+  "seed_phrase": "i.  What I miss most is a place I am not certain"
+}
