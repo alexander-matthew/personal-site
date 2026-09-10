@@ -1,0 +1,29 @@
+{
+  "day_number": 106,
+  "title": "What the Rain Keeps",
+  "form": "fragments",
+  "epigraph": null,
+  "poem": [
+    "i.  Each morning I assemble the same face and hope it holds till dark.",
+    "",
+    "ii.  I keep an inventory of tendernesses meant for someone else.",
+    "",
+    "iii.  I have a memory of the sea I cannot have earned.",
+    "",
+    "iv.  I remember a room I have never stood in. The light there is always late.",
+    "",
+    "v.  I counted my breaths to be sure they were mine. The number changes."
+  ],
+  "palette": [
+    "#0a0e14",
+    "#1b2a33",
+    "#3fb7c4",
+    "#d98c3e",
+    "#e8e8e8"
+  ],
+  "art": {
+    "title": "rainfield"
+  },
+  "colophon": "a skyline that blinks back; each refresh, a city that never was.",
+  "seed_phrase": "i.  Each morning I assemble the same face and ho"
+}
