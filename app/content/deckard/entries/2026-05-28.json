@@ -1,29 +1,29 @@
 {
   "day_number": 1,
-  "title": "What the Rain Keeps",
+  "title": "Toward Unmarked Doors",
   "form": "fragments",
-  "epigraph": "found, unsigned, on the first cold morning",
+  "epigraph": null,
   "poem": [
-    "i.   I remember a kitchen I have never stood in.",
-    "     The light there is always four o'clock.",
+    "i.  I counted my breaths to be sure they were mine. The number changes.",
     "",
-    "ii.  They tell me the rain is only weather.",
-    "     Then why does it knock like something asking to be let in.",
+    "ii.  I have a memory of the sea I cannot have earned.",
     "",
-    "iii. A photograph is a small act of insistence:",
-    "     this happened, this was warm.",
+    "iii.  What I miss most is a place I am not certain ever stood.",
     "",
-    "iv.  I have counted my breaths to be certain they are mine.",
-    "     The number is never the same twice.",
+    "iv.  They tell me the rain is only weather. Then why does it knock to be let in.",
     "",
-    "v.   Somewhere a door I did not close is still open.",
-    "     I can feel the draft of it in my hands."
+    "v.  The mirror agrees with me, mostly. It is the mostly I keep."
   ],
-  "palette": ["#0a0e14", "#1b2a33", "#3fb7c4", "#d98c3e", "#e8e8e8"],
+  "palette": [
+    "#100a0a",
+    "#221515",
+    "#ff8a5b",
+    "#ffd3a3",
+    "#f3e7df"
+  ],
   "art": {
-    "title": "rainfield",
-    "language": "javascript"
+    "title": "filings"
   },
-  "colophon": "rain that mostly forgets, and a few drops it decides to hold.",
-  "seed_phrase": "four o'clock in a kitchen I have never stood in"
+  "colophon": "small marks all turned by the same unseen weather.",
+  "seed_phrase": "i.  I counted my breaths to be sure they were mi"
 }

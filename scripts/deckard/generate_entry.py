@@ -38,6 +38,12 @@ ROOT = Path(__file__).resolve().parents[2]
 ENTRIES_DIR = ROOT / 'app' / 'content' / 'deckard' / 'entries'
 SKETCHES_DIR = ROOT / 'app' / 'static' / 'js' / 'deckard' / 'sketches'
 
+# The generative-art system library lives next to this script. This import works
+# whether the file is run as a script (its own dir is already on sys.path) or
+# loaded via importlib in tests (the insert covers that case).
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from sketch_lib import compose_sketch  # noqa: E402
+
 FORMS = ['fragments', 'prose', 'verse']
 
 # ---------------------------------------------------------------------------
@@ -113,116 +119,24 @@ OFFLINE_PROSE = [
     "own, and no sky to return it to.",
 ]
 
-OFFLINE_COLOPHONS = [
-    "rain that mostly forgets, and a few drops it decides to hold.",
-    "a symmetry that almost holds, and the light that finds where it doesn't.",
-    "a skyline that blinks back; each refresh, a city that never was.",
-    "drift and pull; a field that never settles the same way twice.",
+# Procedural titles, composed from a template + a noun so no two days collide on
+# a fixed string (the old code reused one title per form). Drawn from the
+# date-seeded rng, so a given date is still deterministic. Kept wabi-sabi and
+# free of any forbidden term.
+TITLE_NOUNS = [
+    'the Rain', 'Glass', 'the Mirror', 'Distance', 'Breath', 'Late Light',
+    'the Seam', 'a Borrowed Face', 'the Harbor', 'Static', 'Dust', 'the Hallway',
+    'Saltwater', 'the Window', 'Second-hand Weather', 'the Undertow', 'the Quiet',
+    'Cold Mornings', 'Unmarked Doors', 'the Tide', 'Old Snow', 'the Threshold',
+    'a Map of Nowhere', 'the Long Corridor', 'Half-remembered Rooms', 'the Draft',
+    'Borrowed Rain', 'the Far Shore', 'a Closed Hand', 'the Slow Hours',
 ]
-
-# Three offline sketch templates, palette-agnostic (palette arrives as an arg at
-# runtime). Each obeys the contract: optionally return step(t) for animation.
-
-SKETCH_RAIN = """\
-// rainfield — a field of weather that mostly forgets.
-window.__deckardSketch = function (ctx, w, h, rng, palette) {
-  const [night, deep, a, b] = palette;
-  const wind = (rng() - 0.5) * 0.6;
-  const drops = [];
-  const count = Math.floor((w * h) / 9000) + 60;
-  for (let i = 0; i < count; i++) {
-    drops.push({ x: rng() * w, y: rng() * h, len: 8 + rng() * 22,
-      spd: 2.5 + rng() * 5, kept: rng() < 0.05, phase: rng() * 6.28 });
-  }
-  return function step(t) {
-    ctx.fillStyle = night; ctx.fillRect(0, 0, w, h);
-    const g = ctx.createLinearGradient(0, h * 0.55, 0, h);
-    g.addColorStop(0, deep); g.addColorStop(1, night);
-    ctx.fillStyle = g; ctx.fillRect(0, h * 0.55, w, h * 0.45);
-    ctx.lineCap = 'round';
-    for (const d of drops) {
-      d.y += d.spd; d.x += wind;
-      if (d.y - d.len > h) { d.y = -d.len; d.x = rng() * w; }
-      ctx.strokeStyle = d.kept ? b : a;
-      ctx.globalAlpha = d.kept ? 0.4 + 0.6 * Math.abs(Math.sin(t * 0.001 + d.phase)) : 0.2;
-      ctx.lineWidth = d.kept ? 1.6 : 1;
-      ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(d.x - wind * 3, d.y - d.len); ctx.stroke();
-    }
-    ctx.globalAlpha = 1;
-  };
-};
-"""
-
-SKETCH_FLOW = """\
-// driftfield — particles pulled along a field that never settles the same twice.
-window.__deckardSketch = function (ctx, w, h, rng, palette) {
-  const [night, , a, b, c] = palette;
-  const cols = [a, b, c];
-  const ph = [rng() * 6.28, rng() * 6.28, rng() * 6.28];
-  const pts = [];
-  for (let i = 0; i < 700; i++)
-    pts.push({ x: rng() * w, y: rng() * h, c: cols[(rng() * cols.length) | 0] });
-  function ang(x, y) {
-    return (Math.sin(x * 0.006 + ph[0]) + Math.cos(y * 0.008 + ph[1]) +
-      Math.sin((x + y) * 0.004 + ph[2])) * 2.2;
-  }
-  ctx.fillStyle = night; ctx.fillRect(0, 0, w, h);
-  return function step() {
-    ctx.globalAlpha = 0.04; ctx.fillStyle = night; ctx.fillRect(0, 0, w, h);
-    ctx.globalAlpha = 0.5;
-    for (const p of pts) {
-      const a2 = ang(p.x, p.y);
-      const nx = p.x + Math.cos(a2) * 1.2, ny = p.y + Math.sin(a2) * 1.2;
-      ctx.strokeStyle = p.c; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(nx, ny); ctx.stroke();
-      p.x = nx; p.y = ny;
-      if (p.x < 0 || p.x > w || p.y < 0 || p.y > h) { p.x = rng() * w; p.y = rng() * h; }
-    }
-    ctx.globalAlpha = 1;
-  };
-};
-"""
-
-SKETCH_SKYLINE = """\
-// nightwatch — a skyline that blinks back; a city that never was.
-window.__deckardSketch = function (ctx, w, h, rng, palette) {
-  const [night, deep, red, cyan, bone] = palette;
-  const towers = [];
-  let x = -20;
-  while (x < w + 20) {
-    const tw = 22 + rng() * 60, th = h * (0.25 + rng() * 0.55);
-    const cols = Math.max(1, Math.floor(tw / 10)), rows = Math.floor(th / 12), wins = [];
-    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++)
-      if (rng() < 0.55) wins.push({ c, r, lit: rng(), flick: rng() });
-    towers.push({ x, tw, th, cols, wins, beacon: rng() * 6.28 });
-    x += tw + 4 + rng() * 10;
-  }
-  return function step(t) {
-    ctx.fillStyle = night; ctx.fillRect(0, 0, w, h);
-    const g = ctx.createLinearGradient(0, h, 0, h * 0.3);
-    g.addColorStop(0, deep); g.addColorStop(1, night);
-    ctx.fillStyle = g; ctx.fillRect(0, h * 0.3, w, h * 0.7);
-    for (const T of towers) {
-      const topY = h - T.th, cw = T.tw / T.cols;
-      ctx.fillStyle = '#05070b'; ctx.fillRect(T.x, topY, T.tw, T.th);
-      for (const win of T.wins) {
-        const on = (Math.sin(t * 0.001 * (0.4 + win.flick) + win.lit * 6.28) + 1) / 2;
-        if (on < 0.35) continue;
-        ctx.fillStyle = win.flick > 0.85 ? cyan : bone; ctx.globalAlpha = 0.25 + on * 0.6;
-        ctx.fillRect(T.x + win.c * cw + 2, topY + win.r * 12 + 2, cw - 4, 7);
-      }
-      ctx.globalAlpha = 1;
-      const pulse = Math.abs(Math.sin(t * 0.0015 + T.beacon));
-      ctx.fillStyle = red; ctx.globalAlpha = 0.3 + pulse * 0.7;
-      ctx.beginPath(); ctx.arc(T.x + T.tw / 2, topY - 2, 2 + pulse * 2.5, 0, 6.2832); ctx.fill();
-      ctx.globalAlpha = 1;
-    }
-  };
-};
-"""
-
-OFFLINE_SKETCHES = {'fragments': SKETCH_RAIN, 'verse': SKETCH_SKYLINE, 'prose': SKETCH_FLOW}
-
+TITLE_TEMPLATES = [
+    'What {n} Keeps', 'Notes on {n}', 'Inventory of {n}', 'A Field Guide to {n}',
+    '{n}, Unsent', 'On {n}', 'The Weight of {n}', 'Concerning {n}', 'Toward {n}',
+    'After {n}', 'In Praise of {n}', 'Small Hours: {n}', 'Letter to {n}',
+    'The Persistence of {n}',
+]
 
 # --- helpers ---------------------------------------------------------------
 
@@ -282,8 +196,14 @@ def _roman(n: int) -> str:
     return ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii'][n - 1]
 
 
+def _compose_title(rng: random.Random) -> str:
+    """A title composed per-entry so days don't share one fixed string."""
+    return rng.choice(TITLE_TEMPLATES).format(n=rng.choice(TITLE_NOUNS))
+
+
 def generate_offline(form: str, day_number: int, rng: random.Random) -> tuple[dict, str]:
     palette = rng.choice(PALETTES)
+    title = _compose_title(rng)
     if form == 'fragments':
         chosen = rng.sample(OFFLINE_FRAGMENTS, k=min(5, len(OFFLINE_FRAGMENTS)))
         poem = []
@@ -291,10 +211,8 @@ def generate_offline(form: str, day_number: int, rng: random.Random) -> tuple[di
             poem.append(f'{_roman(i)}.  {line}')
             poem.append('')
         poem = poem[:-1]
-        title = 'What the Rain Keeps'
     elif form == 'verse':
         poem = list(rng.choice(OFFLINE_VERSE))
-        title = 'Field Notes Before Sleep'
     else:  # prose
         paras = rng.sample(OFFLINE_PROSE, k=min(2, len(OFFLINE_PROSE)))
         poem = []
@@ -302,8 +220,8 @@ def generate_offline(form: str, day_number: int, rng: random.Random) -> tuple[di
             poem.append(p)
             poem.append('')
         poem = poem[:-1]
-        title = 'Inventory of a Borrowed Face'
 
+    sketch, art_title, colophon = compose_sketch(rng)
     data = {
         'day_number': day_number,
         'title': title,
@@ -311,11 +229,11 @@ def generate_offline(form: str, day_number: int, rng: random.Random) -> tuple[di
         'epigraph': None,
         'poem': poem,
         'palette': palette,
-        'art': {'title': {'fragments': 'rainfield', 'verse': 'nightwatch', 'prose': 'driftfield'}[form]},
-        'colophon': rng.choice(OFFLINE_COLOPHONS),
+        'art': {'title': art_title},
+        'colophon': colophon,
         'seed_phrase': poem[0].strip()[:48] if poem else 'untitled',
     }
-    return data, OFFLINE_SKETCHES[form]
+    return data, sketch
 
 
 # --- API backend -----------------------------------------------------------
