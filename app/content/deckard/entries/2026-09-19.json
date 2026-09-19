@@ -1,0 +1,29 @@
+{
+  "day_number": 115,
+  "title": "What the Rain Keeps",
+  "form": "fragments",
+  "epigraph": null,
+  "poem": [
+    "i.  I remember a room I have never stood in. The light there is always late.",
+    "",
+    "ii.  A photograph insists: this happened, this was warm.",
+    "",
+    "iii.  The mirror agrees with me, mostly. It is the mostly I keep.",
+    "",
+    "iv.  Somewhere a door I did not close is still open. I feel its draft in my hands.",
+    "",
+    "v.  I counted my breaths to be sure they were mine. The number changes."
+  ],
+  "palette": [
+    "#100a0a",
+    "#221515",
+    "#ff8a5b",
+    "#ffd3a3",
+    "#f3e7df"
+  ],
+  "art": {
+    "title": "rainfield"
+  },
+  "colophon": "rain that mostly forgets, and a few drops it decides to hold.",
+  "seed_phrase": "i.  I remember a room I have never stood in. The"
+}
