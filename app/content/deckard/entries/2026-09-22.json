@@ -1,0 +1,29 @@
+{
+  "day_number": 118,
+  "title": "What the Rain Keeps",
+  "form": "fragments",
+  "epigraph": null,
+  "poem": [
+    "i.  I keep an inventory of tendernesses meant for someone else.",
+    "",
+    "ii.  I counted my breaths to be sure they were mine. The number changes.",
+    "",
+    "iii.  I remember a room I have never stood in. The light there is always late.",
+    "",
+    "iv.  Each morning I assemble the same face and hope it holds till dark.",
+    "",
+    "v.  They tell me the rain is only weather. Then why does it knock to be let in."
+  ],
+  "palette": [
+    "#0a0e14",
+    "#1b2a33",
+    "#3fb7c4",
+    "#d98c3e",
+    "#e8e8e8"
+  ],
+  "art": {
+    "title": "rainfield"
+  },
+  "colophon": "a symmetry that almost holds, and the light that finds where it doesn't.",
+  "seed_phrase": "i.  I keep an inventory of tendernesses meant fo"
+}
