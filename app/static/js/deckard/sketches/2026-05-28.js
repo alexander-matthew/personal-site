@@ -1,59 +1,23 @@
-// rainfield — "What the Rain Keeps"
-//
-// A field of rain that mostly forgets, and a few drops it decides to hold.
-// Deterministic given `rng`; reseeded per viewer and per refresh, so the wind
-// and the kept drops are never quite the same reader to reader.
-//
-// Contract: return an optional step(t) for animation, or nothing for one frame.
+// filings — small marks all turned by the same unseen weather.
 window.__deckardSketch = function (ctx, w, h, rng, palette) {
-  const [night, deep, teal, amber] = palette;
-  const wind = (rng() - 0.5) * 0.6;
-  const drops = [];
-  const count = Math.floor((w * h) / 9000) + 60;
+  var P = {"margin": 0.126, "cols": 25, "freq": 0.007, "len": 0.789, "accentRate": 0.093, "alpha": 0.418, "wt": 1.084};
+  var ground = palette[0], ink = palette[palette.length - 1], accent = palette[2] || ink;
 
-  for (let i = 0; i < count; i++) {
-    drops.push({
-      x: rng() * w,
-      y: rng() * h,
-      len: 8 + rng() * 22,
-      spd: 2.5 + rng() * 5,
-      kept: rng() < 0.04, // a few drops are remembered
-      phase: rng() * Math.PI * 2,
-    });
-  }
-
-  function backdrop() {
-    ctx.fillStyle = night;
-    ctx.fillRect(0, 0, w, h);
-    const horizon = ctx.createLinearGradient(0, h * 0.55, 0, h);
-    horizon.addColorStop(0, deep);
-    horizon.addColorStop(1, night);
-    ctx.fillStyle = horizon;
-    ctx.fillRect(0, h * 0.55, w, h * 0.45);
-  }
-
-  return function step(t) {
-    backdrop();
-    ctx.lineCap = 'round';
-    for (const d of drops) {
-      d.y += d.spd;
-      d.x += wind;
-      if (d.y - d.len > h) {
-        d.y = -d.len;
-        d.x = rng() * w;
-      }
-      if (d.kept) {
-        ctx.strokeStyle = amber;
-        ctx.globalAlpha = 0.4 + 0.6 * Math.abs(Math.sin(t * 0.001 + d.phase));
-        ctx.lineWidth = 1.6;
-      } else {
-        ctx.strokeStyle = teal;
-        ctx.globalAlpha = 0.18 + (d.phase / (Math.PI * 2)) * 0.14;
-        ctx.lineWidth = 1;
-      }
+  var m = Math.min(w, h) * P.margin, gx = P.cols, gy = Math.max(2, Math.round(P.cols * h / w)), f = P.freq, ph = rng() * 6.28;
+  var cw = (w - 2 * m) / gx, ch = (h - 2 * m) / gy, len = Math.min(cw, ch) * P.len;
+  function ang(x, y) { return (Math.sin(x * f + ph) + Math.cos(y * f * 1.2)) * Math.PI; }
+  ctx.fillStyle = ground; ctx.fillRect(0, 0, w, h); ctx.lineCap = 'round';
+  var pts = [];
+  for (var i = 0; i < gx; i++) for (var j = 0; j < gy; j++) pts.push([m + cw * (i + 0.5), m + ch * (j + 0.5), rng() < P.accentRate]);
+  var d = 0;
+  return function () {
+    var t = Math.min(pts.length, d + 8);
+    for (; d < t; d++) {
+      var p = pts[d], a = ang(p[0], p[1]);
+      ctx.strokeStyle = p[2] ? accent : ink; ctx.globalAlpha = p[2] ? 0.85 : P.alpha; ctx.lineWidth = P.wt;
       ctx.beginPath();
-      ctx.moveTo(d.x, d.y);
-      ctx.lineTo(d.x - wind * 3, d.y - d.len);
+      ctx.moveTo(p[0] - Math.cos(a) * len / 2, p[1] - Math.sin(a) * len / 2);
+      ctx.lineTo(p[0] + Math.cos(a) * len / 2, p[1] + Math.sin(a) * len / 2);
       ctx.stroke();
     }
     ctx.globalAlpha = 1;
