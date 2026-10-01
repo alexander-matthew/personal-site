@@ -1,0 +1,29 @@
+{
+  "day_number": 127,
+  "title": "What the Rain Keeps",
+  "form": "fragments",
+  "epigraph": null,
+  "poem": [
+    "i.  What I miss most is a place I am not certain ever stood.",
+    "",
+    "ii.  They tell me the rain is only weather. Then why does it knock to be let in.",
+    "",
+    "iii.  Somewhere a door I did not close is still open. I feel its draft in my hands.",
+    "",
+    "iv.  I have a memory of the sea I cannot have earned.",
+    "",
+    "v.  The mirror agrees with me, mostly. It is the mostly I keep."
+  ],
+  "palette": [
+    "#0a0f0d",
+    "#13201b",
+    "#3fd49b",
+    "#d8c98c",
+    "#eef2ee"
+  ],
+  "art": {
+    "title": "rainfield"
+  },
+  "colophon": "a symmetry that almost holds, and the light that finds where it doesn't.",
+  "seed_phrase": "i.  What I miss most is a place I am not certain"
+}
