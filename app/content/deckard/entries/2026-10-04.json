@@ -1,0 +1,29 @@
+{
+  "day_number": 130,
+  "title": "What the Rain Keeps",
+  "form": "fragments",
+  "epigraph": null,
+  "poem": [
+    "i.  I remember a room I have never stood in. The light there is always late.",
+    "",
+    "ii.  I counted my breaths to be sure they were mine. The number changes.",
+    "",
+    "iii.  Somewhere a door I did not close is still open. I feel its draft in my hands.",
+    "",
+    "iv.  I have a memory of the sea I cannot have earned.",
+    "",
+    "v.  What I miss most is a place I am not certain ever stood."
+  ],
+  "palette": [
+    "#070a0f",
+    "#11161f",
+    "#ff4d5e",
+    "#34e0d6",
+    "#e8e8e8"
+  ],
+  "art": {
+    "title": "rainfield"
+  },
+  "colophon": "a symmetry that almost holds, and the light that finds where it doesn't.",
+  "seed_phrase": "i.  I remember a room I have never stood in. The"
+}
