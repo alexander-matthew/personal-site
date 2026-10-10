@@ -1,0 +1,29 @@
+{
+  "day_number": 136,
+  "title": "What the Rain Keeps",
+  "form": "fragments",
+  "epigraph": null,
+  "poem": [
+    "i.  A photograph insists: this happened, this was warm.",
+    "",
+    "ii.  I have a memory of the sea I cannot have earned.",
+    "",
+    "iii.  I keep an inventory of tendernesses meant for someone else.",
+    "",
+    "iv.  Each morning I assemble the same face and hope it holds till dark.",
+    "",
+    "v.  I counted my breaths to be sure they were mine. The number changes."
+  ],
+  "palette": [
+    "#0a0e14",
+    "#1b2a33",
+    "#3fb7c4",
+    "#d98c3e",
+    "#e8e8e8"
+  ],
+  "art": {
+    "title": "rainfield"
+  },
+  "colophon": "drift and pull; a field that never settles the same way twice.",
+  "seed_phrase": "i.  A photograph insists: this happened, this wa"
+}
