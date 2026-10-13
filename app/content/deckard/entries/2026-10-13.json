@@ -1,0 +1,29 @@
+{
+  "day_number": 139,
+  "title": "What the Rain Keeps",
+  "form": "fragments",
+  "epigraph": null,
+  "poem": [
+    "i.  The mirror agrees with me, mostly. It is the mostly I keep.",
+    "",
+    "ii.  I remember a room I have never stood in. The light there is always late.",
+    "",
+    "iii.  A photograph insists: this happened, this was warm.",
+    "",
+    "iv.  I counted my breaths to be sure they were mine. The number changes.",
+    "",
+    "v.  Somewhere a door I did not close is still open. I feel its draft in my hands."
+  ],
+  "palette": [
+    "#0a0f0d",
+    "#13201b",
+    "#3fd49b",
+    "#d8c98c",
+    "#eef2ee"
+  ],
+  "art": {
+    "title": "rainfield"
+  },
+  "colophon": "drift and pull; a field that never settles the same way twice.",
+  "seed_phrase": "i.  The mirror agrees with me, mostly. It is the"
+}
