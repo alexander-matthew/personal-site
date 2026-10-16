@@ -1,0 +1,29 @@
+{
+  "day_number": 142,
+  "title": "What the Rain Keeps",
+  "form": "fragments",
+  "epigraph": null,
+  "poem": [
+    "i.  A photograph insists: this happened, this was warm.",
+    "",
+    "ii.  The mirror agrees with me, mostly. It is the mostly I keep.",
+    "",
+    "iii.  I counted my breaths to be sure they were mine. The number changes.",
+    "",
+    "iv.  What I miss most is a place I am not certain ever stood.",
+    "",
+    "v.  I have a memory of the sea I cannot have earned."
+  ],
+  "palette": [
+    "#0a0f0d",
+    "#13201b",
+    "#3fd49b",
+    "#d8c98c",
+    "#eef2ee"
+  ],
+  "art": {
+    "title": "rainfield"
+  },
+  "colophon": "rain that mostly forgets, and a few drops it decides to hold.",
+  "seed_phrase": "i.  A photograph insists: this happened, this wa"
+}
