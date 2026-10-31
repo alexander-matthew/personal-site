@@ -1,0 +1,29 @@
+{
+  "day_number": 157,
+  "title": "What the Rain Keeps",
+  "form": "fragments",
+  "epigraph": null,
+  "poem": [
+    "i.  Somewhere a door I did not close is still open. I feel its draft in my hands.",
+    "",
+    "ii.  The mirror agrees with me, mostly. It is the mostly I keep.",
+    "",
+    "iii.  They tell me the rain is only weather. Then why does it knock to be let in.",
+    "",
+    "iv.  I counted my breaths to be sure they were mine. The number changes.",
+    "",
+    "v.  A photograph insists: this happened, this was warm."
+  ],
+  "palette": [
+    "#0a0a0c",
+    "#15161a",
+    "#8a8f99",
+    "#cfd6df",
+    "#4da6ff"
+  ],
+  "art": {
+    "title": "rainfield"
+  },
+  "colophon": "rain that mostly forgets, and a few drops it decides to hold.",
+  "seed_phrase": "i.  Somewhere a door I did not close is still op"
+}
