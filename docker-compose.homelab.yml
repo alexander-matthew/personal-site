@@ -1,0 +1,29 @@
+# Homelab deployment via Cloudflare Tunnel.
+#
+# Differs from docker-compose.yml (EC2): no host ports, no nginx, no certbot.
+# cloudflared opens an outbound connection to Cloudflare's edge and proxies
+# to the `web` service on the internal docker network. TLS is terminated at
+# Cloudflare, so the origin never sees raw TLS or the public internet.
+#
+# Required env (.env on host): CLOUDFLARE_TUNNEL_TOKEN, plus the same app
+# secrets the EC2 path uses (SECRET_KEY, SPOTIFY_*).
+
+services:
+  web:
+    build: .
+    env_file:
+      - .env
+    expose:
+      - "8000"
+    restart: unless-stopped
+    # No `ports:` — web is reachable only on the internal docker network.
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - web
+    restart: unless-stopped
+    # No `ports:` — outbound-only connection to Cloudflare.

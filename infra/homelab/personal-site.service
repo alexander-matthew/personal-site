@@ -1,0 +1,18 @@
+[Unit]
+Description=personal-site (homelab, via Cloudflare Tunnel)
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=alex-matthew
+Group=alex-matthew
+WorkingDirectory=/home/alex-matthew/code/personal-site
+ExecStart=/usr/bin/docker compose -f docker-compose.homelab.yml up -d --build
+ExecStop=/usr/bin/docker compose -f docker-compose.homelab.yml down
+TimeoutStartSec=300
+
+[Install]
+WantedBy=multi-user.target

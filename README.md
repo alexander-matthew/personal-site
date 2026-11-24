@@ -78,6 +78,22 @@ npm run test:watch
 
 ## Deployment
 
+Two parallel deployment paths are wired up.
+
+### Homelab (Cloudflare Tunnel)
+
+For running on the `homelab` Ubuntu box. No inbound ports, no Let's Encrypt
+locally — Cloudflare's edge fronts everything.
+
+- Runtime: `docker-compose.homelab.yml` (`web` + `cloudflared`)
+- Deploy: `./deploy-homelab.sh`
+- Boot persistence: `infra/homelab/personal-site.service` (systemd)
+- Full runbook + one-time Cloudflare-side setup: `infra/homelab/README.md`
+
+### EC2 (future)
+
+Mirrors the `wedding-site` pattern. Kept here for the eventual AWS port.
+
 - Infrastructure: Terraform files in `infra/`
 - Runtime: `docker-compose.yml` (`web`, `nginx`, `certbot`)
 - App deploy script: `./deploy.sh`
